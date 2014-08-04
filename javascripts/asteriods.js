@@ -82,10 +82,13 @@ Asteriod.prototype.update = function()
   matrixR.rotateY(this.angVel.r);
   this.rotation.clone(this.rotation.multiply(matrixR.multiply(matrixP.multiply(matrixY))));
   
-  this.x += this.angVel.p;
-  this.y += this.angVel.r;
-  this.z += this.angVel.y;
-}
+  //this.x += this.angVel.p;
+  //this.y += this.angVel.r;
+  //this.z += this.angVel.y;
+  this.x = modulo2(this.x + this.angVel.p, localSpace)-localSpace*0.5;
+  this.y = modulo2(this.y + this.angVel.r, localSpace)-localSpace*0.5;
+  this.z = modulo2(this.z + this.angVel.y, localSpace)-localSpace*0.5;
+  
 
 Asteriod.prototype.render = function()
 {
