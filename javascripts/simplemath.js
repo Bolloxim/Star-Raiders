@@ -106,7 +106,7 @@ matrix3x3.prototype.rotateY = function(angle)
 {
    var c = Math.cos(angle);
    var s = Math.sin(angle);
-   this.matrix = [c,0,s,0,1,0,-s, 0, c];
+   this.m = [c,0,s,0,1,0,-s, 0, c];
 }
 matrix3x3.prototype.rotateZ = function(angle)
 {
