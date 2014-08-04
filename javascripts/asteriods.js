@@ -64,9 +64,9 @@ Asteriod.prototype.init = function()
   for (var i=0; i< icosahedronVerts.length; i++)
   {
     var deform = Math.random()*1.0-0.5;
-    var x = (icosahedronVerts[i].x + icosahedronVerts[i].x * deform) * 100;
-    var y = (icosahedronVerts[i].y + icosahedronVerts[i].y * deform) * 100;
-    var z = (icosahedronVerts[i].z + icosahedronVerts[i].z * deform) * 100;
+    var x = (icosahedronVerts[i].x + icosahedronVerts[i].x * deform) * 1;
+    var y = (icosahedronVerts[i].y + icosahedronVerts[i].y * deform) * 1;
+    var z = (icosahedronVerts[i].z + icosahedronVerts[i].z * deform) * 1;
     this.asteroidVerts[i] = {x:x, y:y, z:z};
   }
 
@@ -82,12 +82,9 @@ Asteriod.prototype.update = function()
   matrixR.rotateY(this.angVel.r);
   this.rotation.clone(this.rotation.multiply(matrixR.multiply(matrixP.multiply(matrixY))));
   
-  //this.x += this.angVel.p;
-  //this.y += this.angVel.r;
-  //this.z += this.angVel.y;
-  this.x = modulo2(this.x + this.angVel.p, localSpace)-localSpace*0.5;
-  this.y = modulo2(this.y + this.angVel.r, localSpace)-localSpace*0.5;
-  this.z = modulo2(this.z + this.angVel.y, localSpace)-localSpace*0.5;
+  this.x += this.angVel.p;
+  this.y += this.angVel.r;
+  this.z += this.angVel.y;
 }
 
 Asteriod.prototype.render = function()
@@ -114,18 +111,18 @@ Asteriod.prototype.render = function()
       t.x += x;
       t.y += y;
       t.z += z;
-      console.log("before coords - " + t.x + "," + t.y + "," + t.z);
-      var u = orientation.transform(t.x, t.y, t.z);
-      console.log("coords - " + u.x + "," + u.y + "," + u.z);
+
+      t = orientation.transform(t.x, t.y, t.z);
+      
      
       // pixel depth using a long focal distance to ensure all set is in focus
-      var depth = focalPoint*5 / ((u.z + 5*scale) +1);
+      var depth = focalPoint*5 / ((t.z + 5*scale) +1);
       if (depth<=0) return;
      
-      var x1 = u.x*depth+centreX;
-      var y1 = u.y*depth+centreY;
+      var x1 = t.x*depth+centreX;
+      var y1 = t.y*depth+centreY;
     
-      transforms.push(  {x:x1, y:y1, z:u.z} );
+      transforms.push(  {x:x1, y:y1, z:t.z} );
      
    }
   
@@ -142,7 +139,7 @@ Asteriod.prototype.render = function()
       var cross = (dx1*dy2 - dy1*dx2);
       if (cross < 0) continue;
       // use cross product normal to reflect light
-      var shade = Math.floor(Math.sqrt(cross)*scale)+10;
+      var shade = 255;//Math.floor(Math.sqrt(cross)*scale)+10;
 
      // fill the triangle
       context.beginPath();
