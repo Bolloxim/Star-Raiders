@@ -114,7 +114,7 @@ Asteriod.prototype.render = function()
       t.x += x;
       t.y += y;
       t.z += z;
-
+      console.log("before coords - " + t.x + "," + t.y + "," + t.z);
       t = orientation.transform(t);
       console.log("coords - " + t.x + "," + t.y + "," + t.z);
      
