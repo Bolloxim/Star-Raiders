@@ -10,16 +10,18 @@ var splutterCount=0;
 var splutterNoise=60;
 var canvas;
 var context;
+var localSpace = 0;
 
 // asteriods 
 var asteriods = [];
 
-function SetupAsteriods()
+function SetupAsteriods(space)
 {
+  localSpace = space;
   asteriods = [];
   for (var i=0; i<maxAsteriods; i++)
   {
-     asteriods.push(new Asteriod())
+     asteriods.push(new Asteriod(space))
   }
 }
 
@@ -51,9 +53,9 @@ Asteriod.prototype.init = function()
 {
   this.asteroidVerts = [];
   
-  this.x = Math.random()*localSpaceCubed-localSpaceCubed*0.5;
-  this.y = Math.random()*localSpaceCubed-localSpaceCubed*0.5;
-  this.z = Math.random()*localSpaceCubed-localSpaceCubed*0.5;
+  this.x = Math.random()*localSpace-localSpace*0.5;
+  this.y = Math.random()*localSpace-localSpace*0.5;
+  this.z = Math.random()*localSpace-localSpace*0.5;
   
   this.angVel = {y:(Math.random()-0.5)*Math.PI/120, p:(Math.random()-0.5)*Math.PI/120, r:(Math.random()-0.5)*Math.PI/120};
   this.rotation = new matrix3x3();
@@ -102,9 +104,9 @@ Asteriod.prototype.render = function()
       var vert = this.asteroidVerts[i];
       var t = this.rotation.transform(vert.x, vert.y, vert.z);
       
-      var x = modulo(localPosition.x - this.x)-512;
-      var y = modulo(localPosition.y - this.y)-512;
-      var z = modulo(localPosition.z - this.z)-512;
+      var x = modulo2(localPosition.x - this.x, localSpace)-localSpace*0.5;
+      var y = modulo2(localPosition.y - this.y, localSpace)-localSpace*0.5;
+      var z = modulo2(localPosition.z - this.z, localSpace)-localSpace*0.5;
 
       t.x += x;
       t.y += y;
