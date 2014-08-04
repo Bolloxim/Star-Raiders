@@ -176,11 +176,6 @@ function renderLongRangeScanner()
     context.stroke();
   }
 
-  // render asteriods
-
-//  localPosition.x+=2;
-//  localPosition.y+=1;
-//  localPosition.y+=10;
   
   var cphi = Math.cos(shipPhi);
   var sphi = Math.sin(shipPhi);
@@ -643,7 +638,7 @@ function SetupButtons()
   new Button(b.x*0.05, b.y*4.2, b.x*0.8, ms.y*0.6, "Shields", ToggleShields);
   new Button(b.x*0.05, b.y*5.2, b.x*0.8, ms.y*0.6, "Target Comp", ToggleTargetComp);
 
-  new Slider(ms.x*16, b.y, b.x, ms.y*6,10, true, 10, "throttle", SetThrottle);
+  new Slider(ms.x*17, b.y, b.x*0.5, ms.y*6,10, true, 10, "throttle", SetThrottle);
  
 }
 

@@ -2,7 +2,7 @@
 const focalDepth = 80;
 const focalPoint = 256;
 const maxAsteriods = 32;
-var localSpaceCubed = 10;
+
 
 // variables
 var shieldUp;
@@ -25,6 +25,7 @@ function SetupAsteriods()
 
 function RenderAsteriods()
 {
+  console.log("debug - rendering roids");
   context.globalCompositeOperation='source-over';
 
   for (var i=0; i<asteriods.length;i++)
@@ -35,6 +36,7 @@ function RenderAsteriods()
 
 function UpdateAsteriods()
 {
+  console.log("debug - updating roids = " + asteriods.length);
   for (var i=0; i<asteriods.length;i++)
   {
     asteriods[i].update();
