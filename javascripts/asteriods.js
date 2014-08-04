@@ -25,7 +25,6 @@ function SetupAsteriods()
 
 function RenderAsteriods()
 {
-  console.log("debug - rendering roids");
   context.globalCompositeOperation='source-over';
 
   for (var i=0; i<asteriods.length;i++)
@@ -36,7 +35,7 @@ function RenderAsteriods()
 
 function UpdateAsteriods()
 {
-  console.log("debug - updating roids = " + asteriods.length);
+
   for (var i=0; i<asteriods.length;i++)
   {
     asteriods[i].update();
@@ -110,6 +109,8 @@ Asteriod.prototype.render = function()
       t.x += x;
       t.y += y;
       t.z += z;
+
+      t = orientation.transform(t);
      
       // pixel depth using a long focal distance to ensure all set is in focus
       var depth = focalPoint*5 / ((t.z + 5*scale) +1);
