@@ -140,7 +140,8 @@ Asteriod.prototype.render = function()
       var cross = (dx1*dy2 - dy1*dx2);
       if (cross < 0) continue;
       // use cross product normal to reflect light
-      var shade = Math.floor(Math.sqrt(cross)*scale)+10;
+      var shade = 255;//Math.floor(Math.sqrt(cross)*scale)+10;
+      console.log("hmm- " + cross + " coords " + transforms[b].x + " " +transforms[b].y);
 
      // fill the triangle
       context.beginPath();
