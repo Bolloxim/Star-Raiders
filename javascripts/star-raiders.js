@@ -315,6 +315,49 @@ function renderGalacticScanner()
  
 }
 
+// initialization
+
+function init()
+{
+  // setup canvas and context
+  canvas = document.getElementById('star-raiders');
+  context = canvas.getContext('2d');
+    
+  // set canvas to be window dimensions
+  resize();
+
+  // create event listeners
+  canvas.addEventListener('mousemove', mouseMove);
+  canvas.addEventListener('click', mouseClick);
+  canvas.addEventListener('mousedown', mouseDown);
+  canvas.addEventListener('mouseup', mouseUp);
+  window.addEventListener('resize', resize);
+  
+  // initialze variables  
+  SetShipLocation(galaxyMapSize.x*0.5, galaxyMapSize.y*0.5);
+
+  // initial ping
+  shipPing.x = shipPosition.x;
+  shipPing.y = shipPosition.y;
+  
+  // buttons
+  SetupButtons();
+  
+  // populate map
+  BoardSetup();
+  
+  // populate local space
+  SetupAsteriods();
+  
+  SetupNMEs();
+  
+  var d = new Date();
+  gameStart = d.getTime();
+  
+  // testing this
+  PressButton("Long Range");
+}
+
 // input functions
 
 function mouseMove(event) 
@@ -512,6 +555,11 @@ function renderStarDate()
   context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-mapScale.x, canvas.height-15);
 }
 
+function renderGameScreen()
+{
+  RenderAsteriods();
+  renderShield();
+}
 
 // rendering functions
 
@@ -519,7 +567,9 @@ function render()
 {
  
   context.fillStyle = 'black';
-  context.clearRect(0, 0, canvas.width, canvas.height); 
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  renderGameScreen();
   
   switch (overlayMode)
   {
@@ -557,6 +607,7 @@ function updateclocks()
 
 function update()
 {
+   UpdateAsteriods();
 
    UpdateBoard();
   
@@ -622,6 +673,10 @@ function ToggleWarp(button)
 function ToggleShields(button)
 {
   button.state^=1;
+  
+  shieldUp=button.state;
+  splutterCount = 30;
+  splutterNoise = 60;
 }
 
 function ToggleTargetComp(button)
