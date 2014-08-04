@@ -116,6 +116,7 @@ Asteriod.prototype.render = function()
       t.z += z;
 
       t = orientation.transform(t);
+      console.log("coords - " + t.x + "," + t.y + "," + t.z);
      
       // pixel depth using a long focal distance to ensure all set is in focus
       var depth = focalPoint*5 / ((t.z + 5*scale) +1);
@@ -123,7 +124,8 @@ Asteriod.prototype.render = function()
      
       var x1 = t.x*depth+centreX;
       var y1 = t.y*depth+centreY;
-     transforms.push(  {x:x1, y:y1, z:t.z} );
+    
+      transforms.push(  {x:x1, y:y1, z:t.z} );
      
    }
   
@@ -140,8 +142,7 @@ Asteriod.prototype.render = function()
       var cross = (dx1*dy2 - dy1*dx2);
       if (cross < 0) continue;
       // use cross product normal to reflect light
-      var shade = 255;//Math.floor(Math.sqrt(cross)*scale)+10;
-      console.log("hmm- " + cross + " coords " + transforms[b].x + " " +transforms[b].y);
+      var shade = Math.floor(Math.sqrt(cross)*scale)+10;
 
      // fill the triangle
       context.beginPath();
