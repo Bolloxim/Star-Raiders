@@ -115,17 +115,17 @@ Asteriod.prototype.render = function()
       t.y += y;
       t.z += z;
       console.log("before coords - " + t.x + "," + t.y + "," + t.z);
-      t = orientation.transform(t);
-      console.log("coords - " + t.x + "," + t.y + "," + t.z);
+      var u = orientation.transform(t.x, t.y, t.z);
+      console.log("coords - " + u.x + "," + u.y + "," + u.z);
      
       // pixel depth using a long focal distance to ensure all set is in focus
-      var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+      var depth = focalPoint*5 / ((u.z + 5*scale) +1);
       if (depth<=0) return;
      
-      var x1 = t.x*depth+centreX;
-      var y1 = t.y*depth+centreY;
+      var x1 = u.x*depth+centreX;
+      var y1 = u.y*depth+centreY;
     
-      transforms.push(  {x:x1, y:y1, z:t.z} );
+      transforms.push(  {x:x1, y:y1, z:u.z} );
      
    }
   
