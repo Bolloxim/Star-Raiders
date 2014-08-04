@@ -8,6 +8,8 @@ var localSpaceCubed = 10;
 var shieldUp;
 var splutterCount=0;
 var splutterNoise=60;
+var canvas;
+var context;
 
 // asteriods 
 var asteriods = [];
@@ -195,6 +197,10 @@ function buildVerts()
 
 function init()
 {
+  // setup canvas and context
+  canvas = document.getElementById('star-raiders');
+  context = canvas.getContext('2d');
+
   // initialze variables  
   buildVerts();
   
