@@ -102,10 +102,14 @@ Asteriod.prototype.render = function()
    {
       var vert = this.asteroidVerts[i];
       var t = this.rotation.transform(vert.x, vert.y, vert.z);
+      
+      var x = modulo(localPosition.x - this.x)-512;
+      var y = modulo(localPosition.y - this.y)-512;
+      var z = modulo(localPosition.z - this.z)-512;
 
-      t.x +=this.x;
-      t.y +=this.y;
-      t.z +=this.z;
+      t.x += x;
+      t.y += y;
+      t.z += z;
      
       // pixel depth using a long focal distance to ensure all set is in focus
       var depth = focalPoint*5 / ((t.z + 5*scale) +1);
