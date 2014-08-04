@@ -64,9 +64,9 @@ Asteriod.prototype.init = function()
   for (var i=0; i< icosahedronVerts.length; i++)
   {
     var deform = Math.random()*1.0-0.5;
-    var x = icosahedronVerts[i].x + icosahedronVerts[i].x * deform;
-    var y = icosahedronVerts[i].y + icosahedronVerts[i].y * deform;
-    var z = icosahedronVerts[i].z + icosahedronVerts[i].z * deform;
+    var x = (icosahedronVerts[i].x + icosahedronVerts[i].x * deform) * 100;
+    var y = (icosahedronVerts[i].y + icosahedronVerts[i].y * deform) * 100;
+    var z = (icosahedronVerts[i].z + icosahedronVerts[i].z * deform) * 100;
     this.asteroidVerts[i] = {x:x, y:y, z:z};
   }
 
