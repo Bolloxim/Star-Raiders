@@ -88,7 +88,7 @@ Asteriod.prototype.update = function()
   this.x = modulo2(this.x + this.angVel.p, localSpace)-localSpace*0.5;
   this.y = modulo2(this.y + this.angVel.r, localSpace)-localSpace*0.5;
   this.z = modulo2(this.z + this.angVel.y, localSpace)-localSpace*0.5;
-  
+}
 
 Asteriod.prototype.render = function()
 {
