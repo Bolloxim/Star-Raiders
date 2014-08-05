@@ -139,10 +139,9 @@ Asteriod.prototype.render = function()
       var dy2 = transforms[b].y - transforms[c].y;
       var cross = (dx1*dy2 - dy1*dx2);
       if (cross < 0) continue;
-      var z = transforms[b].z;
-      if (z<1) z=1;
+      var z = transforms[b].z <1 ? 1:transforms[b].z;
       // use cross product normal to reflect light, well its not really a true cross product but a scalar magnitude
-      var shade = Math.min(Math.floor(Math.sqrt(cross * transforms[b].z)*scale)+25, 255);
+      var shade = Math.min(Math.floor(Math.sqrt(cross * z)*scale)+25, 255);
 
      // fill the triangle
       context.beginPath();
