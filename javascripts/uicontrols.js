@@ -187,6 +187,7 @@ Slider.prototype.render = function()
   context.stroke();
   
   var offset = this.value/this.range;
+  var size = this.h/this.range;
   context.beginPath();
   context.rect(this.x-10, this.y+this.h-offset*this.h, this.w+20, -this.h/this.range);
   context.fillStyle = 'rgba(0, 128, 0, 0.5)';
@@ -206,11 +207,11 @@ Slider.prototype.hit = function(x, y)
      // hit
      if (this.vertical)
      {
-        this.value = (this.y+this.h - y) / this.h * this.range;
+        this.value = Math.floor((this.y+this.h - y) / this.h * this.range);
      }
      else
      {
-        this.value = (this.x+this.w - x) / this.w * this.range;     
+        this.value = Math.floor((this.x+this.w - x) / this.w * this.range);     
      }
      
      this.callback(this);
