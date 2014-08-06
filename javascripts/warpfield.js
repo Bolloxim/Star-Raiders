@@ -196,8 +196,8 @@ function moveStarfield()
   	cameraDepth = modulo(cameraDepth+velocity);
   }
   
-  var dx = cX - tX;
-  var dy = cY - tY;
+  var dx = -tX + cX;
+  var dy = tY - cY;
   var dist = Math.sqrt(dx*dx + dy*dy);
 
   if (dist!=0)
