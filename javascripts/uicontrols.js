@@ -3,12 +3,12 @@ var buttons = [];
 
 
 // checks hits against the button list
-function CheckButtons(x, y)
+function CheckButtons(x, y, checking)
 {
    var buttonhit=false;
    for (var i=0; i<buttons.length; i++)
    {
-     buttonhit |= buttons[i].hit(x,y);
+     buttonhit |= buttons[i].hit(x,y,checking);
    }
    return buttonhit;
 }
@@ -153,12 +153,12 @@ Button.prototype.render = function()
   context.fillText(this.name, this.x+this.w/2, this.y+this.h-9);
 }
 
-Button.prototype.hit = function(x, y)
+Button.prototype.hit = function(x, y, checking)
 {
    if (x>=this.x && x<this.x+this.w && y>this.y && y<this.y+this.h)
    {
       // hit
-     this.callback(this);
+     if (!checking) this.callback(this);
      return true;
    }
    return false;
