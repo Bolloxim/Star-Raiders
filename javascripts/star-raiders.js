@@ -125,7 +125,7 @@ function SetWarpPoint(x, y, lock)
   
   // convert mouse to board
   warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16);
-  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.x*16);
+  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16);
   
   warpAnim = 0;
 }
@@ -142,7 +142,7 @@ function ShipCalculateWarpEnergy(sx, sy)
 {
    // convert sx and sy into board-coords
   var x = Math.min(Math.max(sx-border.x, 0), mapScale.x*16) / mapScale.x;
-  var y = Math.min(Math.max(sy-border.y, 0), mapScale.x*16) / mapScale.y;
+  var y = Math.min(Math.max(sy-border.y, 0), mapScale.y*16) / mapScale.y;
     
   var dx = shipPosition.x - x;
   var dy = shipPosition.y - y;
@@ -198,11 +198,11 @@ function renderLongRangeScanner()
   // ok lets draw
   context.beginPath();
   context.arc(lrsCentreX, lrsCentreY, radius/2, 0, Math.PI*2.0, 0);
-  context.fillStyle = 'rgba(0,64,0,0.5)';
+  context.fillStyle = 'rgba(0,0,64,0.5)';
   context.fill();
   context.beginPath();
   context.arc(lrsCentreX, lrsCentreY, radius/2, 0, Math.PI*2.0, 0);
-  context.strokeStyle = 'rgba(0,255,0,0.5)';
+  context.strokeStyle = 'rgba(0,0,255,0.5)';
   context.linewidth = 1;
   context.stroke(); 
   context.beginPath();
@@ -213,7 +213,7 @@ function renderLongRangeScanner()
   context.lineTo(lrsCentreX, lrsCentreY);
   context.closePath();
   context.stroke();
-  context.strokeStyle = 'rgba(0,64,0,0.5)';
+  context.strokeStyle = 'rgba(0,0,128,0.5)';
   for (var a=1; a<8; a++)
   {
     context.beginPath();
@@ -298,6 +298,12 @@ function renderGalacticScanner()
   var scaleX = mapScale.x;
   var scaleY = mapScale.y;
 
+  // clear a shaded area
+  context.beginPath();
+  context.rect(border.x+offX, border.y+offY, mapScale.x*16, mapScale.y*8);
+  context.fillStyle = 'rgba(0,0,128,0.5)';
+  context.fill();
+  
   context.beginPath();
   
   for (var i=0; i<=galaxyMapSize.x; i++)
@@ -351,12 +357,9 @@ function renderGalacticScanner()
   context.fill();
 
   // render hyperspace location
-  context.beginPath();
-//  clampX = Math.max(Math.min(warpLocation.x, scaleX*(galaxyMapSize.x)+border.x), border.x);
-//  clampY = Math.max(Math.min(warpLocation.y, scaleY*(galaxyMapSize.y)+border.y), border.y);
   clampX = warpLocation.x+border.x;
   clampY = warpLocation.y+border.y;
-  
+  context.beginPath();
   context.moveTo(clampX+offX, border.y+offY)
   context.lineTo(clampX+offX, scaleY*(galaxyMapSize.y)+border.y+offY);
   context.moveTo(border.x+offX, clampY+offY);
@@ -391,6 +394,7 @@ function init()
   canvas.addEventListener('click', mouseClick);
   canvas.addEventListener('mousedown', mouseDown);
   canvas.addEventListener('mouseup', mouseUp);
+  canvas.addEventListener("mousewheel", mouseWheel, false);
   window.addEventListener('resize', resize);
   
   // initialze variables  
@@ -433,11 +437,14 @@ function mouseMove(event)
   {
     DragEvent(event);
   }
+ 
 }
 
 function mouseDown(event)
 {
   console.log("mousedown" + event.which);
+  if (CheckButtons(mouseX, mouseY, false) == true) return;
+  
   if (event.which&1)
   {
       dragging = true;
@@ -455,8 +462,11 @@ function mouseUp(event)
 
 function mouseClick()
 {
-   buttonpressed = CheckButtons(mouseX, mouseY);
-   if (buttonpressed) return;
+   buttonpressed = CheckButtons(mouseX, mouseY, true);
+   if (buttonpressed)
+   {
+     return;
+   }
   
    // lock in warp point
    if (overlayMode == eGalacticScanner)
@@ -470,6 +480,7 @@ function mouseClick()
 
 function resize()
 {
+  
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
     // compute centre of screen
@@ -478,10 +489,22 @@ function resize()
   fontsize = 21;
   
   // resize font based on canvas size
+  if (warpLocked) // need to rescale the warp location
+  {
+    tmpx = (warpLocation.x + border.x) / mapScale.x;
+    tmpy = (warpLocation.y + border.y) / mapScale.y;
+  }
+  
   mapScale.x = canvas.width/(galaxyMapSize.x+6);
   mapScale.y = canvas.height/(galaxyMapSize.y+3);
   border.x = mapScale.x*3;
   border.y = mapScale.y;
+  
+  if (warpLocked) // need to rescale the warp location
+  {
+    warpLocation.x = tmpx*mapScale.x - border.x;
+    warpLocation.y = tmpy*mapScale.y - border.y;
+  }
   
   lrScale.x = canvas.width*16/18;
   lrScale.y = canvas.height*16/20;
@@ -544,15 +567,16 @@ function renderGalaxyInformation()
   
     if (warpLocked)
     {
-      var clampX = Math.max(Math.min(warpLocation.x, mapScale.x*(galaxyMapSize.x+1)), mapScale.x);
-      var clampY = Math.max(Math.min(warpLocation.y, mapScale.y*(galaxyMapSize.y+1)), mapScale.y);
-      var fuel = ShipCalculateWarpEnergy(clampX, clampY);
+      // does this in mouse coords for rollover.. so have to add the border back in
+      var fuel = ShipCalculateWarpEnergy(warpLocation.x+border.x, warpLocation.y+border.y);
 
       context.textAlign = "centre";
-      context.font = '11pt Orbitron';
-      context.fillText('Energy: ' + fuel, clampX, clampY-12);
+      context.font = '22pt Orbitron';
+          context.fillStyle = 'rgb(0,0,255)';
+      context.fillText('Energy: ' + fuel, warpLocation.x+border.x+mapCentreX, warpLocation.y+mapCentreY+border.y-12);
      
     }
+  
     var x = shipPosition.x*scaleX+border.x;
     var y = shipPosition.y*scaleY+border.y;
     renderIconShip(x, y, fontsize*1.5);
@@ -658,7 +682,9 @@ function renderEnergy()
 
 function renderGameScreen()
 {
+  renderStarfield();
   RenderAsteriods();
+
   renderShield();
 }
 
@@ -724,6 +750,8 @@ function updateclocks()
 
 function update()
 {
+   moveStarfield();
+  
    UpdateAsteriods();
 
    UpdateBoard();
@@ -756,14 +784,17 @@ function SetupButtons()
   buttons = [];
   var b = border;
   var ms = mapScale;
-  new Button(b.x*0.05, b.y*1.2, b.x*0.8, ms.y*0.6, "Long Range", SwitchToLongRange);
-  new Button(b.x*0.05, b.y*2.2, b.x*0.8, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart);
-  new Button(b.x*0.05, b.y*3.2, b.x*0.8, ms.y*0.6, "Warp", ToggleWarp);
-  new Button(b.x*0.05, b.y*4.2, b.x*0.8, ms.y*0.6, "Shields", ToggleShields);
-  new Button(b.x*0.05, b.y*5.2, b.x*0.8, ms.y*0.6, "Target Comp", ToggleTargetComp);
-  new Button(b.x*0.05, b.y*6.2, b.x*0.8, ms.y*0.6, "Tracking Comp", ToggleTrackingComp);
+  var bx = border.x*0.25
+  var bw = border.x*0.5;
+  
+  new Button(bx, b.y*2.2, bw, ms.y*0.6, "Long Range", SwitchToLongRange);
+  new Button(bx, b.y*3.2, bw, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart);
+  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Warp", ToggleWarp);
+  new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields);
+  new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp);
+  new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking Comp", ToggleTrackingComp);
 
-  new Slider(ms.x*16, b.y, b.x, ms.y*6,10, true, 10, "throttle", SetThrottle);
+  new Slider(ms.x*20, b.y*2, border.x*0.25, ms.y*6, 10, true, 10, "throttle", SetThrottle);
  
 }
 
@@ -790,6 +821,8 @@ function SwitchToGalaxyChart(button)
 function ToggleWarp(button)
 {
   button.state^=1;
+  if (button.state == false && triggerWarp!=normalSpace) triggerWarp=cancelHyperspace;
+  else triggerWarp = enterHyperspace;
 }
 
 function ToggleShields(button)
@@ -828,6 +861,7 @@ function DragEvent(event)
 {
   dragCurr.x = event.clientX;
   dragCurr.y = event.clientY;
+
 }
 
 function DragEventStart(event)
@@ -839,7 +873,7 @@ function DragEventStart(event)
   dragmatrix.clone(orientation);
   shipPhi = 0;
   shipTheta = 0;
-  
+
   dragging = true;
 }
 
@@ -854,9 +888,18 @@ var shipVelocity = 0;
 var shipThrottle = 0;
 var shipVelocityEnergy = 0;
 var setShipVelocity = 0;
+var triggerWarp = normalSpace;
+
+const normalSpace = 0;
+const enterHyperspace = 1;
+const inHyperspace = 2;
+const cancelHyperspace = 3;
 
 function UpdateShipControls()
 {
+  TestMoveUnderMouse(mouseX, mouseY,dragging);
+  if (triggerWarp!=normalSpace) EnteringWarp();
+  return;
   var rotationForce = -(dragCurr.x - dragStart.x) / canvas.width; 
   var pitchForce = (dragCurr.y - dragStart.y) / canvas.height; 
   if (dragging==true) 
@@ -895,13 +938,123 @@ function UpdateShipControls()
 
  }
 
+// continual movement.. 
+function TestMoveUnderMouse(mouseX, mouseY)
+{
+  // calculate the fov angle from the centre to the mouse
+  var dx = centreX - mouseX;
+  var sx = dx * focalPoint*5 / 1000;
+  var dy = centreY - mouseY;
+  var sy = -dy * focalPoint*5 / 1000;
+  //convert into angle
+  angleX = Math.tan(sx/1000);
+  //convert into angle
+  angleY = Math.tan(sy/1000);
+
+  var rx = new matrix3x3();
+  var rz = new matrix3x3();
+  var ry = new matrix3x3();
+  rx.rotateX(angleY*freqHz);
+  ry.rotateY(angleX*freqHz);
+  
+  orientation.clone(  ry.multiply(rx.multiply(orientation)) );
+  
+  // orientate the view polar for the scanner
+  var rotate90 = new matrix3x3();
+  rotate90.rotateX(Math.PI*0.5);
+  scannerView.clone(rotate90.multiply(orientation));
+  
+  // move along direction of rotation
+  var dv = setShipVelocity-shipVelocity;
+  if (dv<-1) dv = -0.2;
+  if (dv>+1) dv = +0.2;
+  shipVelocity += dv;
+  
+  var speed = -shipVelocity * freqHz;
+  localPosition.x += orientation.m[6]*speed;
+  localPosition.y += orientation.m[7]*speed;
+  localPosition.z += orientation.m[8]*speed;
+  // changing
+  initVelocity = -setShipVelocity*0.05;
+
+}
+
+/*
+
+var angleX=0;
+var angleY=0;
+function TestMoveUnderMouse(mouseX, mouseY, click)
+{
+  if (click)
+  {
+      // calculate the fov angle from the centre to the mouse
+      var dx = centreX - mouseX;
+      var sx = dx * focalPoint*5 / 1400;
+      var dy = centreY - mouseY;
+      var sy = -dy * focalPoint*5 / 1400;
+
+      //convert into angle
+      angleX = Math.tan(sx/1400);
+      //convert into angle
+      angleY = Math.tan(sy/1400);
+  }
+  else
+  {
+      angleX-=angleX*freqHz;
+      angleY-=angleY*freqHz;
+  }
+  
+  var rx = new matrix3x3();
+  var rz = new matrix3x3();
+  var ry = new matrix3x3();
+  rx.rotateX(angleY*freqHz);
+  ry.rotateY(angleX*freqHz);
+  
+  orientation.clone(  ry.multiply(rx.multiply(orientation)) );
+  
+  // orientate the view polar for the scanner
+  var rotate90 = new matrix3x3();
+  rotate90.rotateX(Math.PI*0.5);
+  scannerView.clone(rotate90.multiply(orientation));
+  
+  // move along direction of rotation
+  var dv = setShipVelocity-shipVelocity;
+  if (dv<-1) dv = -0.2;
+  if (dv>+1) dv = +0.2;
+  shipVelocity += dv;
+  
+  var speed = -shipVelocity * freqHz;
+  localPosition.x += orientation.m[6]*speed;
+  localPosition.y += orientation.m[7]*speed;
+  localPosition.z += orientation.m[8]*speed;
+  
+    // changing
+  initVelocity = -setShipVelocity*0.125;
+
+}
+*/
 // throttle + energy
 var throttleTable =  [0, 0.3,  0.75, 1.5,  3,  6,  12, 25, 37, 43 ];
 var throttleEnergy = [0,   1,   1.5,   2, 2.5, 3, 3.5, 7.5, 11.25, 15];
 
+function mouseWheel(event)
+{
+    if (triggerWarp) return;
+  
+    var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
+    var slider = GetControl("throttle"); 
+    
+    slider.value+=delta*freqHz*6;
+    SetThrottle(slider);
+}
+
 function SetThrottle(slider)
 {
+  if (triggerWarp!=normalSpace) return;
+  
+
   if (slider.value >9) slider.value = 9;
+  if (slider.value <0) slider.value = 0;
   
   throttle = Math.round(slider.value);
   setShipVelocity = throttleTable[throttle];
@@ -919,6 +1072,40 @@ function energyManagement()
   // tracking computer
   if (trackingComputer) energy -= 0.5 * freqHz;
 }
+
+function EnteringWarp()
+{
+   if (triggerWarp==enterHyperspace)
+   {
+      setShipVelocity = 99.99;
+      if (!enterWarp && shipVelocity >90)
+      {
+        triggerWarp = inHyperspace;
+        enterWarp = true;
+        warpStartDepth = cameraDepth;
+        warpTime = 0;
+      }
+   }
+  if (triggerWarp == inHyperspace)
+  {
+    // waiting destination 
+    if (enterWarp == false)
+    {
+       triggerWarp = normalSpace;
+       var slider = GetControl("throttle");
+       SetThrottle(slider);
+       GetControl("Warp").state = 0;
+    }
+  }
+  if (triggerWarp == cancelHyperspace)
+  {
+     triggerWarp = normalSpace;
+     var slider = GetControl("throttle");
+     SetThrottle(slider);
+     energy-=100;
+  }
+}
+
 
 // entry point
 init();
