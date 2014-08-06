@@ -206,7 +206,7 @@ Slider.prototype.render = function()
   context.fill();
 
   context.moveTo(this.x, this.y);
-  context.font = '10pt Calibri';
+  context.font = '12pt Orbitron';
   context.fillStyle = 'rgba(127,255,127, 1)';
   context.textAlign = "center";
   context.fillText(this.name, this.x+this.w/2, this.y+this.h-9);
