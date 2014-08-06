@@ -156,6 +156,11 @@ function animate()
 
 function move()
 {
+  moveStarfield();
+}
+
+function moveStarfield()
+{
   
   if (enterWarp)
   {
@@ -212,16 +217,8 @@ function render()
   // brute force clear
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  // draw all stars
-  for (i = 0; i < stars.length; i++) 
-  {
-    var index = cameraTrick==1 ? modulo2((i + 1 + Math.floor(cameraDepth)*density) , stars.length) : i;
-    // depending on direction of travel is order of drawing trails
-    if (enterWarp && termVelocity<=0) stars[index].warpline();
-    stars[index].draw();
-    if (enterWarp && termVelocity>0) stars[index].warpline();
-  };
-  
+  renderStarfield();
+
   createButton(canvas.width/2-100, 10, 200, 32, termVelocity>0?"Aft View":"Bow View");
   
   // banner for a about 12 seconds
@@ -234,6 +231,19 @@ function render()
   context.font = '10pt Calibri';
   context.fillText('(move mouse to change field options in script for effects)', canvas.width/2, 120);
   context.fillText('* Left Click Warps *', canvas.width/2, 140);
+}
+
+function renderStarfield()
+{
+  // draw all stars
+  for (i = 0; i < stars.length; i++) 
+  {
+    var index = cameraTrick==1 ? modulo2((i + 1 + Math.floor(cameraDepth)*density) , stars.length) : i;
+    // depending on direction of travel is order of drawing trails
+    if (enterWarp && termVelocity<=0) stars[index].warpline();
+    stars[index].draw();
+    if (enterWarp && termVelocity>0) stars[index].warpline();
+  };  
 }
 
 function mousemove(event) 
@@ -318,31 +328,7 @@ function swapView()
 
 }
 
-function hitButton(x, y, w, h)
-{
-  return (mouseX>x && mouseX<x+w && mouseY>y && mouseY<y+h) ? true : false;
-}
-
-function createButton(x, y, w, h, name)
-{
-    // fill a rect
-  context.beginPath();
-  context.rect(x, y, w,h);
-  context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  context.fill();
-
-  context.lineWidth = 2;
-  context.strokeStyle = 'rgba(120, 120, 120, 0.5)';
-  context.stroke();
-  
-  context.moveTo(x,y);
-  context.font = '20pt Calibri';
-  context.fillStyle = 'rgba(255,255,255, 1)';
-  context.textAlign = "center";
-  context.fillText(name, x+w/2, y+h-9);
-}
-
 // entry point
 init();
-animate();
+
 
