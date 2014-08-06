@@ -114,7 +114,7 @@ Star.prototype.warpline = function()
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('starfield');
+	canvas = document.getElementById('star-raiders');
 	context = canvas.getContext('2d');
   // set canvas to be window dimensions
   resize();
