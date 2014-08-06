@@ -122,8 +122,11 @@ function SetWarpPoint(x, y, lock)
 {
   if (warpLocked == true && lock == false) return;
   warpLocked = lock;
-  warpLocation.x = x;
-  warpLocation.y = y;
+  
+  // convert mouse to board
+  warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16);
+  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.x*16);
+  
   warpAnim = 0;
 }
 
@@ -138,10 +141,9 @@ var distanceTable =[100,130,160,200,230,500,700,800,900,1200,1250,1300,1350,1400
 function ShipCalculateWarpEnergy(sx, sy)
 {
    // convert sx and sy into board-coords
-
-  var x = (sx/mapScale.x) - 1;
-  var y = (sy/mapScale.y) - 1;
-  
+  var x = Math.min(Math.max(sx-border.x, 0), mapScale.x*16) / mapScale.x;
+  var y = Math.min(Math.max(sy-border.y, 0), mapScale.x*16) / mapScale.y;
+    
   var dx = shipPosition.x - x;
   var dy = shipPosition.y - y;
 
@@ -300,8 +302,8 @@ function renderGalacticScanner()
   
   for (var i=0; i<=galaxyMapSize.x; i++)
   {
-    context.moveTo(scaleX*(i+1)+offX, scaleY+offY);
-    context.lineTo(scaleX*(i+1)+offX, scaleY*(galaxyMapSize.y+1)+offY);
+    context.moveTo(scaleX*i+border.x+offX, border.y+offY);
+    context.lineTo(scaleX*i+border.x+offX, scaleY*(galaxyMapSize.y)+offY+border.y);
   }
   context.strokeStyle = '#c0c0c0';
   context.lineWidth = 4;
@@ -311,8 +313,8 @@ function renderGalacticScanner()
 
   for (var j=0; j<=galaxyMapSize.y; j++)
   {
-    context.moveTo(scaleX+offX, scaleY*(j+1)+offY);
-    context.lineTo(scaleX*(galaxyMapSize.x+1)+offX, scaleY*(j+1)+offY);
+    context.moveTo(border.x+offX, scaleY*(j)+offY+border.y);
+    context.lineTo(scaleX*(galaxyMapSize.x)+offX+border.x, scaleY*(j)+offY+border.y);
   }
   
   context.strokeStyle = '#c0c0c0';
@@ -327,8 +329,8 @@ function renderGalacticScanner()
   pingRadius = distance * canvas.width/2;
 
   context.globalCompositeOperation='source-over';
-  var shipX = shipPing.x * scaleX + scaleX+offX;
-  var shipY = shipPing.y * scaleY + scaleY+offY;
+  var shipX = shipPing.x * scaleX + border.x+offX;
+  var shipY = shipPing.y * scaleY + border.y+offY;
     // update map with locations of ships
   for (var b=0; b<boardPieces.length; b++)
   {
@@ -350,13 +352,15 @@ function renderGalacticScanner()
 
   // render hyperspace location
   context.beginPath();
-  clampX = Math.max(Math.min(warpLocation.x, scaleX*(galaxyMapSize.x+1)), scaleX);
-  clampY = Math.max(Math.min(warpLocation.y, scaleY*(galaxyMapSize.y+1)), scaleY);
+//  clampX = Math.max(Math.min(warpLocation.x, scaleX*(galaxyMapSize.x)+border.x), border.x);
+//  clampY = Math.max(Math.min(warpLocation.y, scaleY*(galaxyMapSize.y)+border.y), border.y);
+  clampX = warpLocation.x+border.x;
+  clampY = warpLocation.y+border.y;
   
-  context.moveTo(clampX+offX, scaleY+offY)
-  context.lineTo(clampX+offX, scaleY*(galaxyMapSize.y+1)+offY);
-  context.moveTo(scaleX+offX, clampY+offY);
-  context.lineTo(scaleX*(galaxyMapSize.x+1)+offX, clampY+offY);
+  context.moveTo(clampX+offX, border.y+offY)
+  context.lineTo(clampX+offX, scaleY*(galaxyMapSize.y)+border.y+offY);
+  context.moveTo(border.x+offX, clampY+offY);
+  context.lineTo(scaleX*(galaxyMapSize.x)+border.x+offX, clampY+offY);
   
   if (warpLocked)
   {
@@ -451,13 +455,6 @@ function mouseUp(event)
 
 function mouseClick()
 {
-   var scaleX = mapScale.x;
-   var scaleY = mapScale.y;
-  
-   var x = (mouseX/scaleX)-1;
-   var y = (mouseY/scaleY)-1;
-  
-   //SetShipLocation(x, y);
    buttonpressed = CheckButtons(mouseX, mouseY);
    if (buttonpressed) return;
   
@@ -481,18 +478,18 @@ function resize()
   fontsize = 21;
   
   // resize font based on canvas size
-  mapScale.x = canvas.width/(galaxyMapSize.x+2);
-  mapScale.y = canvas.height/(galaxyMapSize.y+2);
-  border.x = mapScale.x;
+  mapScale.x = canvas.width/(galaxyMapSize.x+6);
+  mapScale.y = canvas.height/(galaxyMapSize.y+3);
+  border.x = mapScale.x*3;
   border.y = mapScale.y;
   
   lrScale.x = canvas.width*16/18;
-  lrScale.y = canvas.height*16/18;
+  lrScale.y = canvas.height*16/20;
   
   do
   {
     fontsize-=0.1;
-    context.font = fontsize + 'pt Calibri';
+    context.font = fontsize + 'pt Orbitron';
     var fits = context.measureText('group');
   }while((fits.width+20>mapScale.x || mapScale.y<fontsize*4) && fontsize >5);
 
@@ -533,17 +530,17 @@ function renderGalaxyInformation()
    }
   
     context.globalAlpha = 1.0;
-    context.font = '20pt Calibri';
+    context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,0)';
     context.textAlign = "left";
     context.fillText('Targets: ' + targets, mapScale.x, canvas.height-15);
 
     var fuel = ShipCalculateWarpEnergy(mouseX, mouseY);
    
-    context.font = '20pt Calibri';
+    context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,0)';
     context.textAlign = "center";
-    context.fillText('Warp Energy: ' + fuel, canvas.width/2, canvas.height-15);
+    context.fillText('Warp Energy: ' + fuel, canvas.width/2, canvas.height-40);
   
     if (warpLocked)
     {
@@ -552,16 +549,16 @@ function renderGalaxyInformation()
       var fuel = ShipCalculateWarpEnergy(clampX, clampY);
 
       context.textAlign = "centre";
-      context.font = '11pt Calibri';
+      context.font = '11pt Orbitron';
       context.fillText('Energy: ' + fuel, clampX, clampY-12);
      
     }
-    var x = shipPosition.x*scaleX+scaleX;
-    var y = shipPosition.y*scaleY+scaleY;
-    renderIconShip(x, y, fontsize);
+    var x = shipPosition.x*scaleX+border.x;
+    var y = shipPosition.y*scaleY+border.y;
+    renderIconShip(x, y, fontsize*1.5);
   
     context.globalAlpha = 1.0;
-    context.font = '20pt Calibri';
+    context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,255)';
     context.textAlign = "center";
     context.fillText('Galactic Scanner', canvas.width/2, 30);
@@ -574,13 +571,10 @@ function renderLongRangeInformation()
 //    renderIconShip(centreX, centreY, 10);
   
     context.globalAlpha = 1.0;
-    context.font = '20pt Calibri';
+    context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,255)';
     context.textAlign = "center";
-    context.fillText('Long Range Scanner', canvas.width/2, 20); 
-    context.font = '14pt Calibri';
-    context.fillText('(hold left mouse down and DRAG to YAW and PITCH ship)', canvas.width/2, canvas.height-5);
-  
+    context.fillText('Long Range Scanner', canvas.width/2, 30);   
 }
 
 function renderIconShip(posx, posy, scale)
@@ -592,14 +586,14 @@ function renderIconShip(posx, posy, scale)
     context.fillStyle = 'rgb(255,255,0)';
     context.beginPath();
     context.arc(x, y, scale*0.5, 0, Math.PI*2);
-    context.fill();
+    context.stroke();
     context.moveTo(x, y-scale*1.5);
     context.lineTo(x-scale, y+scale*1.5);
     context.lineTo(x, y);
     context.lineTo(x+scale, y+scale*1.5);
     context.closePath();
 
-    context.fill();
+    context.stroke();
 }
 
 function renderTargetingComputer()
@@ -635,31 +629,31 @@ function renderStarDate()
   
   var gameTime = currentTime - gameStart;
   var decimalTime = gameTime / 60000;
-  context.font = '20pt Calibri';
+  context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(255,255,0)';
-  context.textAlign = "right";
+  context.textAlign = "left";
   leadingzero = decimalTime<10 ? '0':'';
-  context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-mapScale.x, canvas.height-15);
+  context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-mapScale.x*3, canvas.height-15);
 }
 
 function renderVelocity()
 { 
-  context.font = '20pt Calibri';
+  context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(255,255,0)';
   context.textAlign = "right";
   leadingzero = shipVelocity<10 ? '0':'';
-  context.fillText('V: ' + leadingzero + shipVelocity.toFixed(2), canvas.width-mapScale.x, 20);
+  context.fillText('V: ' + leadingzero + shipVelocity.toFixed(2), canvas.width-mapScale.x, 30);
 }
 
 function renderEnergy()
 { 
-  context.font = '20pt Calibri';
+  context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(255,255,0)';
   context.textAlign = "center";
   leadingzero = energy<10 ? '000':'';
   leadingzero = energy<100 ? '00':'';
   leadingzero = energy<1000 ? '0':'';
-  context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-35);
+  context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-15);
 }
 
 function renderGameScreen()
@@ -859,6 +853,7 @@ var pitchVelocity = 0;
 var shipVelocity = 0;
 var shipThrottle = 0;
 var shipVelocityEnergy = 0;
+var setShipVelocity = 0;
 
 function UpdateShipControls()
 {
@@ -888,6 +883,11 @@ function UpdateShipControls()
   scannerView.clone(rotate90.multiply(orientation));
   
   // move along direction of rotation
+  var dv = setShipVelocity-shipVelocity;
+  if (dv<-1) dv = -0.2;
+  if (dv>+1) dv = +0.2;
+  shipVelocity += dv;
+  
   var speed = -shipVelocity * freqHz;
   localPosition.x += orientation.m[6]*speed;
   localPosition.y += orientation.m[7]*speed;
@@ -904,7 +904,7 @@ function SetThrottle(slider)
   if (slider.value >9) slider.value = 9;
   
   throttle = Math.round(slider.value);
-  shipVelocity = throttleTable[throttle];
+  setShipVelocity = throttleTable[throttle];
   shipVelocityEnergy = throttleEnergy[throttle];
 }
 

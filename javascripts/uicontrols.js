@@ -45,6 +45,18 @@ function PressButton(name)
    }
 }
 
+// debug function to emumlate button presses
+function GetControl(name)
+{
+   for (var i=0; i<buttons.length; i++)
+   {
+     if (name == buttons[i].name)
+     {
+       return buttons[i];
+     }
+   }
+}
+
 function Button(x, y, w, h, name, callback)
 {
   this.hitX = 0;
