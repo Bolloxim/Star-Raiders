@@ -119,7 +119,7 @@ function init()
   // set canvas to be window dimensions
   resize();
   canvas.addEventListener('mousemove', mousemove);
-  canvas.addEventListener('click', mouseclick);
+  //canvas.addEventListener('click', mouseclick);
   window.addEventListener('resize', resize);
 
   // compute center of screen (its really centre but for americans I change it)
@@ -269,7 +269,7 @@ function mouseclick()
 {
   tX = mouseX;
   tY = mouseY;
-  if (termVelocity<=0)
+  if (termVelocity>0)
   {
     tX = canvas.width - tX;
     tY = canvas.height - tY;
