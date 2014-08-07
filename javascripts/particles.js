@@ -11,8 +11,6 @@ var mouseY;
 var spawnX;
 var spawnY;
 var frameCount=0;
-var cX;
-var cY;
 
 // test multiple groups
 var spawnList = [];
@@ -374,19 +372,6 @@ function update()
 
 function UpdateParticles()
 {
-   var dx = mouseX - cX;
-  var dy = mouseY - cY;
-  var dist = Math.sqrt(dx*dx + dy*dy);
-
-  if (dist!=0)
-   {
-     dx/=dist;
-     dy/=dist;
-   }
-  dist = Math.min(dist, 512.0);
-
-  cX = cX + (dist*dx*0.06125);
-  cY = cY + (dist*dy*0.06125);
 
   var i = spawnList.length;
   while (i)
