@@ -18,7 +18,7 @@ function CheckShortcuts(key)
    var buttonhit=false;
    for (var i=0; i<buttons.length; i++)
    {
-     buttonhit |= buttons[i].keypressed(key);
+     buttonhit |= buttons[i].isShortcut(key);
    }
    return buttonhit;
 }
@@ -175,7 +175,7 @@ Button.prototype.hit = function(x, y, checking)
    return false;
 }
 
-Button.prototype.keypressed = function(key)
+Button.prototype.isShortcut = function(key)
 {
   if (this.shortcut == key)
   {
