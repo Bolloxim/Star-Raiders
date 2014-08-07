@@ -280,7 +280,10 @@ function init()
   explodeEmitter = new ExplodeParticleEmitter();
   torpedoEmitter = new PhotonTorpedoEmitter();
   dustEmitter    = new DustParticleEmitter();
-  
+}
+
+function initDemo()
+{
   explodeEmitter.create();
   torpedoEmitter.create();
   dustEmitter.create();
@@ -390,4 +393,5 @@ function animate()
 
 // entry point
 init();
+//initDemo();
 //animate();
