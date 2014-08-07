@@ -13,6 +13,16 @@ function CheckButtons(x, y, checking)
    return buttonhit;
 }
 
+function CheckShortcuts(key)
+{
+   var buttonhit=false;
+   for (var i=0; i<buttons.length; i++)
+   {
+     buttonhit |= buttons[i].keypressed(key);
+   }
+   return buttonhit;
+}
+
 // renders the buttons
 function RenderButtons()
 {
