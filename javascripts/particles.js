@@ -240,14 +240,11 @@ Particle.prototype.draw = function()
 {
   if (this.pos.z+localPosition.z + focalDepth > 0 && this.time < this.life)
   {
-
-    var t = orientation.transform(this.pos.x, this.pos.y, this.pos.z);
-
-    var depth = focalPoint / (t.z + focalDepth );
+    var depth = focalPoint / (this.pos.z + focalDepth );
     if (depth<=0) return;
     
-    var x = t.x * depth + this.sx;
-    var y = t.y * depth + this.sy;
+    var x = this.pos.x * depth + this.sx + localPosition.x;
+    var y = this.pos.y * depth + this.sy + localPosition.y;
     var sz = this.size * depth;
 
     // fill a rect
