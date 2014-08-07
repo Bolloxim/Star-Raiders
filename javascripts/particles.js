@@ -174,7 +174,7 @@ ParticleGroup.prototype.create = function(emitter)
   this.time = 0;
   this.life = emitter.life;
   this.particles = [];
-  this.plane = this.emitter.plane;
+  this.plane = orientation.transform(this.emitter.plane.x, this.emitter.plane.y, this.emitter.plane.z);
   
   this.spawn();
 }
