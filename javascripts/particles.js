@@ -262,7 +262,7 @@ Particle.prototype.draw = function()
 function init()
 {
   // setup canvas and context
-  canvas = document.getElementById('explode');
+  canvas = document.getElementById('star-raiders');
   context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
