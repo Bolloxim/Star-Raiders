@@ -78,13 +78,12 @@ PhotonTorpedoEmitter.prototype.series = function()
   this.time = 0;
   this.life = 2;
   
-  this.plane = orientation.transform(0,0,-1);
 }
 
 // each iteration will change a property
 PhotonTorpedoEmitter.prototype.generate = function()
 {
-  
+  this.plane = orientation.transform(0,0,-1);
   //this.pos = {x:(spawnX-centreX), y:(spawnY-centreY), z:-100};
   this.pos = orientation.transform(spawnX-centreX, spawnY-centreY, -100);
 //  this.vel = {x:0, y:0, z:-5-(this.iteration*0.1)}
