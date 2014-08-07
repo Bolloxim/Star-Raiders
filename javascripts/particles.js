@@ -17,19 +17,19 @@ var spawnList = [];
 var explodeEmitter;
 var torpedoEmiiter;
 
-function ParticleEmitter()
+function ExplodeParticleEmitter()
 {
-	this.series();
+  this.series();
 }
 
-ParticleEmitter.prototype.create = function()
+ExplodeParticleEmitter.prototype.create = function()
 {
   spawnList.push(new ParticleGroup(this));
   spawnList.push(new ParticleGroup(this));  
 }
 
 // define series constants here
-ParticleEmitter.prototype.series = function()
+ExplodeParticleEmitter.prototype.series = function()
 {
   this.plane = RandomNormal();
 
@@ -43,7 +43,7 @@ ParticleEmitter.prototype.series = function()
 }
 
 // each iteration will change a property
-ParticleEmitter.prototype.generate = function()
+ExplodeParticleEmitter.prototype.generate = function()
 {
 
   this.pos = {x:0, y:0, z:0};
@@ -56,7 +56,7 @@ ParticleEmitter.prototype.generate = function()
 
 function PhotonTorpedoEmitter()
 {
-	this.series();
+  this.series();
 }
 
 PhotonTorpedoEmitter.prototype.create = function()
@@ -76,23 +76,64 @@ PhotonTorpedoEmitter.prototype.series = function()
   this.sx = centreX;
   this.sy = centreY;
   this.time = 0;
-   this.life = 2;
-  this.plane = RandomNormal();
+  this.life = 2;
+  this.plane = {x:0, y:0, z:-1};
 }
 
 // each iteration will change a property
 PhotonTorpedoEmitter.prototype.generate = function()
 {
   
-  this.pos = {x:(spawnX-centreX)/4, y:(spawnY-centreY)/4, z:10};
- // this.vel = new RandomNormal();
-  this.vel = {x:0, y:0, z:-5-(this.iteration*this.iteration*0.001)}
-  this.velsize = -0.01 - (Math.random()*-this.vel.z*0.1);
-  this.size = 3.0 + Math.random()*3;
-  this.life = 2;
-  this.color = 'rgb(10, 10, 255)';
+  this.pos = {x:(spawnX-centreX), y:(spawnY-centreY), z:-100};
+
+  this.vel = {x:0, y:0, z:-5-(this.iteration*0.1)}
+  this.velsize = -0.01 - (Math.random());
+  this.size = 5.0 *this.iteration*0.1;
+  this.life = 4;
+  this.color = 'rgb(255, 64, 10)';
   this.iteration++;
 }
+
+function DustParticleEmitter()
+{
+  this.series();
+}
+
+DustParticleEmitter.prototype.create = function()
+{
+  spawnList.push(new ParticleGroup(this));
+}
+
+// define series constants here
+DustParticleEmitter.prototype.series = function()
+{
+  this.plane = new RandomNormal();
+
+  this.iteration = 0;
+  this.particleCount = 64;
+  this.sx = spawnX;
+  this.sy = spawnY;
+  this.size = 6.0;
+  this.time = 0;
+  this.life = 5;
+}
+
+// each iteration will change a property
+DustParticleEmitter.prototype.generate = function()
+{
+  this.pos = {x:0, y:0, z:0};
+  this.vel = new RandomNormal();//RandomOnPlane(this.plane);
+  var speed = Math.random()*2+2;
+  this.vel.x*=speed;
+    this.vel.y*=speed;
+    this.vel.z*=speed;
+  this.velsize = Math.random()*0.1;
+  this.life = Math.random()*2.0;
+  var grey = 255 - this.iteration*4;
+  this.color = 'rgb('+grey+','+grey+','+grey+')';
+  this.iteration++;
+}
+
 
 // uniform distribution of a normal 
 function RandomNormal()
@@ -103,7 +144,17 @@ function RandomNormal()
   var nx = Math.sin(theta)*Math.sin(phi);
   var ny = Math.cos(theta)*Math.sin(phi);
   
-  return {x:nx, y:ny,z:nz};
+  return {x:nx, y:ny, z:nz};
+}
+
+function RandomOnPlane(B)
+{
+  
+  var theta = Math.random() * Math.PI * 2;
+  var nx = Math.sin(theta)+Math.cos(theta);
+  var ny = Math.cos(theta)-Math.sin(theta);
+  var A = {x:nx, y:ny, z:1};
+  return {x: A.y*B.z - A.z*B.y, y: A.z*B.x - A.x*B.z, z:A.x*B.y-A.y*B.x};
 }
 
 // prototype classes
@@ -189,8 +240,9 @@ Particle.prototype.draw = function()
 {
   if (this.pos.z + focalDepth > 0 && this.time < this.life)
   {
-    var depth = focalPoint / (this.pos.z + focalDepth);
-		
+    var depth = focalPoint / (this.pos.z + focalDepth );
+    if (depth<=0) return;
+    
     var x = this.pos.x * depth + this.sx;
     var y = this.pos.y * depth + this.sy;
     var sz = this.size * depth;
@@ -210,8 +262,8 @@ Particle.prototype.draw = function()
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('explode');
-	context = canvas.getContext('2d');
+  canvas = document.getElementById('explode');
+  context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
   resize();
@@ -225,11 +277,13 @@ function init()
   spawnX = centreX;
   spawnY = centreY;
  
-  explodeEmitter = new ParticleEmitter();
+  explodeEmitter = new ExplodeParticleEmitter();
   torpedoEmitter = new PhotonTorpedoEmitter();
- 
+  dustEmitter    = new DustParticleEmitter();
+  
   explodeEmitter.create();
- // torpedoEmitter.create();
+  torpedoEmitter.create();
+  dustEmitter.create();
   
 }
 
@@ -238,22 +292,28 @@ function init()
 
 function mouseMove(event) 
 {
-	var rect = canvas.getBoundingClientRect();
+  var rect = canvas.getBoundingClientRect();
 
-	mouseX = event.clientX - rect.left,
-	mouseY = event.clientY - rect.top
+  mouseX = event.clientX - rect.left,
+  mouseY = event.clientY - rect.top
 }
 
 function mouseClick()
 {
-	spawnX = mouseX;
-	spawnY = mouseY;
+  spawnX = mouseX;
+  spawnY = mouseY;
    spawn();
 }
 
+var cycle = 0;
 function spawn()
 {
-  explodeEmitter.create();
+  cycle++;
+  if ((cycle & 15) == 0)
+    explodeEmitter.create();
+  if ((cycle & 3) == 0)
+    dustEmitter.create();
+
   torpedoEmitter.create();
 }
 
@@ -268,15 +328,22 @@ function resize()
 
 
 // rendering functions
+function RenderParticles()
+{
+  context.globalCompositeOperation = 'lighter';
+
+  for (var i = 0; i< spawnList.length; i++) spawnList[i].draw();
+
+  context.globalCompositeOperation = 'source-over';
+}
 
 function render()
 {
  
   context.fillStyle = 'black';
   context.clearRect(0, 0, canvas.width, canvas.height);    
-  context.globalCompositeOperation = 'lighter';
-
-  for (var i = 0; i< spawnList.length; i++) spawnList[i].draw();
+  
+  RenderParticles();
   
   context.globalAlpha = 1.0;
   context.font = '20pt Calibri';
@@ -290,7 +357,12 @@ function render()
 // movement functions
 
 function update()
-{ 
+{
+  UpdateParticles();
+}
+
+function UpdateParticles()
+{
   var i = spawnList.length;
   while (i)
   {
@@ -317,4 +389,4 @@ function animate()
 
 // entry point
 init();
-animate();
+//animate();
