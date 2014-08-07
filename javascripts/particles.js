@@ -238,13 +238,13 @@ Particle.prototype.move = function(plane)
 
 Particle.prototype.draw = function() 
 {
-  if (this.pos.z + focalDepth > 0 && this.time < this.life)
+  if (this.pos.z+localPosition.z + focalDepth > 0 && this.time < this.life)
   {
     var depth = focalPoint / (this.pos.z + focalDepth );
     if (depth<=0) return;
     
-    var x = this.pos.x * depth + this.sx;
-    var y = this.pos.y * depth + this.sy;
+    var x = this.pos.x * depth + this.sx + localPosition.x;
+    var y = this.pos.y * depth + this.sy + localPosition.y;
     var sz = this.size * depth;
 
     // fill a rect
