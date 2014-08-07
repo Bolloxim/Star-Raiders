@@ -245,8 +245,8 @@ Particle.prototype.draw = function()
     var depth = focalPoint / (this.pos.z + focalDepth );
     if (depth<=0) return;
     
-    var x = this.pos.x * depth + this.sx + cX;
-    var y = this.pos.y * depth + this.sy + cY;
+    var x = this.pos.x * depth + this.sx + cX-centreX;
+    var y = this.pos.y * depth + this.sy + cY-centreY;
     var sz = this.size * depth;
 
     // fill a rect
