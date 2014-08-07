@@ -330,11 +330,13 @@ function resize()
 // rendering functions
 function RenderParticles()
 {
+  // set additive mode
   context.globalCompositeOperation = 'lighter';
 
   for (var i = 0; i< spawnList.length; i++) spawnList[i].draw();
-
+    // restore
   context.globalCompositeOperation = 'source-over';
+  context.globalAlpha = 1.0;
 }
 
 function render()
