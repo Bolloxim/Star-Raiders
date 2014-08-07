@@ -84,12 +84,12 @@ PhotonTorpedoEmitter.prototype.series = function()
 PhotonTorpedoEmitter.prototype.generate = function()
 {
   
-  this.pos = {x:(spawnX-centreX), y:(spawnY-centreY), z:-100};
+  this.pos = {x:(spawnX-centreX)-(cX-centreX), y:(spawnY-centreY)-(cY-centreY), z:-100};
 
   this.vel = {x:0, y:0, z:-5-(this.iteration*0.1)}
   this.velsize = -0.01 - (Math.random());
   this.size = 5.0 *this.iteration*0.1;
-  this.life = 4;
+  this.life = 6;
   this.color = 'rgb(255, 64, 10)';
   this.iteration++;
 }
