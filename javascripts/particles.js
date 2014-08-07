@@ -84,7 +84,7 @@ PhotonTorpedoEmitter.prototype.series = function()
 PhotonTorpedoEmitter.prototype.generate = function()
 {
   
-  this.pos = {x:(spawnX-centreX)-(centreX-cX), y:(spawnY-centreY)-(centreY-cY), z:-100};
+  this.pos = {x:(spawnX-centreX)-(cX), y:(spawnY-centreY)-(cY), z:-100};
 
   this.vel = {x:0, y:0, z:-5-(this.iteration*0.1)}
   this.velsize = -0.01 - (Math.random());
