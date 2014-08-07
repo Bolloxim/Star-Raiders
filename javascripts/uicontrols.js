@@ -57,7 +57,7 @@ function GetControl(name)
    }
 }
 
-function Button(x, y, w, h, name, callback)
+function Button(x, y, w, h, name, callback, shortcut)
 {
   this.hitX = 0;
   this.hitY = 0;
@@ -68,6 +68,7 @@ function Button(x, y, w, h, name, callback)
   this.name = name;
   this.callback = callback;
   this.state = 0;
+  this.shortcut = shortcut;
   // add button to stack
   buttons.push(this);
 }
@@ -162,6 +163,16 @@ Button.prototype.hit = function(x, y, checking)
      return true;
    }
    return false;
+}
+
+Button.prototype.keypressed = function(key)
+{
+  if (this.shortcut == key)
+  {
+    this.callback(this);
+    return true;
+  }
+  return false;
 }
 
 function Slider(x, y, w, h, marks, vert, range,name, callback)
