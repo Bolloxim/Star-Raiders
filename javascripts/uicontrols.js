@@ -253,3 +253,8 @@ Slider.prototype.hit = function(x, y)
   
    return false;
 }
+
+Slider.prototype.isShortcut = function(key)
+{
+  return false;
+}
