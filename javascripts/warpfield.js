@@ -257,7 +257,7 @@ function mousemove(event)
   {
     tX = mouseX;
     tY = mouseY;
-    if (termVelocity>0)
+    if (termVelocity<=0)
     {
       tX = canvas.width - tX;
       tY = canvas.height - tY;
