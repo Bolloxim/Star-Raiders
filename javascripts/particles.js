@@ -269,8 +269,8 @@ function init()
   resize();
 
   // create event listeners
-  canvas.addEventListener('mousemove', mouseMove);
-  canvas.addEventListener('click', mouseClick);
+//  canvas.addEventListener('mousemove', mouseMove);
+//  canvas.addEventListener('click', mouseClick);
   window.addEventListener('resize', resize);
 
   // initialze variables
@@ -302,7 +302,7 @@ function mouseClick()
 {
   spawnX = mouseX;
   spawnY = mouseY;
-   spawn();
+  spawn();
 }
 
 var cycle = 0;
@@ -359,6 +359,7 @@ function render()
 function update()
 {
   UpdateParticles();
+  if ((frameCount&255)==0) spawn();
 }
 
 function UpdateParticles()
@@ -369,8 +370,6 @@ function UpdateParticles()
       --i;
     if (spawnList[i].update()==false) spawnList.splice(i,1);
   }
-  
-  if ((frameCount&255)==0) spawn();
 }
 
 // per frame tick functions
