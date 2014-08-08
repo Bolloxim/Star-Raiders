@@ -99,6 +99,7 @@ function Asteriod()
 Asteriod.prototype.init = function()
 {
   this.fragment = 0;
+  this.shieldsHit = false;
   this.asteroidVerts = [];
   
   this.x = Math.random()*localSpace-localSpace*0.5;
@@ -162,6 +163,14 @@ Asteriod.prototype.update = function()
   this.x += this.angVel.p;
   this.y += this.angVel.r;
   this.z += this.angVel.y;
+
+  // update collision
+  var x = modulo2(localPosition.x - this.x, localSpace)-localSpace*0.5;
+  var y = modulo2(localPosition.y - this.y, localSpace)-localSpace*0.5;
+  var z = modulo2(localPosition.z - this.z, localSpace)-localSpace*0.5;
+
+  // check shields
+  if (x*x+y*y+z*z< shieldRange) this.shieldsHit = true;
 }
 
 Asteriod.prototype.render = function()
