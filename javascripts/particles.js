@@ -122,7 +122,7 @@ DustParticleEmitter.prototype.series = function()
 // each iteration will change a property
 DustParticleEmitter.prototype.generate = function()
 {
-  this.pos = {x:0, y:0, z:0};
+  this.pos = {x:0, y:0, z:spawnZ};
   this.vel = new RandomNormal();//RandomOnPlane(this.plane);
   var speed = Math.random()*2+2;
   this.vel.x*=speed;
@@ -239,7 +239,7 @@ Particle.prototype.move = function(plane)
 
 Particle.prototype.draw = function() 
 {
-  if (this.pos.z+localPosition.z + focalDepth > 0 && this.time < this.life)
+  if (this.pos.z + focalDepth > 0 && this.time < this.life)
   {
     var depth = focalPoint / (this.pos.z + focalDepth );
     if (depth<=0) return;
