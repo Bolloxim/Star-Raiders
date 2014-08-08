@@ -397,6 +397,7 @@ function renderShield()
    {
       shieldAlpha = shieldFlashTimer/30.0;
       shieldFlashCol = Math.floor(shieldAlpha*255);
+      shieldAlpha*=0.7;
       shieldFlashTimer--;
    }
 
