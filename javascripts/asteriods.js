@@ -392,12 +392,12 @@ function renderShield()
    if (splutterCount) splutterCount--;
    var splutter = splutterNoise&splutterCount;
    var shieldFlashCol = 0;
-   var shieldAlpha=0;
+   var shieldAlpha = 0;
    if (shieldFlashTimer)
    {
       shieldAlpha = shieldFlashTimer/30.0;
       shieldFlashCol = Math.floor(shieldAlpha*255);
-      shieldAlpha*=0.7;
+      shieldAlpha=0.25;
       shieldFlashTimer--;
    }
 
