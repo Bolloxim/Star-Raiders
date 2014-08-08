@@ -48,6 +48,7 @@ function UpdateAsteriods()
   }
 
  // should really broadphase but 32x32 checks is not awful
+ /* no collisons
   for (var i=0; i<asteriods.length;i++)
   {
     var src = asteriods[i];
@@ -67,6 +68,7 @@ function UpdateAsteriods()
       }
     }
   }
+  */
   // make sure roids sort amongst selfs
   asteriods.sort(CompareRoids);
 }
@@ -86,9 +88,6 @@ function FragmentAsteriod(roid)
   chunk.angVel.y*=-Math.PI*Math.random();
   roid.angVel.r*=Math.PI*Math.random();
   chunk.angVel.r*=-Math.PI*Math.random();
-  roid.z += 3;
-  chunk.z -= 3;
-  
 }
 
 function Asteriod()
