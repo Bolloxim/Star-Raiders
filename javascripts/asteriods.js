@@ -371,6 +371,16 @@ function renderIcosahedron()
    }
 }
 
+var shieldFlashTimer = 0
+var shieldFlashX = 0;
+var shieldFlashY = 0;
+function shieldFlash(x, y)
+{
+  shieldFlashX = x;
+  shieldFlashY = y;
+  shieldFlashTimer = 30;
+}
+
 var spin =0;
 function renderShield()
 {
@@ -378,6 +388,13 @@ function renderShield()
    spin+=0.01;
    if (splutterCount) splutterCount--;
    var splutter = splutterNoise&splutterCount;
+   var shieldFlashCol = 0;
+   if (shieldFlashTimer)
+   {
+      shieldFlashCol = Math.floor(shieldFlashTimer/30.0 * 255);
+      shieldFlashTimer--;
+   }
+
    if ( shieldUp & !splutter)
    {
        context.globalCompositeOperation='lighter';
@@ -430,11 +447,11 @@ function renderShield()
           context.lineTo(transforms[b].x, transforms[b].y);
           context.lineTo(transforms[c].x, transforms[c].y);
           context.closePath();
-          context.fillStyle = 'rgba('+0+','+shade+','+0+',0.25)';
+          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+',0.25)';
           context.fill();
           // edge it in red for fun
           context.lineWidth = 1;
-          context.strokeStyle = 'rgba('+0+','+shade+','+0+', 0.1)';
+          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+', 0.1)';
           context.stroke();
        }
 
