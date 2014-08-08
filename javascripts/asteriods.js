@@ -35,13 +35,40 @@ function RenderAsteriods()
   }
 }
 
+function CompareRoids(a,b)
+{
+  return b.z - a.z;
+}
+
 function UpdateAsteriods()
 {
-
   for (var i=0; i<asteriods.length;i++)
   {
     asteriods[i].update();
   }
+
+ // should really broadphase but 32x32 checks is not awful
+  for (var i=0; i<asteriods.length;i++)
+  {
+    var src = asteriods[i];
+    for (var j=i+1; j<asteriods.length;j++)
+    {
+      var dst = asteriods[j];
+      var dx = dst.x-src.x;
+      var dy = dst.y-src.y;
+      var dz = dst.z-src.z;
+      if (dx*dx + dy*dy + dz*dz < 2)
+      {
+        dst.angVel.y*=-1;
+        dst.angVel.p*=-1;
+
+        src.angVel.y*=-1;
+        src.angVel.p*=-1;
+      }
+    }
+  }
+  // make sure roids sort amongst selfs
+  asteriods.sort(CompareRoids);
 }
 
 function FragmentAsteriod(roid)
@@ -51,6 +78,10 @@ function FragmentAsteriod(roid)
   chunk.flatten(0);
   roid.flatten(1);
   asteriods.push(chunk);
+  
+  // speed
+  roid.angVel.z*=1.2;
+  cnunk.angVel.z*=-1.2;
 }
 
 function Asteriod()
