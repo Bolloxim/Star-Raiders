@@ -80,10 +80,14 @@ function FragmentAsteriod(roid)
   asteriods.push(chunk);
   
   // speed
-  roid.angVel.p*=1.2;
-  chunk.angVel.p*=-1.2;
-  roid.z += 2;
-  chunk.z -= 2;
+  roid.angVel.p*=Math.PI*Math.random();
+  chunk.angVel.p*=-Math.PI*Math.random();
+  roid.angVel.y*=Math.PI*Math.random();
+  chunk.angVel.y*=-Math.PI*Math.random();
+  roid.angVel.r*=Math.PI*Math.random();
+  chunk.angVel.r*=-Math.PI*Math.random();
+  roid.z += 3;
+  chunk.z -= 3;
   
 }
 
