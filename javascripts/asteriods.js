@@ -452,11 +452,11 @@ function renderShield()
           context.lineTo(transforms[b].x, transforms[b].y);
           context.lineTo(transforms[c].x, transforms[c].y);
           context.closePath();
-          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+0.25+shieldAlpha')';
+          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+0.25+shieldAlpha+')';
           context.fill();
           // edge it in red for fun
           context.lineWidth = 1;
-          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+ 0.1+shieldAlpha')';
+          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+ 0.1+shieldAlpha+')';
           context.stroke();
        }
 
