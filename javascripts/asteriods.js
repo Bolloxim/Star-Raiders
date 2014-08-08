@@ -170,7 +170,11 @@ Asteriod.prototype.update = function()
   var z = modulo2(localPosition.z - this.z, localSpace)-localSpace*0.5;
 
   // check shields
-  if (x*x+y*y+z*z< shieldRange) this.shieldsHit = true;
+  if (x*x+y*y+z*z< shieldRange*shieldRange)
+  {
+    console.log("shieldhit");
+   this.shieldsHit = true;
+  }
 }
 
 Asteriod.prototype.render = function()
