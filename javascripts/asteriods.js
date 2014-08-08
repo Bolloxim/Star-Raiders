@@ -75,10 +75,11 @@ function UpdateAsteriods()
 
 function FragmentAsteriod(roid)
 {
+  if (roid.fragment == 2) return;
   chunk = new Asteriod();
   chunk.clone(roid);
-  chunk.flatten(0);
-  roid.flatten(1);
+  chunk.flatten((roid.fragment<<1));
+  roid.flatten((roid.fragment<<1)+1);
   asteriods.push(chunk);
   
   // speed
@@ -97,7 +98,7 @@ function Asteriod()
 
 Asteriod.prototype.init = function()
 {
-  this.fragment = false;
+  this.fragment = 0;
   this.asteroidVerts = [];
   
   this.x = Math.random()*localSpace-localSpace*0.5;
@@ -137,12 +138,14 @@ Asteriod.prototype.clone = function(roid)
 
 Asteriod.prototype.flatten = function(side)
 {
-  this.fragment = true;
+  this.fragment = (side>>1)+1;
 
   for (var i=0; i< icosahedronVerts.length; i++)
   {
     if (this.asteroidVerts[i].z>0 && side==0) this.asteroidVerts[i].z=0; 
     if (this.asteroidVerts[i].z<0 && side==1) this.asteroidVerts[i].z=0; 
+    if (this.asteroidVerts[i].y>0 && side==2) this.asteroidVerts[i].y=0; 
+    if (this.asteroidVerts[i].y<0 && side==3) this.asteroidVerts[i].y=0; 
   }
 }
 
