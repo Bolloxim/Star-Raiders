@@ -60,6 +60,7 @@ function Asteriod()
 
 Asteriod.prototype.init = function()
 {
+  this.fragment = false;
   this.asteroidVerts = [];
   
   this.x = Math.random()*localSpace-localSpace*0.5;
@@ -82,9 +83,7 @@ Asteriod.prototype.init = function()
 }
 
 Asteriod.prototype.clone = function(roid)
-{
-  this.asteroidVerts = [];
-  
+{   
   this.x = roid.x;
   this.y = roid.y;
   this.z = roid.z;
@@ -101,6 +100,8 @@ Asteriod.prototype.clone = function(roid)
 
 Asteriod.prototype.flatten = function(side)
 {
+  this.fragment = true;
+
   for (var i=0; i< icosahedronVerts.length; i++)
   {
     if (this.asteriodVerts[i].z>0 && side==0) this.asteriodVerts[i].z=0; 
