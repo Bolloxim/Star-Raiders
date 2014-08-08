@@ -392,12 +392,11 @@ function renderShield()
    if (splutterCount) splutterCount--;
    var splutter = splutterNoise&splutterCount;
    var shieldFlashCol = 0;
-   var shieldAlpha = 0;
+   var shadeAlpha = 0.1;
    if (shieldFlashTimer)
    {
-      shieldAlpha = shieldFlashTimer/30.0;
-      shieldFlashCol = Math.floor(shieldAlpha*255);
-      shieldAlpha=0.25;
+      shieldFlashCol = Math.floor(shieldFlashTimer/30.0 * 255);
+      shadeAlpha = 1.0;
       shieldFlashTimer--;
    }
 
@@ -453,11 +452,11 @@ function renderShield()
           context.lineTo(transforms[b].x, transforms[b].y);
           context.lineTo(transforms[c].x, transforms[c].y);
           context.closePath();
-          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+0.25+shieldAlpha+')';
+          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+',0.25)';
           context.fill();
           // edge it in red for fun
           context.lineWidth = 1;
-          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+ 0.1+shieldAlpha+')';
+          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+shadeAlpha+')';
           context.stroke();
        }
 
