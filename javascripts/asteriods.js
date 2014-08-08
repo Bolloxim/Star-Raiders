@@ -172,8 +172,7 @@ Asteriod.prototype.update = function()
   // check shields
   if (x*x+y*y+z*z< shieldRange*shieldRange)
   {
-    console.log("shieldhit");
-   this.shieldsHit = true;
+    this.shieldsHit = true;
   }
 }
 
@@ -393,9 +392,11 @@ function renderShield()
    if (splutterCount) splutterCount--;
    var splutter = splutterNoise&splutterCount;
    var shieldFlashCol = 0;
+   var shieldAlpha=0;
    if (shieldFlashTimer)
    {
-      shieldFlashCol = Math.floor(shieldFlashTimer/30.0 * 255);
+      shieldAlpha = shieldFlashTimer/30.0;
+      shieldFlashCol = Math.floor(shieldAlpha*255);
       shieldFlashTimer--;
    }
 
@@ -451,11 +452,11 @@ function renderShield()
           context.lineTo(transforms[b].x, transforms[b].y);
           context.lineTo(transforms[c].x, transforms[c].y);
           context.closePath();
-          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+',0.25)';
+          context.fillStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+0.25+shieldAlpha')';
           context.fill();
           // edge it in red for fun
           context.lineWidth = 1;
-          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+', 0.1)';
+          context.strokeStyle = 'rgba('+shieldFlashCol+','+shade+','+shieldFlashCol+','+ 0.1+shieldAlpha')';
           context.stroke();
        }
 
