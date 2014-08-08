@@ -81,7 +81,7 @@ function FragmentAsteriod(roid)
   
   // speed
   roid.angVel.z*=1.2;
-  cnunk.angVel.z*=-1.2;
+  chunk.angVel.z*=-1.2;
 }
 
 function Asteriod()
