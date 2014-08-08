@@ -44,6 +44,15 @@ function UpdateAsteriods()
   }
 }
 
+function FragmentAsteriod(roid)
+{
+  chunk = new Asteriod();
+  chunk.clone(roid);
+  chunk.flatten(0);
+  roid.flatten(1);
+  asteriods.push(chunk);
+}
+
 function Asteriod()
 {
   this.init();
@@ -70,6 +79,33 @@ Asteriod.prototype.init = function()
     this.asteroidVerts[i] = {x:x, y:y, z:z};
   }
 
+}
+
+Asteriod.prototype.clone = function(roid)
+{
+  this.asteroidVerts = [];
+  
+  this.x = roid.x;
+  this.y = roid.y;
+  this.z = roid.z;
+  
+  this.angVel = {y:roid.angVel.y, p:roid.angVel.p, r:roid.angVel.r};
+  this.rotation.clone(roid.rotation);
+  
+  // fetch the icosahedron data and morph it
+  for (var i=0; i< icosahedronVerts.length; i++)
+  {
+    this.asteroidVerts[i] = {x:roid.asteroidVerts[i].x, y:roid.asteroidVerts[i].y, z:roid.asteroidVerts[i].z};
+  }
+}
+
+Asteriod.prototype.flatten = function(side)
+{
+  for (var i=0; i< icosahedronVerts.length; i++)
+  {
+    if (this.asteriodVerts[i].z>0 && side==0) this.asteriodVerts[i].z=0; 
+    if (this.asteriodVerts[i].z<0 && side==1) this.asteriodVerts[i].z=0; 
+  }
 }
 
 Asteriod.prototype.update = function()
