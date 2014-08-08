@@ -135,8 +135,8 @@ Asteriod.prototype.flatten = function(side)
 
   for (var i=0; i< icosahedronVerts.length; i++)
   {
-    if (this.asteriodVerts[i].z>0 && side==0) this.asteriodVerts[i].z=0; 
-    if (this.asteriodVerts[i].z<0 && side==1) this.asteriodVerts[i].z=0; 
+    if (this.asteroidVerts[i].z>0 && side==0) this.asteroidVerts[i].z=0; 
+    if (this.asteroidVerts[i].z<0 && side==1) this.asteroidVerts[i].z=0; 
   }
 }
 
