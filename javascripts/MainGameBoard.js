@@ -49,7 +49,7 @@ BoardPiece.prototype.init = function(fx, fy, type)
   // ship layout
   for (var i=1; i<this.numTargets; i++)
   {
-    targets[i] = Math.min(Math.floor(Math.random()*gameDifficulty*0.2+Math.random()*i)+1, basestar);
+    this.targets[i] = Math.min(Math.floor(Math.random()*gameDifficulty*0.2+Math.random()*i)+1, basestar);
   }
 }
 
