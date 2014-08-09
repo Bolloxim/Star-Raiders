@@ -1,4 +1,19 @@
+const typeBase = 0;
+const typePatrol = 1;
+const typeGroup = 2;
+const typeFleet = 3;
 
+const dead = -1;
+const base = 0;
+const fighter = 1;
+const cruiser = 2;
+const basestar = 3;
+
+const novice = 0;
+const pilot = 1;
+const warrior = 2;
+const commander = 3;
+var gameDifficulty;
 
 // creates a piece
 function BoardPiece(x, y, type)
@@ -13,6 +28,7 @@ BoardPiece.prototype.init = function(fx, fy, type)
   // type 1 = patrol
   // type 2 = group
   // type 3 = fleet
+
   
   // status = 0 dead
   // status = 1 alive
@@ -27,6 +43,13 @@ BoardPiece.prototype.init = function(fx, fy, type)
   this.nextMove = this.moveRate;
   
   this.numTargets = type==0 ? 0 : type+1;
+  this.targets = [];
+  this.targets[0] = type; // ensures a base star 
+  // ship layout
+  for (var i=1; i<this.numTargets; i++)
+  {
+    targets[i] = Math.min(Math.floor(Math.random()*gameDifficulty*0.2+Math.random()*i)+1, basestar);
+  }
 }
 
 // render pieces
@@ -221,8 +244,12 @@ function CountHostiles(loc)
 }
 
 
-function BoardSetup()
+function BoardSetup(difficulty)
 {
+  // set board layout on diffuculty
+  var numPieces = 3+difficulty;
+  gameDifficulty = difficulty;
+
   // clear board
   targetBase = 0;
   boardPieces = [];
@@ -230,7 +257,7 @@ function BoardSetup()
   var x, y, border = 1;
   for (var i =0; i<4; i++)  // types
   {
-    for (var j=0; j<4; j++)  // counts
+    for (var j=0; j<numPieces; j++)  // counts
     {
 
       do
