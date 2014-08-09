@@ -13,6 +13,7 @@ const novice = 0;
 const pilot = 1;
 const warrior = 2;
 const commander = 3;
+
 var gameDifficulty;
 
 // creates a piece
