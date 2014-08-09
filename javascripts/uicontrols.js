@@ -206,7 +206,6 @@ function Slider(x, y, w, h, marks, vert, range,name, callback)
 
 Slider.prototype.render = function()
 {
-
     // fill a rect
   context.beginPath();
   context.rect(this.x, this.y, this.w, this.h);
@@ -219,19 +218,35 @@ Slider.prototype.render = function()
   context.strokeStyle = 'rgba(120, 240, 120, 0.5)';
   context.stroke();
   
+  context.beginPath();
+  for (var i=1; i<this.range; i++)
+  {
+     var x = i/this.range * this.h;
+     context.moveTo(this.x, this.y+x);
+     context.lineTo(this.x+this.w/8, this.y+x)
+     context.moveTo(this.x+this.w/8*7, this.y+x);
+     context.lineTo(this.x+this.w, this.y+x)
+
+  }
+
+  context.stroke();
+  
   var offset = this.value/this.range;
   var size = this.h/this.range;
   context.beginPath();
-  context.rect(this.x-10, this.y+this.h-offset*this.h, this.w+20, -this.h/this.range);
-  context.fillStyle = 'rgba(0, 128, 0, 0.5)';
+  context.rect(this.x+3, this.y+this.h-3-offset*(this.h-6), this.w-6, -this.h/this.range);
+  context.fillStyle = 'rgba(64, 128, 64, 0.5)';
   context.fill();
 
   context.moveTo(this.x, this.y);
   context.font = '12pt Orbitron';
   context.fillStyle = 'rgba(127,255,127, 1)';
   context.textAlign = "center";
-  context.fillText(this.name, this.x+this.w/2, this.y+this.h-9);
+  context.fillText(this.name, this.x+this.w/2, this.y+this.h+20);
+  
 }
+
+
 
 Slider.prototype.hit = function(x, y)
 {
