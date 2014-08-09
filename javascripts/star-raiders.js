@@ -5,6 +5,7 @@ const eNone = 0;
 const eGalacticScanner = 1;
 const eLongRange = 2;
 const eTargetComputer = 3;
+const shieldRange = 5;
 
 // variables
 var centreX;
@@ -51,6 +52,9 @@ var warpLocation = {x:0, y:0};
 var warpAnim     = 0;
 var warpLocked = false;
 var energy = 9999;
+
+// ship damage
+var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
 
 // difficulty settings
 var maxAsteriods = 32;
@@ -395,6 +399,7 @@ function init()
   canvas.addEventListener('mousedown', mouseDown);
   canvas.addEventListener('mouseup', mouseUp);
   canvas.addEventListener("mousewheel", mouseWheel, false);
+  document.addEventListener('keydown', processKeydown, false);
   window.addEventListener('resize', resize);
   
   // initialze variables  
@@ -466,6 +471,11 @@ function mouseClick()
    if (buttonpressed)
    {
      return;
+   }
+  
+   if (overlayMode == eNone || eTargetComputer)
+   {
+      FirePhotons();
    }
   
    // lock in warp point
@@ -684,6 +694,7 @@ function renderGameScreen()
 {
   renderStarfield();
   RenderAsteriods();
+  RenderParticles();
 
   renderShield();
 }
@@ -729,6 +740,8 @@ function render()
   renderInformation();
   
   RenderButtons();
+  
+    PhotonCheck();
 }
 
 // per frame tick functions
@@ -760,6 +773,8 @@ function update()
   
    UpdateNMEs();
   
+   UpdateParticles();
+  
    energyManagement();
 }
 
@@ -777,6 +792,23 @@ function animate()
   requestAnimationFrame(animate);
 }
 
+// keyboard controls
+function processKeydown(event)
+{
+    var key = String.fromCharCode(event.keyCode);
+    console.log("key = " + key);
+    if (CheckShortcuts(key)==false)
+    {
+        // throttle
+        if (key>='0' && key<='9')
+        {
+            var slider = GetControl("throttle");
+            slider.value = key - '0';
+            SetThrottle(slider);
+        }
+    }
+}
+
 // setup buttons
 function SetupButtons()
 {
@@ -787,12 +819,12 @@ function SetupButtons()
   var bx = border.x*0.25
   var bw = border.x*0.5;
   
-  new Button(bx, b.y*2.2, bw, ms.y*0.6, "Long Range", SwitchToLongRange);
-  new Button(bx, b.y*3.2, bw, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart);
-  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Warp", ToggleWarp);
-  new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields);
-  new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp);
-  new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking Comp", ToggleTrackingComp);
+  new Button(bx, b.y*2.2, bw, ms.y*0.6, "Long Range", SwitchToLongRange, 'L');
+  new Button(bx, b.y*3.2, bw, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart, 'G');
+  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Warp", ToggleWarp, 'H');
+  new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields, 'S');
+  new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp, 'C');
+  new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking Comp", ToggleTrackingComp, 'T');
 
   new Slider(ms.x*20, b.y*2, border.x*0.25, ms.y*6, 10, true, 10, "throttle", SetThrottle);
  
@@ -888,7 +920,7 @@ var shipVelocity = 0;
 var shipThrottle = 0;
 var shipVelocityEnergy = 0;
 var setShipVelocity = 0;
-var triggerWarp = normalSpace;
+var triggerWarp = 0;
 
 const normalSpace = 0;
 const enterHyperspace = 1;
@@ -899,7 +931,12 @@ function UpdateShipControls()
 {
   TestMoveUnderMouse(mouseX, mouseY,dragging);
   if (triggerWarp!=normalSpace) EnteringWarp();
+  
+
   return;
+  
+  
+  
   var rotationForce = -(dragCurr.x - dragStart.x) / canvas.width; 
   var pitchForce = (dragCurr.y - dragStart.y) / canvas.height; 
   if (dragging==true) 
@@ -1039,8 +1076,6 @@ var throttleEnergy = [0,   1,   1.5,   2, 2.5, 3, 3.5, 7.5, 11.25, 15];
 
 function mouseWheel(event)
 {
-    if (triggerWarp) return;
-  
     var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
     var slider = GetControl("throttle"); 
     
@@ -1050,15 +1085,16 @@ function mouseWheel(event)
 
 function SetThrottle(slider)
 {
-  if (triggerWarp!=normalSpace) return;
-  
 
   if (slider.value >9) slider.value = 9;
   if (slider.value <0) slider.value = 0;
-  
-  throttle = Math.round(slider.value);
-  setShipVelocity = throttleTable[throttle];
-  shipVelocityEnergy = throttleEnergy[throttle];
+
+  if (triggerWarp==normalSpace)
+  {
+    throttle = Math.round(slider.value);
+    setShipVelocity = throttleTable[throttle];
+    shipVelocityEnergy = throttleEnergy[throttle];
+  }
 }
 
 function energyManagement()
@@ -1071,6 +1107,9 @@ function energyManagement()
   energy -= 0.25 * freqHz;
   // tracking computer
   if (trackingComputer) energy -= 0.5 * freqHz;
+  
+  // check damage
+  CheckShields();
 }
 
 function EnteringWarp()
@@ -1103,6 +1142,133 @@ function EnteringWarp()
      var slider = GetControl("throttle");
      SetThrottle(slider);
      energy-=100;
+  }
+}
+
+var shipFireX = 1;
+function FirePhotons()
+{
+   // alternate fire
+   spawnX = centreX + shipFireX*canvas.width/32;
+   spawnY = centreY + canvas.height/16;
+   torpedoEmitter.create();
+   if (shipDamage.photons==false) shipFireX*=-1;
+  energy-=10;
+}
+
+function CheckShields()
+{
+  var i = asteriods.length;
+  while (i)
+  {
+      --i;
+    if (asteriods[i].shieldsHit) 
+    {
+      // spawn splash
+      var roid = asteriods[i];
+      var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
+      var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
+      var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
+        
+      var scale =512/canvas.height;
+      var t = orientation.transform(x, y, z);
+      var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+
+      spawnX = t.x*depth+centreX;
+      spawnY = t.y*depth+centreY;
+      spawmZ =0;
+      dustEmitter.create();
+      ShieldHit(spawnX, spawnY, 100/(1<<roid.fragment));
+      // delete roid
+      asteriods.splice(i,1);
+    }
+  } 
+}
+
+function ShieldHit(x, y, damage)
+{
+  energy-=damage;
+  if (shieldUp==false) // dead
+  {
+     // gameover
+    energy = 0;
+  }
+  else
+  {
+     shieldFlash(x, y);
+  }
+}
+
+function PhotonCheck()
+{
+
+  for (var i = 0; i< spawnList.length; i++)
+  {
+      if (spawnList[i].emitter instanceof PhotonTorpedoEmitter)
+      {
+          var pos = spawnList[i].particles[63].pos;
+
+          var depth = focalPoint / (pos.z + focalDepth );
+          if (depth<=0) continue;
+    
+          var sx = pos.x * depth + spawnList[i].particles[63].sx + cX-centreX;
+          var sy = pos.y * depth + spawnList[i].particles[63].sy + cY-centreY;
+          var sz = spawnList[i].particles[63].size * depth;
+/*        
+          context.beginPath();
+          context.arc(sx, sy, sz, 0, Math.PI*2);
+          context.fillStyle = 'rgb(255,255,255)';
+          context.fill();
+*/        
+          var scale =512/canvas.height;
+//          console.log("photon = " + pos.x + " " + pos.y + " " + pos.z);
+          for (var j = 0; j<asteriods.length; j++)
+          {
+  
+              var roid = asteriods[j];
+              var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
+              var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
+              var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
+
+              var t = orientation.transform(x, y, z);
+              var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+              if (depth<=0) continue;
+              var size = depth*1.5;
+     
+              var x1 = t.x*depth+centreX;
+              var y1 = t.y*depth+centreY;
+              var dx = sx-x1;
+              var dy = sy-y1;
+              var dz = pos.z-500 - t.z;
+/*            
+              context.beginPath();
+              context.arc(x1, y1, size, 0, Math.PI*2);
+              context.strokeStyle = 'rgb(255,255,255)';
+              context.stroke();
+              context.fillText("dist="+Math.floor(dz), x1, y1-12);
+*/
+              if (dx*dx+dy*dy < size*size && dz*dz < 4000)
+              {
+                  // create particle
+                  spawnX=x1;
+                  spawnY=y1;
+                  spawnZ=t.z;
+              
+                  dustEmitter.create();
+                
+                  // destroy blast
+                  spawnList[i].life = 0;
+                
+                  // fragment rock
+                  if (asteriods[j].fragment==2)
+                    asteriods[j].init();    // destroy
+                  else
+                    FragmentAsteriod(asteriods[j]);
+
+                  break;
+              }
+          }
+      }
   }
 }
 

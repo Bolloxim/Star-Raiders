@@ -288,10 +288,12 @@ function SetWarpPoint(x, y, lock)
 {
   if (warpLocked == true && lock == false) return;
   warpLocked = lock;
-  warpLocation.x = x;
-  warpLocation.y = y;
-  warpAnim = 0;
   
+  // convert mouse to board
+  warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16);
+  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16);
+  
+  warpAnim = 0;
 }
 
 function ClearWarpPoint()
@@ -305,10 +307,9 @@ var distanceTable =[100,130,160,200,230,500,700,800,900,1200,1250,1300,1350,1400
 function ShipCalculateWarpEnergy(sx, sy)
 {
    // convert sx and sy into board-coords
-
-  var x = (sx/mapScale.x) - 1;
-  var y = (sy/mapScale.y) - 1;
-  
+  var x = Math.min(Math.max(sx-border.x, 0), mapScale.x*16) / mapScale.x;
+  var y = Math.min(Math.max(sy-border.y, 0), mapScale.y*16) / mapScale.y;
+    
   var dx = shipPosition.x - x;
   var dy = shipPosition.y - y;
 
@@ -323,6 +324,8 @@ function ShipCalculateWarpEnergy(sx, sy)
   
   return Math.floor(energy);
 }
+
+
 
 function UpdateBoard()
 {
