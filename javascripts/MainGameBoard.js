@@ -312,6 +312,13 @@ function SetShipLocation(x, y)
   shipPosition.y = y;
 }
 
+function GetPieceAtShipLocation()
+{
+  var index = GetBoardPiece(shipLocation.x, shipLocation.y, false);
+
+  return index<0 ? null : boardPieces[index];
+}
+
 function SetWarpPoint(x, y, lock)
 {
   if (warpLocked == true && lock == false) return;
