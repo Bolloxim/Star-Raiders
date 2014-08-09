@@ -52,6 +52,8 @@ var warpLocation = {x:0, y:0};
 var warpAnim     = 0;
 var warpLocked = false;
 var energy = 9999;
+var badDriving = 0;
+var redAlertColor = 0;
 
 // ship damage
 var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
@@ -63,20 +65,31 @@ var maxNMEs = 8;
 // needs moving
 var targetComputer = false;
 var trackingComputer = false;
+var redTime = 0;
+var redAlert = 0;
 
 var orientation = new matrix3x3();
 var scannerView = new matrix3x3();
 
 var nmes = [];
 
-function SetupNMEs()
+// difficulty setup, novice , pilot, warrior, commander
+
+function SetupNMEs(boardItem)
 {
-  for (var i=0; i<maxNMEs; i++)
+  SetRedAlert();
+  // clear list
+  nmes = [];
+  if (boardItem == null) return;
+  
+  for (var i=0; i<boardItem.numTargets; i++)
   {
      var nme = new NME();
-     nme.randomize(0);
+     nme.randomize(boardItem.targets[i]);
      nmes.push(nme);
   }
+  
+  SetRedAlert();
 }
 
 function UpdateNMEs()
@@ -113,57 +126,25 @@ NME.prototype.randomize = function(type)
   this.speed = 1.2;
 }
 
-
-function SetShipLocation(x, y)
+function SetRedAlert()
 {
-  shipLocation.x = Math.floor(x);
-  shipLocation.y = Math.floor(y);
-  shipPosition.x = x;
-  shipPosition.y = y;
+   redTime = (new Date()).getTime();
 }
 
-function SetWarpPoint(x, y, lock)
+function DrawRedAlert()
 {
-  if (warpLocked == true && lock == false) return;
-  warpLocked = lock;
+
+    var delta = (new Date()).getTime() - redTime;
+    redAlert = delta<=4000;
+    if (redAlert == false) return;
   
-  // convert mouse to board
-  warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16);
-  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16);
-  
-  warpAnim = 0;
+    redAlertColor = (Math.floor(delta/500) & 1)*255;
+    context.globalAlpha = 1.0;
+    context.font = '40pt Orbitron';
+    context.fillStyle = 'rgb('+(redAlertColor^255)+',0,'+redAlertColor+')';
+    context.textAlign = "center";
+    context.fillText('RED ALERT', canvas.width/2, 50);
 }
-
-function ClearWarpPoint()
-{
-  warpLocked = false;
-}
-
-// many thanks to http://www.sonic.net/~nbs/star-raiders/docs/v.html 
-var distanceTable =[100,130,160,200,230,500,700,800,900,1200,1250,1300,1350,1400,1550,1700,1840,2000,2080,2160,2230,2320,2410, 2500,9999];
-
-function ShipCalculateWarpEnergy(sx, sy)
-{
-   // convert sx and sy into board-coords
-  var x = Math.min(Math.max(sx-border.x, 0), mapScale.x*16) / mapScale.x;
-  var y = Math.min(Math.max(sy-border.y, 0), mapScale.y*16) / mapScale.y;
-    
-  var dx = shipPosition.x - x;
-  var dy = shipPosition.y - y;
-
-  // location
-  var distance = Math.sqrt(dx*dx+dy*dy);
-
-  var di = Math.floor(distance);
-  if (di>23) di=23;
-
-  var energy = distanceTable[di];
-  energy+= (distanceTable[di+1]-energy) * (distance-di);
-  
-  return Math.floor(energy);
-}
-
-
 
 // long range scan
 var shipPhi = 0.0;
@@ -267,8 +248,6 @@ function renderLongRangeScanner()
 }
 
 // galactic scan
-
-
 function renderGalacticScanner()
 {
     // logic for enabling/disabling the scanner
@@ -413,12 +392,13 @@ function init()
   SetupButtons();
   
   // populate map
-  BoardSetup();
+  BoardSetup(commander);
   
   // populate local space
   SetupAsteriods(localSpaceCubed);
-  
-  SetupNMEs();
+ 
+  // populate shiplocation
+  SetupNMEs(GetPieceAtShipLocation());
   
   var d = new Date();
   gameStart = d.getTime();
@@ -729,8 +709,11 @@ function renderOverlays()
 
 function render()
 {
- 
-  context.fillStyle = 'black';
+  if (redAlert)
+    document.getElementById("star-raiders").style.background = 'rgb('+redAlertColor+',0,'+(redAlertColor^255)+')';
+  else
+    document.getElementById("star-raiders").style.background = 'black';
+  
   context.clearRect(0, 0, canvas.width, canvas.height);
   
   renderGameScreen();
@@ -741,7 +724,9 @@ function render()
   
   RenderButtons();
   
-    PhotonCheck();
+  PhotonCheck();
+  
+  DrawRedAlert();
 }
 
 // per frame tick functions
@@ -1123,6 +1108,10 @@ function EnteringWarp()
         enterWarp = true;
         warpStartDepth = cameraDepth;
         warpTime = 0;
+        
+        // clear data
+        asteriods = [];
+        nmes = []; 
       }
    }
   if (triggerWarp == inHyperspace)
@@ -1134,6 +1123,22 @@ function EnteringWarp()
        var slider = GetControl("throttle");
        SetThrottle(slider);
        GetControl("Warp").state = 0;
+      
+       // setwarpLocation
+       var badDriver = 1;
+       var x = warpLocation.x + Math.random()*badDriving;
+       var y = warpLocation.y + Math.random()*badDriving;
+       if (warpLocked== false)
+       {
+           x = Math.random()*badDriving*2 - 1;
+           y = Math.random()*badDriving*2 - 1;
+       }
+      
+       SetShipLocation(x, y);
+       // Setup NME's
+       SetupAsteriods(localSpaceCubed);
+       SetupNMEs(GetPieceAtShipLocation());
+       warpLocked = false;
     }
   }
   if (triggerWarp == cancelHyperspace)
