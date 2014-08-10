@@ -255,7 +255,8 @@ function BoardSetup(difficulty)
   targetBase = 0;
   boardPieces = [];
   
-  var x, y, border = 1;
+  var x, y;
+  var edge = 1;
   for (var i =0; i<4; i++)  // types
   {
     for (var j=0; j<numPieces; j++)  // counts
@@ -263,15 +264,15 @@ function BoardSetup(difficulty)
 
       do
       {
-        x = Math.floor(Math.random() * (galaxyMapSize.x-border*2))+border;
-        y = Math.floor(Math.random() * (galaxyMapSize.y-border*2))+border;
+        x = Math.floor(Math.random() * (galaxyMapSize.x-edge*2))+edge;
+        y = Math.floor(Math.random() * (galaxyMapSize.y-edge*2))+edge;
         
         var p = GetBoardPiece(x, y);
       } while(p>=0);
 
       boardPieces.push(new BoardPiece(x, y, i));
     }
-    border = 0;
+    edge = 0;
   }
 }
 
@@ -279,18 +280,21 @@ function BoardSetup(difficulty)
 // board pieces 
 function GetBoardPiece(x, y, useKnown)
 {
+  xi = Math.floor(x);
+  yi = Math.floor(y);
+
   if (useKnown)
   {
       for (var i=0; i<boardPieces.length; i++)
       {
-        if (boardPieces[i].lastknown.x == x && boardPieces[i].lastknown.y==y) return i;
+        if (boardPieces[i].lastknown.x == xi && boardPieces[i].lastknown.y==yi) return i;
       }      
   }
   else
   {
       for (var i=0; i<boardPieces.length; i++)
       {
-        if (boardPieces[i].location.x == x && boardPieces[i].location.y==y) return i;
+        if (boardPieces[i].location.x == xi && boardPieces[i].location.y==yi) return i;
       }      
   }
   return -1;
@@ -298,8 +302,8 @@ function GetBoardPiece(x, y, useKnown)
 
 function GetBoardPieceScreen(sx, sy, lastKnown)
 {
-  x = Math.floor(sx/mapScale.x) - 1;
-  y = Math.floor(sy/mapScale.y) - 1;
+  x = Math.min(Math.max(x-border.x, 0), mapScale.x*16) / mapScale.x;;
+  y = Math.min(Math.max(y-border.y, 0), mapScale.y*16) / mapScale.y;
   
   return GetBoardPiece(x, y, lastKnown);
 }
@@ -325,8 +329,8 @@ function SetWarpPoint(x, y, lock)
   warpLocked = lock;
   
   // convert mouse to board
-  warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16);
-  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16);
+  warpLocation.x = Math.min(Math.max(x-border.x, 0), mapScale.x*16) / mapScale.x;
+  warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16) / mapScale.y;
   
   warpAnim = 0;
 }
