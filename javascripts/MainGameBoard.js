@@ -402,6 +402,6 @@ function UpdateBoard()
   
    if (targetBase == 4 ) // zylons win
    {
-      BoardSetup();
+      BoardSetup(gameDifficulty);
    }
  } 
