@@ -146,6 +146,12 @@ BoardPiece.prototype.move = function(gameCycle)
      this.location.y = y;
      this.status = 2;
 
+     // lets check again see if ships arrived
+    if (shipLocation.x == this.location.x && shipLocation.y == this.location.y)
+    {
+      SetupNMEs(this);
+    }
+
    }
 
 
