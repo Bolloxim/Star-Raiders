@@ -151,7 +151,7 @@ BoardPiece.prototype.move = function(gameCycle)
 // help functoin to convert from map to screen space
 BoardPiece.prototype.screen = function(x, y)
 {
-  return {x:x*mapScale.x+border.x*1.5+mapCentreX, y:y*mapScale.y+border.y*1.5+mapCentreY};
+  return {x:x*mapScale.x+mapScale.x*0.5+border.x+mapCentreX, y:y*mapScale.y+mapScale.y*0.5+border.y+mapCentreY};
 }
 
 
