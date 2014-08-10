@@ -19,7 +19,7 @@ const sparcity = 1.0;
 const tailLength = 20;
 
 const viewFront = 0;
-const viewAft = 0;
+const viewAft = 1;
 var   viewIs = viewFront;
 
 // depth modulo fucntion. custom
@@ -313,7 +313,7 @@ function viewingAft()
 function swapView()
 {
   // toggle view
-  viewIs ^= viewAft;
+  viewIs ^= 1;
 
   // inverse the velocities
   initVelocity*=-1;
