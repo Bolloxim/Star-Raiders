@@ -18,6 +18,10 @@ const focalPoint = 256;
 const sparcity = 1.0;
 const tailLength = 20;
 
+const viewFront = 0;
+const viewAft = 0;
+var   viewIs = viewFront;
+
 // depth modulo fucntion. custom
 function modulo(a)
 {
@@ -296,8 +300,21 @@ function resize()
   canvas.height = window.innerHeight;
 }
 
+function viewingFront()
+{
+  return viewIs == viewFront;
+}
+
+function viewingAft()
+{
+  return viewIs == viewAft;
+}
+
 function swapView()
 {
+  // toggle view
+  viewIs ^= viewAft;
+
   // inverse the velocities
   initVelocity*=-1;
   termVelocity*=-1;
