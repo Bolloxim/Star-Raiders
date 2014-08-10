@@ -21,6 +21,7 @@ const tailLength = 20;
 const viewFront = 0;
 const viewAft = 1;
 var   viewIs = viewFront;
+var   starsColorAlias = 'black';
 
 // depth modulo fucntion. custom
 function modulo(a)
@@ -71,7 +72,7 @@ Star.prototype.draw = function()
   context.fill();
   // use border edge for twinkle effect 
   context.lineWidth = 0;
-  context.strokeStyle = 'black';
+  context.strokeStyle = starsColorAlias;
   context.stroke();
 };
 
