@@ -302,8 +302,8 @@ function GetBoardPiece(x, y, useKnown)
 
 function GetBoardPieceScreen(sx, sy, lastKnown)
 {
-  x = Math.min(Math.max(x-border.x, 0), mapScale.x*16) / mapScale.x;;
-  y = Math.min(Math.max(y-border.y, 0), mapScale.y*16) / mapScale.y;
+  x = Math.min(Math.max(sx-border.x, 0), mapScale.x*16) / mapScale.x;
+  y = Math.min(Math.max(sy-border.y, 0), mapScale.y*16) / mapScale.y;
   
   return GetBoardPiece(x, y, lastKnown);
 }
