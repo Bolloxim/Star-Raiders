@@ -115,9 +115,12 @@ BoardPiece.prototype.move = function(gameCycle)
   
    // scale game cycle time (radar beats every 10s)
    aiCycle = Math.floor(gameCycle/cycleScalar);
-  
+
    if (this.nextMove<=aiCycle && this.type > 0) // new position except bases
    {
+      // check if we have the player ship here
+      if (shipLocation.x == this.location.x && shipLocation.y == this.location.y) return;
+
       var x, y;
       var target = boardPieces[targetBase].location;
       // bee-line
