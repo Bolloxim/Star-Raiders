@@ -164,7 +164,7 @@ function renderZylon(x1, y1, z1, rotation, elevation)
   var depth = focalPoint*5 / (z1 + 5*scale);
   var x = x1 * depth + centreX;
   var y = y1 * depth + centreY;
-  var size  = 10 * depth;
+  var size  = 1 * depth;
 
   if (!autoRotate)
   {
