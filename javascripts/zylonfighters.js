@@ -168,14 +168,16 @@ function renderZylon(x1, y1, z1, rotation, elevation)
 
   if (!autoRotate)
   {
-	  rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
-    elevation = Math.atan2((y - mouseY) , canvas.height);
+    rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
+     elevation = Math.atan2((y - mouseY) , canvas.height);
   }
   
   if (size<=0) return;
   
-  context.globalAlpha = 1.0;
-  if (z1>5000) context.globalAlpha = 1.0 - (z1-5000)/5000;
+  var fade = 1.0;
+  if (z1>128)  fade = 1.0 - (z1-128)/128;
+  if (fade<0) fade = 0;
+  context.globalAlpha = fade;
   // rotate the ship
   var angle = rotation;
   var c = Math.sin(angle+Math.PI*0.5);
