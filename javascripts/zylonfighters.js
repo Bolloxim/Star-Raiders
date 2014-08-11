@@ -1,5 +1,5 @@
 // constant options
-const focalDepth = 80;
+const focalDepth = 1400;
 const focalPoint = 256;
 
 
@@ -44,8 +44,8 @@ Part.prototype.move = function()
   this.pos.z+=this.vel.z;
   
   this.vel.x*=1.03;
-    this.vel.y*=1.03;
-    this.vel.z*=1.03;
+  this.vel.y*=1.03;
+  this.vel.z*=1.03;
 }
 // initialization
 
@@ -59,9 +59,13 @@ function init()
   resize();
 
   // create event listeners
+  window.addEventListener('resize', resize);
+}
+
+function initDemo()
+{
   canvas.addEventListener('mousemove', mouseMove);
   canvas.addEventListener('click', mouseClick);
-  window.addEventListener('resize', resize);
   
   mouseX = centreX;
   mouseY = centreY;
@@ -156,14 +160,15 @@ function renderZylon(x1, y1, z1, rotation, elevation)
 {
   
   // compute depth and 3D position
-  var depth = focalPoint / (z1 + focalDepth);
+  var scale = 512/canvas.height;
+  var depth = focalPoint*5 / (z1 + 5*scale);
   var x = x1 * depth + centreX;
   var y = y1 * depth + centreY;
-  var size  = 100 * depth;
+  var size  = 10 * depth;
 
   if (!autoRotate)
   {
-	 rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
+	  rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
     elevation = Math.atan2((y - mouseY) , canvas.height);
   }
   
@@ -362,4 +367,5 @@ function animate()
 
 // entry point
 init();
-animate();
+//initDemo();
+//animate();
