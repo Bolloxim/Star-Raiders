@@ -53,14 +53,14 @@ BoardPiece.prototype.init = function(fx, fy, type)
   }
 }
 
-BoardPiece.prototype.killTarget(type)
+BoardPiece.prototype.killTarget = function(shipType)
 {
   var j=-1;
   for (var i=0; i<this.numTargets; i++)
   {
-    if (this.targets[i]==type)
+    if (this.targets[i]==shipType)
     {
-      j=-1;
+      j=i;
     }
   }
 
