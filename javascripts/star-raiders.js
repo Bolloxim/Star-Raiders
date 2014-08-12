@@ -7,6 +7,7 @@ const eLongRange = 2;
 const eTargetComputer = 3;
 const shieldRange = 5;
 
+var backgroundColor;
 // variables
 var centreX;
 var centreY;
@@ -51,10 +52,13 @@ var lrScale         = {x:0, y:0};
 var warpLocation = {x:0, y:0};
 var warpAnim     = 0;
 var warpLocked = false;
+var warpEnergy = 0;
 var energy = 9999;
 var badDriving = 0;
 var redAlertColor = 0;
 
+// tracking computer
+var trackingTarget = 0;
 // ship damage
 var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
 
@@ -68,6 +72,7 @@ var trackingComputer = false;
 var redTime = 0;
 var redAlert = 0;
 
+var shipOrientation = new matrix3x3();
 var orientation = new matrix3x3();
 var scannerView = new matrix3x3();
 
@@ -77,7 +82,6 @@ var nmes = [];
 
 function SetupNMEs(boardItem)
 {
-  SetRedAlert();
   // clear list
   nmes = [];
   if (boardItem == null) return;
@@ -96,9 +100,21 @@ function UpdateNMEs()
 {
   for (var i=0; i<nmes.length; i++)
   {
-    nmes[i].pos.x = modulo( nmes[i].pos.x + nmes[i].vel.x * nmes[i].speed );
-    nmes[i].pos.y = modulo( nmes[i].pos.y + nmes[i].vel.y * nmes[i].speed );
-    nmes[i].pos.z = modulo( nmes[i].pos.z + nmes[i].vel.z * nmes[i].speed );
+     var x = nmes[i].pos.x + nmes[i].vel.x * nmes[i].speed * freqHz;
+     var y = nmes[i].pos.y + nmes[i].vel.y * nmes[i].speed * freqHz;
+     var z = nmes[i].pos.z + nmes[i].vel.z * nmes[i].speed * freqHz;
+    
+     nmes[i].pos.x = x;
+     nmes[i].pos.y = y;
+     nmes[i].pos.z = z;
+  }
+}
+
+function RenderNMEs()
+{
+  for (var i=0; i<nmes.length; i++)
+  {
+     nmes[i].render();
   }
 }
 
@@ -119,12 +135,22 @@ NME.prototype.randomize = function(type)
   this.pos.y = Math.random()*localSpaceCubed;
   this.pos.z = Math.random()*localSpaceCubed;
   
-  this.vel.x = Math.random()*2-1;
-  this.vel.y = Math.random()*2-1;
-  this.vel.z = Math.random()*2-1;
+  this.vel = RandomNormal();
   
-  this.speed = 1.2;
+  this.speed = 25;
 }
+
+NME.prototype.render = function()
+{
+   var x = modulo2(localPosition.x - this.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+   var y = modulo2(localPosition.y - this.pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+   var z = modulo2(localPosition.z - this.pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+
+   var camspace = orientation.transform(x, y, z);
+   renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
+}
+
+
 
 function SetRedAlert()
 {
@@ -136,14 +162,23 @@ function DrawRedAlert()
 
     var delta = (new Date()).getTime() - redTime;
     redAlert = delta<=4000;
-    if (redAlert == false) return;
-  
+    if (redAlert == false)
+    {
+      document.getElementById("star-raiders").style.background = 'black';
+      backgroundColor = 'rgb(0,0,16)';
+      starsColorAlias = backgroundColor;
+      return;
+    }
+
     redAlertColor = (Math.floor(delta/500) & 1)*255;
     context.globalAlpha = 1.0;
     context.font = '40pt Orbitron';
     context.fillStyle = 'rgb('+(redAlertColor^255)+',0,'+redAlertColor+')';
     context.textAlign = "center";
     context.fillText('RED ALERT', canvas.width/2, 50);
+    
+    backgroundColor = 'rgb('+((redAlertColor))+',0,'+((redAlertColor^255))+')';
+    starsColorAlias = backgroundColor;
 }
 
 // long range scan
@@ -188,7 +223,7 @@ function renderLongRangeScanner()
   context.beginPath();
   context.arc(lrsCentreX, lrsCentreY, radius/2, 0, Math.PI*2.0, 0);
   context.strokeStyle = 'rgba(0,0,255,0.5)';
-  context.linewidth = 1;
+  context.lineWidth = 1;
   context.stroke(); 
   context.beginPath();
   context.arc(lrsCentreX, lrsCentreY, radius/8, 0, Math.PI*2.0, 0);
@@ -340,8 +375,8 @@ function renderGalacticScanner()
   context.fill();
 
   // render hyperspace location
-  clampX = warpLocation.x+border.x;
-  clampY = warpLocation.y+border.y;
+  clampX = warpLocation.x*mapScale.x+border.x;
+  clampY = warpLocation.y*mapScale.y+border.y;
   context.beginPath();
   context.moveTo(clampX+offX, border.y+offY)
   context.lineTo(clampX+offX, scaleY*(galaxyMapSize.y)+border.y+offY);
@@ -479,22 +514,12 @@ function resize()
   fontsize = 21;
   
   // resize font based on canvas size
-  if (warpLocked) // need to rescale the warp location
-  {
-    tmpx = (warpLocation.x + border.x) / mapScale.x;
-    tmpy = (warpLocation.y + border.y) / mapScale.y;
-  }
   
   mapScale.x = canvas.width/(galaxyMapSize.x+6);
   mapScale.y = canvas.height/(galaxyMapSize.y+3);
   border.x = mapScale.x*3;
   border.y = mapScale.y;
   
-  if (warpLocked) // need to rescale the warp location
-  {
-    warpLocation.x = tmpx*mapScale.x - border.x;
-    warpLocation.y = tmpy*mapScale.y - border.y;
-  }
   
   lrScale.x = canvas.width*16/18;
   lrScale.y = canvas.height*16/20;
@@ -558,12 +583,12 @@ function renderGalaxyInformation()
     if (warpLocked)
     {
       // does this in mouse coords for rollover.. so have to add the border back in
-      var fuel = ShipCalculateWarpEnergy(warpLocation.x+border.x, warpLocation.y+border.y);
-
+      var fuel = ShipCalculateWarpEnergy(warpLocation.x*mapScale.x+border.x, warpLocation.y*mapScale.y+border.y);
+      warpEnergy = fuel;
       context.textAlign = "centre";
       context.font = '22pt Orbitron';
           context.fillStyle = 'rgb(0,0,255)';
-      context.fillText('Energy: ' + fuel, warpLocation.x+border.x+mapCentreX, warpLocation.y+mapCentreY+border.y-12);
+      context.fillText('Energy: ' + fuel, warpLocation.x*mapScale.x+border.x+mapCentreX, warpLocation.y*mapScale.y+mapCentreY+border.y-12);
      
     }
   
@@ -594,8 +619,8 @@ function renderLongRangeInformation()
 function renderIconShip(posx, posy, scale)
 {
      // render our ship
-    var x = posx;
-    var y = posy;
+    var x = posx+mapCentreX;
+    var y = posy+mapCentreY;
   
     context.fillStyle = 'rgb(255,255,0)';
     context.beginPath();
@@ -610,30 +635,104 @@ function renderIconShip(posx, posy, scale)
     context.stroke();
 }
 
+function gradon(radian)
+{
+  return Math.floor(radian*100 / (Math.PI*2) +50.0);
+}
+
 function renderTargetingComputer()
 {
     if (!targetComputer) return;
-  
+
     var x = centreX;
     var y = centreY;
     var w = canvas.width/16;
     var h = canvas.height/16;
+
+      context.beginPath();
+      context.moveTo(x+w/4, y);
+      context.lineTo(x+w, y);
+      context.moveTo(x-w/4, y);
+      context.lineTo(x-w, y);
+      if (viewingFront())
+      {
+        context.moveTo(x, y-h/4);
+        context.lineTo(x, y-h);
+        context.moveTo(x, y+h/4);
+        context.lineTo(x, y+h);
+      }
+      context.lineWidth = 7;
+      context.strokeStyle = 'rgba(255,0,0,0.5)';
+      context.stroke();
+      context.lineWidth = 3;
+      context.strokeStyle = 'rgba(255,0,0,1)';
+      context.stroke();
   
-    context.beginPath();
-    context.moveTo(x+w/4, y);
-    context.lineTo(x+w, y);
-    context.moveTo(x-w/4, y);
-    context.lineTo(x-w, y);
-    context.moveTo(x, y-h/4);
-    context.lineTo(x, y-h);
-    context.moveTo(x, y+h/4);
-    context.lineTo(x, y+h);
-    context.lineWidth = 7;
-    context.strokeStyle = 'rgba(255,0,0,0.5)';
-    context.stroke();
-    context.lineWidth = 3;
-    context.strokeStyle = 'rgba(255,0,0,1)';
-    context.stroke();
+      if (viewingFront())
+      {
+        var x1 = mapScale.x*16;
+        var y1 = mapScale.y*8;
+        var xw =border.x;
+        var yh =mapScale.y*2;
+        context.beginPath();
+        context.rect(x1, y1, xw, yh);
+        context.fillStyle = 'rgba(0,0,128,0.5)';
+        context.fill();
+        context.rect(x1+xw*0.25, y1+yh*0.25, xw*0.5, yh*0.5);     
+        context.moveTo(x1, y1+yh*0.5);
+        context.lineTo(x1+xw*0.25, y1+yh*0.5);
+        context.moveTo(x1+xw*0.75, y1+yh*0.5);
+        context.lineTo(x1+xw, y1+yh*0.5);
+        context.moveTo(x1+xw*0.5, y1);
+        context.lineTo(x1+xw*0.5, y1+yh*0.25);
+        context.moveTo(x1+xw*0.5, y1+yh*0.75);
+        context.lineTo(x1+xw*0.5, y1+yh);
+        context.lineWidth = 4;
+        context.strokeStyle = 'rgba(255,255,255,0.5)';
+        context.stroke();
+        
+        // compute tracking position
+        var distance = 0;
+        var gradonTheta = 0;
+        var gradonPhi = 0;
+        
+        if (trackingTarget>=0 && trackingTarget < nmes.length)
+        {
+             var x = modulo2(localPosition.x - nmes[trackingTarget].pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+             var y = modulo2(localPosition.y - nmes[trackingTarget].pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+             var z = modulo2(localPosition.z - nmes[trackingTarget].pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+             
+             var t = orientation.transform(x,y,z);
+             distance = Math.round(t.z);
+             // compute angles
+             var phi = Math.atan2(t.x, t.z);
+             var rx1 = (modulo2(phi+Math.PI, Math.PI*2) / (Math.PI*2)) * (xw-30) + x1+15;
+             var theta = Math.atan2(t.y, Math.sqrt(t.x*t.x+t.z*t.z));
+             var ry1 = (modulo2(theta+Math.PI, Math.PI*2) / (Math.PI*2)) *2* (yh-15) + y1+15-yh*0.5;
+          
+             context.beginPath();
+             context.rect(rx1-8, ry1-8, 16,16);
+             context.rect(rx1-15, ry1-15, 5, 30);
+             context.rect(rx1+10, ry1-15, 5, 30);
+             context.fillStyle= 'yellow';
+             context.fill();
+          
+             // convert to gradons
+             gradonTheta = gradon(theta);
+             gradonPhi = gradon(phi);
+            
+          }
+        
+          context.font = '20pt Orbitron';
+          context.fillStyle = 'rgb(255,255,0)';
+          context.textAlign = "left";
+        
+          context.fillText('T:'+trackingTarget, x1, canvas.height-15);   
+          context.fillText('R:'+distance, x1+xw*0.5, canvas.height-15);   
+          context.fillText('Φ:'+gradonPhi, x1, y1-15); 
+          context.fillText('θ:'+gradonTheta , x1+xw*0.5, y1-15);   
+        
+      }
 }
 
 function renderStarDate()
@@ -647,7 +746,7 @@ function renderStarDate()
   context.fillStyle = 'rgb(255,255,0)';
   context.textAlign = "left";
   leadingzero = decimalTime<10 ? '0':'';
-  context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-mapScale.x*3, canvas.height-15);
+  context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-border.x+15, canvas.height-15);
 }
 
 function renderVelocity()
@@ -674,6 +773,7 @@ function renderGameScreen()
 {
   renderStarfield();
   RenderAsteriods();
+  RenderNMEs();
   RenderParticles();
 
   renderShield();
@@ -709,11 +809,8 @@ function renderOverlays()
 
 function render()
 {
-  if (redAlert)
-    document.getElementById("star-raiders").style.background = 'rgb('+redAlertColor+',0,'+(redAlertColor^255)+')';
-  else
-    document.getElementById("star-raiders").style.background = 'black';
-  
+  document.getElementById("star-raiders").style.background = backgroundColor;  
+
   context.clearRect(0, 0, canvas.width, canvas.height);
   
   renderGameScreen();
@@ -791,6 +888,9 @@ function processKeydown(event)
             slider.value = key - '0';
             SetThrottle(slider);
         }
+      
+        if (key=='M') trackingTarget++;
+        if (trackingTarget>=nmes.length) trackingTarget = 0;
     }
 }
 
@@ -810,6 +910,7 @@ function SetupButtons()
   new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields, 'S');
   new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp, 'C');
   new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking Comp", ToggleTrackingComp, 'T');
+  new Button(bx, b.y*8.2, bw, ms.y*0.6, "SwapView", swapView, 'A');
 
   new Slider(ms.x*20, b.y*2, border.x*0.25, ms.y*6, 10, true, 10, "throttle", SetThrottle);
  
@@ -818,21 +919,33 @@ function SetupButtons()
 function SwitchToLongRange(button)
 {
   console.log("switching to long range");
-  if (overlayMode == eLongRange) overlayMode = eNone;
-  else overlayMode = eLongRange;
+  if (overlayMode == eLongRange)
+  {
+    overlayMode = targetComputer?eTargetComputer:eNone;
+    GetControl("Target Comp").state = targetComputer;
+  }
+  else
+  {
+    overlayMode = eLongRange;
+  }
   button.state = overlayMode == eLongRange;
   ClearButtonState("Galaxy Chart");
-  ClearButtonState("Target Comp");
 }
 
 function SwitchToGalaxyChart(button)
 {
    console.log("switching to galatic range");
-   if (overlayMode == eGalacticScanner) overlayMode = eNone;
-   else overlayMode = eGalacticScanner;
+   if (overlayMode == eGalacticScanner)
+   {
+     overlayMode = targetComputer?eTargetComputer:eNone;
+     GetControl("Target Comp").state = targetComputer;
+   }
+   else
+   {
+     overlayMode = eGalacticScanner;
+   }
    button.state = overlayMode == eGalacticScanner;
    ClearButtonState("Long Range");
-   ClearButtonState("Target Comp");
 }
 
 function ToggleWarp(button)
@@ -853,13 +966,21 @@ function ToggleShields(button)
 
 function ToggleTargetComp(button)
 {
-  button.state^=1;
-  targetComputer= button.state;
-
-   if (overlayMode == eTargetComputer) overlayMode = eNone;
-   else overlayMode = eTargetComputer;
-   ClearButtonState("Long Range");
-   ClearButtonState("Galaxy Chart");
+ 
+   if (overlayMode != eTargetComputer)
+   {
+     overlayMode = eTargetComputer;
+     targetComputer = 1;
+     button.state=1;
+     ClearButtonState("Long Range");
+     ClearButtonState("Galaxy Chart");
+   }
+   else
+   {
+     overlayMode = eNone;
+     button.state = 0;
+     targetComputer=0;
+   }
 }
 
 function ToggleTrackingComp(button)
@@ -979,7 +1100,17 @@ function TestMoveUnderMouse(mouseX, mouseY)
   rx.rotateX(angleY*freqHz);
   ry.rotateY(angleX*freqHz);
   
-  orientation.clone(  ry.multiply(rx.multiply(orientation)) );
+  shipOrientation.clone(  ry.multiply(rx.multiply(shipOrientation)) );
+  if (viewingFront())
+  {
+    orientation.clone(shipOrientation);
+  }
+  else
+  {
+    var rotate180 = new matrix3x3();
+    rotate180.rotateY(Math.PI);
+    orientation.clone(rotate180.multiply(shipOrientation));
+  }
   
   // orientate the view polar for the scanner
   var rotate90 = new matrix3x3();
@@ -993,11 +1124,12 @@ function TestMoveUnderMouse(mouseX, mouseY)
   shipVelocity += dv;
   
   var speed = -shipVelocity * freqHz;
-  localPosition.x += orientation.m[6]*speed;
-  localPosition.y += orientation.m[7]*speed;
-  localPosition.z += orientation.m[8]*speed;
+  localPosition.x += shipOrientation.m[6]*speed;
+  localPosition.y += shipOrientation.m[7]*speed;
+  localPosition.z += shipOrientation.m[8]*speed;
   // changing
   initVelocity = -setShipVelocity*0.05;
+  if (viewingAft()) initVelocity*=-1;
 
 }
 
@@ -1139,6 +1271,7 @@ function EnteringWarp()
        SetupAsteriods(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
        warpLocked = false;
+       energy-=warpEnergy;
     }
   }
   if (triggerWarp == cancelHyperspace)
@@ -1158,7 +1291,7 @@ function FirePhotons()
    spawnY = centreY + canvas.height/16;
    torpedoEmitter.create();
    if (shipDamage.photons==false) shipFireX*=-1;
-  energy-=10;
+   energy-=10;
 }
 
 function CheckShields()
@@ -1219,12 +1352,12 @@ function PhotonCheck()
           var sx = pos.x * depth + spawnList[i].particles[63].sx + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy + cY-centreY;
           var sz = spawnList[i].particles[63].size * depth;
-/*        
+        
           context.beginPath();
           context.arc(sx, sy, sz, 0, Math.PI*2);
-          context.fillStyle = 'rgb(255,255,255)';
-          context.fill();
-*/        
+          context.strokeStyle = 'rgb(255,255,255)';
+          context.stroke();
+        
           var scale =512/canvas.height;
 //          console.log("photon = " + pos.x + " " + pos.y + " " + pos.z);
           for (var j = 0; j<asteriods.length; j++)
