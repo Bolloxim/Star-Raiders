@@ -43,7 +43,7 @@ BoardPiece.prototype.init = function(fx, fy, type)
   this.moveRate = type==3 ? 8 : type;
   this.nextMove = this.moveRate;
   
-  this.numTargets = type==0 ? 0 : type+1;
+  this.numTargets = type+1;
   this.targets = [];
   this.targets[0] = type; // ensures a base star 
   // ship layout
@@ -51,6 +51,20 @@ BoardPiece.prototype.init = function(fx, fy, type)
   {
     this.targets[i] = Math.min(Math.floor(Math.random()*gameDifficulty*0.2+Math.random()*i)+1, basestar);
   }
+}
+
+BoardPiece.prototype.killTarget(type)
+{
+  var j=-1;
+  for (var i=0; i<this.numTargets; i++)
+  {
+    if (this.targets[i]==type)
+    {
+      j=-1;
+    }
+  }
+
+  if (j!=-1) this.targets.splice(j,1);
 }
 
 // render pieces
