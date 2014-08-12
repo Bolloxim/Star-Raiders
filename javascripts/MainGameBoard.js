@@ -64,7 +64,11 @@ BoardPiece.prototype.killTarget = function(shipType)
     }
   }
 
-  if (j!=-1) this.targets.splice(j,1);
+  if (j!=-1)
+  {
+    this.targets.splice(j,1);
+    this.numTargets--;
+  }
 }
 
 // render pieces
