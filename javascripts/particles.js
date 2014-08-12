@@ -94,8 +94,8 @@ PhotonTorpedoEmitter.prototype.generate = function()
   this.color = 'rgb(255, 64, 10)';
   if (this.iteration==63)
   {
-    this.color = 'rgb(255, 128, 64)';
-    this.velsize = -0.01;
+    this.color = 'rgb(255, 255, 255)';
+    this.velsize = -0.05;
   }
   this.iteration++;
 }
