@@ -68,6 +68,7 @@ BoardPiece.prototype.killTarget = function(shipType)
   {
     this.targets.splice(j,1);
     this.numTargets--;
+    if (this.numTargets==0) this.status = 0; // byebye
   }
 }
 
