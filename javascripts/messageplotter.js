@@ -135,7 +135,7 @@ function displayText()
   
   context.globalCompositeOperation = 'lighter';
   context.globalAlpha = 1.0;
-  context.font = '40pt Orbitron';
+  context.font = '30pt Orbitron';
   context.fillStyle = 'rgb(0,255,0)';
   context.strokeStyle = 'rgb(192, 255,192)';
   context.lineWidth = 1;
@@ -145,7 +145,7 @@ function displayText()
   var cursorPos;
   for (var i=0; i<currentMessage; i++)
   {
-      var y = stringDisplayPos.y-(currentMessage-i)*50;
+      var y = stringDisplayPos.y-(currentMessage-i)*35;
       context.fillText(messageList[i], stringDisplayPos.x, y);
       context.strokeText(messageList[i], stringDisplayPos.x, y);
   }
