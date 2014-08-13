@@ -116,8 +116,8 @@ DustParticleEmitter.prototype.series = function()
 
   this.iteration = 0;
   this.particleCount = 64;
-  this.sx = 0;
-  this.sy = 0;
+  this.sx = centreX;
+  this.sy = centreY;
   this.size = 6.0;
   this.time = 0;
   this.life = 5;
