@@ -104,7 +104,7 @@ function randomText()
    var msg = msgs[item];
   if (item<3) msg = msg + rank(Math.random()*400-80);
 	startText(msg, 50, 150);  
-
+  currentMessage = 0;
 }
 
 function startText(string, x, y)
@@ -117,7 +117,7 @@ function startText(string, x, y)
   
   var strings = string.split('\n');
   messageList.push.apply(messageList, strings);
-  currentMessage = 0;
+  
 }
 
 function displayText()
