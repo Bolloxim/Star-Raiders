@@ -54,6 +54,7 @@ var warpAnim     = 0;
 var warpLocked = false;
 var warpEnergy = 0;
 var energy = 9999;
+var kills = 0;
 var badDriving = 0;
 var redAlertColor = 0;
 
@@ -77,6 +78,10 @@ var orientation = new matrix3x3();
 var scannerView = new matrix3x3();
 
 var nmes = [];
+var gameDifficultyHitBox = 1.5;
+var statistics = {roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0};
+var currentBoardItem = null;
+var pauseGame = false;
 
 // difficulty setup, novice , pilot, warrior, commander
 
@@ -84,6 +89,7 @@ function SetupNMEs(boardItem)
 {
   // clear list
   nmes = [];
+  currentBoardItem = boardItem;
   if (boardItem == null) return;
   
   for (var i=0; i<boardItem.numTargets; i++)
@@ -93,20 +99,23 @@ function SetupNMEs(boardItem)
      nmes.push(nme);
   }
   
-  SetRedAlert();
+  if (boardItem.type != base) SetRedAlert();
 }
 
 function UpdateNMEs()
 {
   for (var i=0; i<nmes.length; i++)
   {
-     var x = nmes[i].pos.x + nmes[i].vel.x * nmes[i].speed * freqHz;
-     var y = nmes[i].pos.y + nmes[i].vel.y * nmes[i].speed * freqHz;
-     var z = nmes[i].pos.z + nmes[i].vel.z * nmes[i].speed * freqHz;
-    
-     nmes[i].pos.x = x;
-     nmes[i].pos.y = y;
-     nmes[i].pos.z = z;
+     if (nmes[i].hitpoints)
+     {
+       var x = nmes[i].pos.x + nmes[i].vel.x * nmes[i].speed * freqHz;
+       var y = nmes[i].pos.y + nmes[i].vel.y * nmes[i].speed * freqHz;
+       var z = nmes[i].pos.z + nmes[i].vel.z * nmes[i].speed * freqHz;
+
+       nmes[i].pos.x = x;
+       nmes[i].pos.y = y;
+       nmes[i].pos.z = z;
+     }
   }
 }
 
@@ -114,8 +123,17 @@ function RenderNMEs()
 {
   for (var i=0; i<nmes.length; i++)
   {
-     nmes[i].render();
+     if (nmes[i].hitpoints>0)
+         nmes[i].render();
   }
+}
+
+function KillNmeType(shipType)
+{
+  kills++;
+  statistics.killTypes[shipType]++;
+  // update board item
+  currentBoardItem.killTarget(shipType);
 }
 
 // nme objects
@@ -127,17 +145,23 @@ function NME()
   this.speed = 0;
   this.damage = 0;
   this.type = 0; // 0 = fighter, 1 = cruiser, 2 = basestar
+  this.hitpoints = 0;
 }
 
 NME.prototype.randomize = function(type)
 {
+  var hitpointTable = [4, 1, 1, 2];
+  
   this.pos.x = Math.random()*localSpaceCubed;
   this.pos.y = Math.random()*localSpaceCubed;
   this.pos.z = Math.random()*localSpaceCubed;
   
   this.vel = RandomNormal();
+
+  this.type = type;
   
   this.speed = 25;
+  this.hitpoints = hitpointTable[type];
 }
 
 NME.prototype.render = function()
@@ -561,10 +585,10 @@ function renderGalaxyInformation()
   
    var i = GetBoardPieceScreen(mouseX, mouseY);
    var targets = 'empty';
-   if (i>0)
+   if (i>0 && boardPieces[i].status!=0)
    {
       targets = boardPieces[i].numTargets;
-      if (targets == 0) targets = 'starbase';
+      if (boardPieces[i].type==base) targets = 'starbase';
    }
   
     context.globalAlpha = 1.0;
@@ -696,7 +720,7 @@ function renderTargetingComputer()
         var gradonTheta = 0;
         var gradonPhi = 0;
         
-        if (trackingTarget>=0 && trackingTarget < nmes.length)
+        if (trackingTarget>=0 && trackingTarget < nmes.length && nmes[trackingTarget].hitpoints)
         {
              var x = modulo2(localPosition.x - nmes[trackingTarget].pos.x, localSpaceCubed)-localSpaceCubed*0.5;
              var y = modulo2(localPosition.y - nmes[trackingTarget].pos.y, localSpaceCubed)-localSpaceCubed*0.5;
@@ -845,6 +869,8 @@ function updateclocks()
 
 function update()
 {
+   if (pauseGame == true) return;
+  
    moveStarfield();
   
    UpdateAsteriods();
@@ -901,16 +927,17 @@ function SetupButtons()
   buttons = [];
   var b = border;
   var ms = mapScale;
-  var bx = border.x*0.25
-  var bw = border.x*0.5;
+  var bx = border.x*0.2;
+  var bw = border.x*0.6;
   
   new Button(bx, b.y*2.2, bw, ms.y*0.6, "Long Range", SwitchToLongRange, 'L');
   new Button(bx, b.y*3.2, bw, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart, 'G');
-  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Warp", ToggleWarp, 'H');
+  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Hyperspace", ToggleWarp, 'H');
   new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields, 'S');
   new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp, 'C');
-  new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking Comp", ToggleTrackingComp, 'T');
-  new Button(bx, b.y*8.2, bw, ms.y*0.6, "SwapView", swapView, 'A');
+  new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking", ToggleTrackingComp, 'T');
+  new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", swapView, 'A');
+  new Button(bx, b.y*1.2, bw, ms.y*0.6, "Pause Game", TogglePauseGame, 'P');
 
   new Slider(ms.x*20, b.y*2, border.x*0.25, ms.y*6, 10, true, 10, "throttle", SetThrottle);
  
@@ -987,6 +1014,12 @@ function ToggleTrackingComp(button)
 {
   button.state^=1;
   trackingComputer= button.state;
+}
+
+function TogglePauseGame(button)
+{
+  button.state^=1;
+  pauseGame = button.state;
 }
 
 // flight controls
@@ -1254,7 +1287,7 @@ function EnteringWarp()
        triggerWarp = normalSpace;
        var slider = GetControl("throttle");
        SetThrottle(slider);
-       GetControl("Warp").state = 0;
+       GetControl("Hyperspace").state = 0;
       
        // setwarpLocation
        var badDriver = 1;
@@ -1337,6 +1370,123 @@ function ShieldHit(x, y, damage)
   }
 }
 
+function CollideAsteriods(sx, sy, sz)
+{
+    var scale =512/canvas.height;
+
+  for (var j = 0; j<asteriods.length; j++)
+  {
+      var roid = asteriods[j];
+      var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
+      var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
+      var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
+
+      var t = orientation.transform(x, y, z);
+      var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+      if (depth<=0) continue;
+      var size = depth*gameDifficultyHitBox;
+
+      var x1 = t.x*depth+centreX;
+      var y1 = t.y*depth+centreY;
+      var dx = sx-x1;
+      var dy = sy-y1;
+      var dz = sz-500 - t.z;
+/*            
+      context.beginPath();
+      context.arc(x1, y1, size, 0, Math.PI*2);
+      context.strokeStyle = 'rgb(255,255,255)';
+      context.stroke();
+      context.fillText("dist="+Math.floor(dz), x1, y1-12);
+*/
+      if (dx*dx+dy*dy < size*size && dz*dz < 4000)
+      {
+          // create particle
+          spawnX=x1;
+          spawnY=y1;
+          spawnZ=t.z*4;
+
+          dustEmitter.create();
+
+          // fragment rock
+          if (asteriods[j].fragment==2)
+            asteriods[j].init();    // destroy
+          else
+            FragmentAsteriod(asteriods[j]);
+
+          return true;
+      }
+  }
+  return false;
+}
+
+function CollideNMEs(sx, sy, sz)
+{
+    var scale =512/canvas.height;
+    var zylonHitBox = gameDifficultyHitBox+0.5;
+  
+    for (var j = 0; j<nmes.length; j++)
+    {
+      var nme = nmes[j];
+      if (nme.hitpoints>0)
+      {
+          var x = modulo2(localPosition.x - nme.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+          var y = modulo2(localPosition.y - nme.pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+          var z = modulo2(localPosition.z - nme.pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+
+          var t = orientation.transform(x, y, z);
+          var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+          if (depth<=0) continue;
+          var size = depth*zylonHitBox;
+
+          var x1 = t.x*depth+centreX;
+          var y1 = t.y*depth+centreY;
+          var dx = sx-x1;
+          var dy = sy-y1;
+          var dz = sz-500 - t.z;
+/*
+          context.beginPath();
+          context.arc(x1, y1, size, 0, Math.PI*2);
+          context.strokeStyle = 'rgb(255,255,255)';
+          context.stroke();
+          context.fillText("dist="+Math.floor(dz), x1, y1-12);
+*/
+          if (dx*dx+dy*dy < size*size && dz*dz < 4000)
+          {
+              if (nme.type == base || nme.type == basestar)
+              {
+                 if (t.z < 160) nme.hitpoints--;   
+              }
+              else
+              {
+                // fighter/cruisers any range
+                nme.hitpoints--;
+              }
+              // create particle
+              spawnX=x1;
+              spawnY=y1;
+              spawnZ=t.z;
+
+              if (nme.hitpoints != 0)
+              {
+                 spawnZ*=8.0;
+                 dustEmitter.create();
+              }
+              else
+              {
+                 explodeEmitter.create();
+                 dustEmitter.create();
+                 KillNmeType(nme.type);
+              }
+
+              return true;
+          }
+      }
+   }
+   return false;
+}
+
+
+
 function PhotonCheck()
 {
 
@@ -1352,62 +1502,24 @@ function PhotonCheck()
           var sx = pos.x * depth + spawnList[i].particles[63].sx + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy + cY-centreY;
           var sz = spawnList[i].particles[63].size * depth;
-        
+/*        
           context.beginPath();
           context.arc(sx, sy, sz, 0, Math.PI*2);
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
-        
-          var scale =512/canvas.height;
-//          console.log("photon = " + pos.x + " " + pos.y + " " + pos.z);
-          for (var j = 0; j<asteriods.length; j++)
+*/        
+          if (CollideAsteriods(sx, sy, pos.z))
           {
-  
-              var roid = asteriods[j];
-              var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
-              var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
-              var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
-
-              var t = orientation.transform(x, y, z);
-              var depth = focalPoint*5 / ((t.z + 5*scale) +1);
-              if (depth<=0) continue;
-              var size = depth*1.5;
-     
-              var x1 = t.x*depth+centreX;
-              var y1 = t.y*depth+centreY;
-              var dx = sx-x1;
-              var dy = sy-y1;
-              var dz = pos.z-500 - t.z;
-/*            
-              context.beginPath();
-              context.arc(x1, y1, size, 0, Math.PI*2);
-              context.strokeStyle = 'rgb(255,255,255)';
-              context.stroke();
-              context.fillText("dist="+Math.floor(dz), x1, y1-12);
-*/
-              if (dx*dx+dy*dy < size*size && dz*dz < 4000)
-              {
-                  // create particle
-                  spawnX=x1;
-                  spawnY=y1;
-                  spawnZ=t.z;
-              
-                  dustEmitter.create();
-                
-                  // destroy blast
-                  spawnList[i].life = 0;
-                
-                  // fragment rock
-                  if (asteriods[j].fragment==2)
-                    asteriods[j].init();    // destroy
-                  else
-                    FragmentAsteriod(asteriods[j]);
-
-                  break;
-              }
+            // destroy photon
+            spawnList[i].life = 0;
+          }
+          else if (CollideNMEs(sx, sy, pos.z))
+          {
+            // destroy photon
+            spawnList[i].life = 0;             
           }
       }
-  }
+   }
 }
 
 
