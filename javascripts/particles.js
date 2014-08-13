@@ -116,8 +116,8 @@ DustParticleEmitter.prototype.series = function()
 
   this.iteration = 0;
   this.particleCount = 64;
-  this.sx = centreX;
-  this.sy = centreY;
+  this.sx = spawnX;
+  this.sy = spawnY;
   this.size = 6.0;
   this.time = 0;
   this.life = 5;
@@ -126,7 +126,7 @@ DustParticleEmitter.prototype.series = function()
 // each iteration will change a property
 DustParticleEmitter.prototype.generate = function()
 {
-  this.pos = {x:spawnX, y:spawnY, z:spawnZ};
+  this.pos = {x:0, y:0, z:spawnZ};
   this.vel = new RandomNormal();//RandomOnPlane(this.plane);
   var speed = Math.random()*2+2;
   this.vel.x*=speed;
