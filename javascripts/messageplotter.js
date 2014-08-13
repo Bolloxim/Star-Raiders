@@ -103,14 +103,15 @@ function randomText()
   var item = Math.floor(Math.random() * msgs.length);
    var msg = msgs[item];
   if (item<3) msg = msg + rank(Math.random()*400-80);
-	startText(msg, 50, 150);  
+  var d = new Date();
+  startDisplayTime = d.getTime();
   currentMessage = 0;
+  startText(msg, 50, 150);  
+
 }
 
 function startText(string, x, y)
 {
-  var d = new Date();
-  startDisplayTime = d.getTime();
   stringToDisplay = string;
   stringDisplayPos = {x:x,y:y}
   repeatTime = 0;
