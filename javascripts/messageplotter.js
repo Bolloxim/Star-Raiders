@@ -140,7 +140,8 @@ function displayText()
   context.strokeStyle = 'rgb(192, 255,192)';
   context.lineWidth = 1;
   context.textAlign = "left";
-  
+
+  if (messageList.length==0) return;
   var cursorPos;
   for (var i=0; i<currentMessage; i++)
   {
@@ -148,6 +149,8 @@ function displayText()
       context.fillText(messageList[i], stringDisplayPos.x, y);
       context.strokeText(messageList[i], stringDisplayPos.x, y);
   }
+
+  
 
   stringToDisplay = messageList[currentMessage];
   if (stringRenderedLength>stringToDisplay.length) 
@@ -227,5 +230,5 @@ function animate()
 
 // entry point
 
-init();
-animate();
+//init();
+//animate();
