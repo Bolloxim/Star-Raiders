@@ -13,7 +13,7 @@ var msgs = [
   ];
 
 var startDisplayTime;
-var stringToDisplay;
+var stringToDisplay = 0;
 var stringDisplayPos;
 var frameCount;
 var currentMessage = 0;
@@ -112,6 +112,9 @@ function randomText()
 
 function startText(string, x, y)
 {
+  var d = new Date();
+  if (startDisplayTime==0) 
+      startDisplayTime = d.getTime();
   stringToDisplay = string;
   stringDisplayPos = {x:x,y:y}
   repeatTime = 0;
