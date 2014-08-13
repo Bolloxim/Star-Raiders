@@ -4,6 +4,7 @@ var cX, cY, tX, tY, mouseX, mouseY, density;
 var stars = [];
 var cameraDepth=0;
 var enterWarp, warpStartDepth, warpTime, velocity;
+var warpspread = 3;
 
 // define to 0 to brute force move all stars
 const cameraTrick = 1;
@@ -60,6 +61,7 @@ Star.prototype.move = function()
 Star.prototype.draw = function() 
 {
   // compute depth perspective effect, cameraDepth is used when cameraTrick = 1
+
   var depth = focalPoint / (modulo(this.z + cameraDepth) +1);
   var x = this.x * depth + cX;
   var y = this.y * depth + cY;
@@ -245,9 +247,9 @@ function renderStarfield()
   {
     var index = cameraTrick==1 ? modulo2((i + 1 + Math.floor(cameraDepth)*density) , stars.length) : i;
     // depending on direction of travel is order of drawing trails
-    if (enterWarp && termVelocity<=0) stars[index].warpline();
+    if (enterWarp && termVelocity<=0 && (index%warpspread)==0) stars[index].warpline();
     stars[index].draw();
-    if (enterWarp && termVelocity>0) stars[index].warpline();
+    if (enterWarp && termVelocity>0 && (index%warpspread)==0) stars[index].warpline();
   };  
 }
 
