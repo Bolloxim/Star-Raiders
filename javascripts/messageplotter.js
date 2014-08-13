@@ -131,6 +131,7 @@ function displayText()
     {
       startDisplayTime = t;
       repeatTime = 0;
+      messageList = [];
     }
   var current = t - startDisplayTime;
   var frame = current%speed;
@@ -163,7 +164,7 @@ function displayText()
       context.strokeText(messageList[i], stringDisplayPos.x, y);
    
 	   cursorPos = context.measureText(stringToDisplay);
-//      if (repeatTime<t) repeatTime = t + 5000;
+      if (repeatTime<t) repeatTime = t + 5000;
       if (currentMessage+1<messageList.length) 
       {
         currentMessage++;
