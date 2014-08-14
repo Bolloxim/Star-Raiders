@@ -1,3 +1,11 @@
+// conceptualized and written by andi smithers
+// copyright (C) 2014 andi smithers.
+// freely distributable in whole or in partial
+// please retain credit and comment if distributed
+// thank you. 
+
+
+
 // globals
 var canvas, context, alpha;
 var cX, cY, tX, tY, mouseX, mouseY, density;

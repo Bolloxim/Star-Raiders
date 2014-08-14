@@ -1,3 +1,10 @@
+// conceptualized and written by andi smithers
+// copyright (C) 2014 andi smithers.
+// freely distributable in whole or in partial
+// please retain credit and comment if distributed
+// thank you. 
+
+
 // blinky cursor text scroller 
 var ranks = ["GARBAGE SCOW CAPTAIN",-100,"GALACTIC COOK",0,"ROOKIE",48,"NOVICE",80,"ENSIGN",112,"PILOT",144,"ACE",176,"LIEUTENANT",192,"WARRIOR",208,"CAPTAIN",224,"COMMANDER",240,"STAR COMMANDER",272];
 

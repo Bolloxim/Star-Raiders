@@ -1,3 +1,10 @@
+// conceptualized and written by andi smithers
+// copyright (C) 2014 andi smithers.
+// freely distributable in whole or in partial
+// please retain credit and comment if distributed
+// thank you. 
+
+
 // constant options
 const focalDepth = 1400;
 const focalPoint = 256;
@@ -156,7 +163,7 @@ function render()
    }
 }
 
-function renderZylon(x1, y1, z1, rotation, elevation)
+function renderZylon(x1, y1, z1, rotation, elevation, parts)
 {
   
   // compute depth and 3D position

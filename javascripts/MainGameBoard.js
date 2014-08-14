@@ -1,3 +1,10 @@
+// conceptualized and written by andi smithers
+// copyright (C) 2014 andi smithers.
+// freely distributable in whole or in partial
+// please retain credit and comment if distributed
+// thank you. 
+
+
 const typeBase = 0;
 const typePatrol = 1;
 const typeGroup = 2;
