@@ -73,7 +73,7 @@ BoardPiece.prototype.killTarget = function(shipType)
 
   if (j!=-1)
   {
-    if (this.shipType==base) startText("Starbase destroyed", border.x, 150);
+    if (shipType==base) startText("Starbase destroyed", border.x, 150);
     this.targets.splice(j,1);
     this.numTargets--;
     if (this.numTargets==0) this.status = 0; // byebye
