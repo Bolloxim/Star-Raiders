@@ -73,6 +73,7 @@ BoardPiece.prototype.killTarget = function(shipType)
 
   if (j!=-1)
   {
+    if (this.shipType==base) startText("Starbase destroyed", border.x, 150);
     this.targets.splice(j,1);
     this.numTargets--;
     if (this.numTargets==0) this.status = 0; // byebye
@@ -422,11 +423,16 @@ function UpdateBoard()
    var count = CountHostiles(base.location);
    if (count>=4) // trigger kaboom
    {
-     if (base.nextMove==0) base.nextMove = gameCycle + 2;
+     if (base.nextMove==0)
+     { 
+        base.nextMove = gameCycle + 2;
+        startText("Starbase under attack", border.x, 150);
+     }
      if (base.nextMove<gameCycle)
      { 
        targetBase++;
        base.status = 0;
+       startText("Starbase destroyed", border.x, 150);
        boardPieces.push(new BoardPiece(base.location.x, base.location.y, 1)); 
      }
    }
