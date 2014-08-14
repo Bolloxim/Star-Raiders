@@ -160,17 +160,17 @@ function displayText()
       context.fillText(messageList[i], stringDisplayPos.x, y);
       context.strokeText(messageList[i], stringDisplayPos.x, y);
   }
-
   
 
   stringToDisplay = messageList[currentMessage];
+  if (stringToDisplay==null) return;
   if (stringRenderedLength>stringToDisplay.length) 
   {
       var y = stringDisplayPos.y;
       context.fillText(messageList[i], stringDisplayPos.x, y);
       context.strokeText(messageList[i], stringDisplayPos.x, y);
    
-	   cursorPos = context.measureText(stringToDisplay);
+	    cursorPos = context.measureText(stringToDisplay);
       if (repeatTime<t) repeatTime = t + 5000;
       if (currentMessage+1<messageList.length) 
       {
