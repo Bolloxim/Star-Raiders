@@ -171,7 +171,7 @@ function displayText()
       context.strokeText(messageList[i], stringDisplayPos.x, y);
    
 	   cursorPos = context.measureText(stringToDisplay);
-      if (repeatTime<t) repeatTime = t + 5000;
+      //if (repeatTime<t) repeatTime = t + 5000;
       if (currentMessage+1<messageList.length) 
       {
         currentMessage++;
