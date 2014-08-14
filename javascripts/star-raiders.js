@@ -4,7 +4,6 @@
 // please retain credit and comment if distributed
 // thank you. 
 
-
 // constant options
 const focalDepth = 80;
 const focalPoint = 256;
@@ -51,7 +50,7 @@ var localPosition = {x:0, y:0, z:0};
 var shipPing     = {x:0, y:0};
 var pingRadius   = 100;
 var lastCycle    = 0;
-var cycleScalar   = 1; // 3 = 30 seconds. 
+var cycleScalar   = 3; // 3 = 30 seconds. 
 var targetBase   = 0;
 var localSpaceCubed = 1024;
 var lrScale         = {x:0, y:0};
@@ -163,7 +162,7 @@ NME.prototype.randomize = function(type)
   this.pos.y = Math.random()*localSpaceCubed;
   this.pos.z = Math.random()*localSpaceCubed;
   
-  this.vel = RandomNormal();
+  if (type!=base)  this.vel = RandomNormal();
 
   this.type = type;
   
@@ -178,7 +177,25 @@ NME.prototype.render = function()
    var z = modulo2(localPosition.z - this.pos.z, localSpaceCubed)-localSpaceCubed*0.5;
 
    var camspace = orientation.transform(x, y, z);
-   renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
+   switch(this.type)
+     {
+       case base:
+          var scale = 512/canvas.height;
+          var depth = focalPoint*5 / camspace.z + 5*scale;
+          var sx = camspace.x * depth + centreX;
+          var sy =camspace.y * depth + centreY;
+          var sz = 1 * depth;
+
+          if (camspace.z>0) RenderStarbase(sx, sy, sz, Math.atan2(camspace.z, camspace.y)+Math.PI);
+          break;
+       case fighter:
+          renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
+          break;
+       default:
+          renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
+          break;
+     }
+
 }
 
 
@@ -196,19 +213,19 @@ function DrawRedAlert()
     if (redAlert == false)
     {
       document.getElementById("star-raiders").style.background = 'black';
-      backgroundColor = 'rgb(0,0,16)';
+      backgroundColor = 'rgb(0,0,0)';
       starsColorAlias = backgroundColor;
       return;
     }
 
-    redAlertColor = (Math.floor(delta/500) & 1)*255;
+    redAlertColor = (Math.floor(delta/500) & 1)*64;
     context.globalAlpha = 1.0;
     context.font = '40pt Orbitron';
-    context.fillStyle = 'rgb('+(redAlertColor^255)+',0,'+redAlertColor+')';
+    context.fillStyle = 'rgb('+(redAlertColor^64)+',0,'+redAlertColor+')';
     context.textAlign = "center";
     context.fillText('RED ALERT', canvas.width/2, 50);
     
-    backgroundColor = 'rgb('+((redAlertColor))+',0,'+((redAlertColor^255))+')';
+    backgroundColor = 'rgb('+((redAlertColor))+',0,'+((redAlertColor^64))+')';
     starsColorAlias = backgroundColor;
 }
 
@@ -458,7 +475,7 @@ function init()
   SetupButtons();
   
   // populate map
-  BoardSetup(commander);
+  BoardSetup(pilot);
   
   // populate local space
   SetupAsteriods(localSpaceCubed);
@@ -469,6 +486,8 @@ function init()
   var d = new Date();
   gameStart = d.getTime();
   
+  // override
+  warpspread = 2;
   // testing this
   PressButton("Target Comp");
 }
@@ -583,6 +602,7 @@ function renderInformation()
   renderStarDate();
   renderVelocity();
   renderEnergy();
+  renderKills();
 }
 
 function renderGalaxyInformation()
@@ -602,14 +622,14 @@ function renderGalaxyInformation()
     context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,0)';
     context.textAlign = "left";
-    context.fillText('Targets: ' + targets, mapScale.x, canvas.height-15);
+    context.fillText('Targets: ' + targets, border.x+mapCentreX, border.y+mapScale.y*8+24+mapCentreY);
 
     var fuel = ShipCalculateWarpEnergy(mouseX, mouseY);
    
     context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,0)';
     context.textAlign = "center";
-    context.fillText('Warp Energy: ' + fuel, canvas.width/2, canvas.height-40);
+    context.fillText('Warp Energy: ' + fuel, canvas.width/2+mapCentreX, border.y+mapScale.y*8+24+mapCentreY);
   
     if (warpLocked)
     {
@@ -618,7 +638,7 @@ function renderGalaxyInformation()
       warpEnergy = fuel;
       context.textAlign = "centre";
       context.font = '22pt Orbitron';
-          context.fillStyle = 'rgb(0,0,255)';
+      context.fillStyle = 'rgb(0,0,255)';
       context.fillText('Energy: ' + fuel, warpLocation.x*mapScale.x+border.x+mapCentreX, warpLocation.y*mapScale.y+mapCentreY+border.y-12);
      
     }
@@ -668,7 +688,18 @@ function renderIconShip(posx, posy, scale)
 
 function gradon(radian)
 {
-  return Math.floor(radian*100 / (Math.PI*2) +50.0);
+  return Math.floor(radian*100 / (Math.PI*2));
+}
+
+function leadPadding(value, num, sign)
+{
+  var padded = value>=0 ? (sign?'+':'') :'-';
+  var absvalue = Math.abs(value);
+  for (var i=1;i<num;i++)
+  {
+    padded += (absvalue<Math.pow(10,i)) ? "0":"";
+  }
+  return padded+absvalue;
 }
 
 function renderTargetingComputer()
@@ -758,10 +789,11 @@ function renderTargetingComputer()
           context.fillStyle = 'rgb(255,255,0)';
           context.textAlign = "left";
         
-          context.fillText('T:'+trackingTarget, x1, canvas.height-15);   
-          context.fillText('R:'+distance, x1+xw*0.5, canvas.height-15);   
-          context.fillText('Φ:'+gradonPhi, x1, y1-15); 
-          context.fillText('θ:'+gradonTheta , x1+xw*0.5, y1-15);   
+          context.fillText('T:'+trackingTarget, x1, canvas.height-15);
+          
+          context.fillText('R:'+leadPadding(distance,3, true), x1+xw*0.5, canvas.height-15);   
+          context.fillText('Φ:'+leadPadding(gradonPhi,2, true), x1, y1-15);
+          context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
         
       }
 }
@@ -778,6 +810,15 @@ function renderStarDate()
   context.textAlign = "left";
   leadingzero = decimalTime<10 ? '0':'';
   context.fillText('StarDate: ' + leadingzero + decimalTime.toFixed(2), canvas.width-border.x+15, canvas.height-15);
+}
+
+function renderKills()
+{
+  context.font = '20pt Orbitron';
+  context.fillStyle = 'rgb(255,255,0)';
+  context.textAlign = "left";
+  leadingzero = kills<10 ? '0':'';
+  context.fillText('Kills: ' + leadingzero + kills, 15, canvas.height-15);
 }
 
 function renderVelocity()
@@ -855,6 +896,8 @@ function render()
   PhotonCheck();
   
   DrawRedAlert();
+
+ // displayText();
 }
 
 // per frame tick functions
@@ -996,6 +1039,7 @@ function ToggleShields(button)
   shieldUp=button.state;
   splutterCount = 30;
   splutterNoise = 60;
+  startText(shieldUp?"Shields Activated": "Shields Deactivated", border.x, 150);
 }
 
 function ToggleTargetComp(button)
@@ -1015,6 +1059,7 @@ function ToggleTargetComp(button)
      button.state = 0;
      targetComputer=0;
    }
+
 }
 
 function ToggleTrackingComp(button)
@@ -1121,6 +1166,9 @@ function UpdateShipControls()
 
  }
 
+var starTheta = 0;
+var starPhi = 0;
+
 // continual movement.. 
 function TestMoveUnderMouse(mouseX, mouseY)
 {
@@ -1170,7 +1218,7 @@ function TestMoveUnderMouse(mouseX, mouseY)
   // changing
   initVelocity = -setShipVelocity*0.05;
   if (viewingAft()) initVelocity*=-1;
-
+  
 }
 
 /*
@@ -1408,8 +1456,8 @@ function CollideAsteriods(sx, sy, sz)
       if (dx*dx+dy*dy < size*size && dz*dz < 4000)
       {
           // create particle
-          spawnX=x1;
-          spawnY=y1;
+          spawnX=sx
+          spawnY=sy;
           spawnZ=t.z*4;
 
           dustEmitter.create();
@@ -1469,8 +1517,8 @@ function CollideNMEs(sx, sy, sz)
                 nme.hitpoints--;
               }
               // create particle
-              spawnX=x1;
-              spawnY=y1;
+              spawnX=sx;
+              spawnY=sy;
               spawnZ=t.z;
 
               if (nme.hitpoints != 0)
