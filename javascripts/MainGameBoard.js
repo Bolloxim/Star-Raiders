@@ -433,7 +433,14 @@ function UpdateBoard()
        targetBase++;
        base.status = 0;
        startText("Starbase destroyed", border.x, 150);
-       boardPieces.push(new BoardPiece(base.location.x, base.location.y, 1)); 
+       var patrol = new BoardPiece(base.location.x, base.location.y, typePatrol)
+       boardPieces.push(patrol);
+       // is ship in same sector
+       if (shipPosition.x == base.location.x && shipPosition.y == base.location.y)
+       {
+         DestroyStarbase();
+         SetupNMEs(patrol);
+       }
      }
    }
    else
