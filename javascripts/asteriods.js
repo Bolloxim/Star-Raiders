@@ -128,9 +128,7 @@ Asteriod.prototype.init = function()
   this.y = Math.random()*localSpace-localSpace*0.5;
   this.z = Math.random()*localSpace-localSpace*0.5;
 
-  this.force.x = 0;
-  this.force.y = 0;
-  this.force.z = 0;
+  this.force = {x:0, y:0, z:0};
   
   this.angVel = {y:(Math.random()-0.5)*Math.PI/120, p:(Math.random()-0.5)*Math.PI/120, r:(Math.random()-0.5)*Math.PI/120};
   this.rotation = new matrix3x3();
