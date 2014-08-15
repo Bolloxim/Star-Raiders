@@ -40,9 +40,9 @@ function SpawnAsteriodsAt(loc)
     roid.x = loc.x;
     roid.y = loc.y;
     roid.z = loc.z;
-    roid.force.x = Math.random()*4-2;
-    roid.force.y = Math.random()*4-2;
-    roid.force.z = Math.random()*4-2;
+    roid.force.x = Math.random()*0.4-0.2;
+    roid.force.y = Math.random()*0.4-0.2;
+    roid.force.z = Math.random()*0.4-0.2;
     asteriods.push(roid);
   }
 }
