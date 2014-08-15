@@ -250,6 +250,7 @@ function render()
 
 function renderStarfield()
 {
+  context.globalCompositeOperation='source-over';
   // draw all stars
   for (i = 0; i < stars.length; i++) 
   {
