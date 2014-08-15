@@ -436,7 +436,7 @@ function UpdateBoard()
        var patrol = new BoardPiece(base.location.x, base.location.y, typePatrol)
        boardPieces.push(patrol);
        // is ship in same sector
-       if (shipPosition.x == base.location.x && shipPosition.y == base.location.y)
+       if (shipLocation.x == base.location.x && shipLocation.y == base.location.y)
        {
          DestroyStarbase();
          SetupNMEs(patrol);
