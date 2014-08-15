@@ -37,9 +37,12 @@ function SpawnAsteriodsAt(loc)
   for (var i=0; i<8; i++)
   {
     var roid = new Asteriod(localSpace);
-    roid.x = loc.x + Math.random()*8-4;
-    roid.y = loc.y + Math.random()*8-4;
-    roid.z = loc.z + Math.random()*8-4;
+    roid.x = loc.x;
+    roid.y = loc.y;
+    roid.z = loc.z;
+    force.x = Math.random()*4-2;
+    force.y = Math.random()*4-2;
+    force.z = Math.random()*4-2;
     asteriods.push(roid);
   }
 }
@@ -124,6 +127,10 @@ Asteriod.prototype.init = function()
   this.x = Math.random()*localSpace-localSpace*0.5;
   this.y = Math.random()*localSpace-localSpace*0.5;
   this.z = Math.random()*localSpace-localSpace*0.5;
+
+  this.force.x = 0;
+  this.force.y = 0;
+  this.force.z = 0;
   
   this.angVel = {y:(Math.random()-0.5)*Math.PI/120, p:(Math.random()-0.5)*Math.PI/120, r:(Math.random()-0.5)*Math.PI/120};
   this.rotation = new matrix3x3();
@@ -179,9 +186,9 @@ Asteriod.prototype.update = function()
   matrixR.rotateY(this.angVel.r);
   this.rotation.clone(this.rotation.multiply(matrixR.multiply(matrixP.multiply(matrixY))));
   
-  this.x += this.angVel.p;
-  this.y += this.angVel.r;
-  this.z += this.angVel.y;
+  this.x += this.angVel.p + this.force.x;
+  this.y += this.angVel.r + this.force.y;
+  this.z += this.angVel.y + this.force.z;
 
   // update collision
   var x = modulo2(localPosition.x - this.x, localSpace)-localSpace*0.5;
