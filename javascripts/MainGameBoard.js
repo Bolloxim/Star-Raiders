@@ -272,8 +272,8 @@ function CountHostiles(loc)
     {
       for (var j=-1; j<2; j++)
         {
-          var p = GetBoardPiece(loc.x+i, loc.y+j);
-          if (p>=0 && p.type!=0) count++;
+          var p = GetBoardPiece(loc.x+i, loc.y+j, 0);
+          if (p>=0 && boardPieces[p].status && boardPieces[p].type!=base) count++;
         }
     }
   

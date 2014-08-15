@@ -80,6 +80,7 @@ function blinky(x, t)
 {
   if ((t%(speed<<3))<speed<<2) return;
   context.globalAlpha = 1;
+  context.beginPath();
   context.fillStyle = 'rgb(0,255,0)';
   context.fillRect(x, stringDisplayPos.y-50, 30, 50);
 }
@@ -196,7 +197,9 @@ function displayText()
 
   
 	blinky(stringDisplayPos.x + cursorPos.width, t);
-    context.globalCompositeOperation = 'source-over';
+
+  context.globalCompositeOperation = 'source-over';
+  context.globalAlpha = 1;
 }
 
 // rendering functions
