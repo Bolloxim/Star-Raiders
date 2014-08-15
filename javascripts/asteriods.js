@@ -32,6 +32,18 @@ function SetupAsteriods(space)
   }
 }
 
+function SpawnAsteriodsAt(loc)
+{
+  for (var i=0; i<8; i++)
+  {
+    var roid = new Asteriod(localSpace);
+    roid.x = loc.x + Math.random()*8-4;
+    roid.y = loc.y + Math.random()*8-4;
+    roid.z = loc.z + Math.random()*8-4;
+    asteriods.push(roid);
+  }
+}
+
 function RenderAsteriods()
 {
   context.globalCompositeOperation='source-over';
