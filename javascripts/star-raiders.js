@@ -122,7 +122,38 @@ function UpdateNMEs()
        nmes[i].pos.y = y;
        nmes[i].pos.z = z;
      }
+  
+    if (nmes[i].type==base)  
+    {
+       // compute distance
+       var delta = nmes[i].delta();
+       var t = orientation.transform(delta.x, delta.y, delta.z);
+
+       // compute angles
+       var phi = Math.atan2(t.x, t.z);
+       var theta = Math.atan2(t.y, Math.sqrt(t.x*t.x+t.z*t.z));
+       var a = Math.abs(gradon(phi));
+       var b = Math.abs(gradon(theta));
+       var dock = (a <= 1 && b <= 1 && t.z <= 5) ? true:false;
+
+       EnableDocking(dock);
+    }
   }
+}
+
+function DestroyStarbase()
+{
+    // verify base
+    if (nmes[0].type == base) 
+    {
+       // detroy base
+       SpawnAsteriodsAt(nmes[0].pos);
+       spawnX = nmes[0].pos.x;
+       spawnY = nmes[0].pos.y;
+       spawnZ = nmes[0].pos.z;
+       explodeEmitter.create();
+       dustEmitter.create();
+    }
 }
 
 function RenderNMEs()
@@ -136,6 +167,8 @@ function RenderNMEs()
 
 function KillNmeType(shipType)
 {
+  if (shipType == base) DestroyStarbase();
+  
   kills++;
   statistics.killTypes[shipType]++;
   // update board item
@@ -170,6 +203,14 @@ NME.prototype.randomize = function(type)
   this.hitpoints = hitpointTable[type];
 }
 
+NME.prototype.delta = function()
+{
+   var x = modulo2(localPosition.x - this.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+   var y = modulo2(localPosition.y - this.pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+   var z = modulo2(localPosition.z - this.pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+   return {x:x, y:y, z:z};
+}
+
 NME.prototype.render = function()
 {
    var x = modulo2(localPosition.x - this.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
@@ -198,7 +239,34 @@ NME.prototype.render = function()
 
 }
 
+var docking;
+var dockTimer;
 
+function EnableDocking(dock)
+{
+   if (dock && !docking)
+   {
+     docking = true;
+     startText("docked with starbase: transfering...", border.x, 150);
+     dockTimer = (new Date()).getTime()+5000;
+   }
+  
+   if (!dock && docking)
+   {
+     docking = false;
+     if (energy<9900)
+       startText("docking aborted!", border.x, 150);
+     else
+       startText("undocked starbase", border.x, 150);
+   }
+  
+   if (docking && dockTimer<(new Date()).getTime())
+   {
+      energy = 9999;
+      dockTimer+=100000;
+      startText("transfer completed", border.x, 150);
+   }
+}
 
 function SetRedAlert()
 {
@@ -483,6 +551,9 @@ function init()
   // populate shiplocation
   SetupNMEs(GetPieceAtShipLocation());
   
+  // background stars
+  InitStarDome();
+  
   var d = new Date();
   gameStart = d.getTime();
   
@@ -765,7 +836,8 @@ function renderTargetingComputer()
              var z = modulo2(localPosition.z - nmes[trackingTarget].pos.z, localSpaceCubed)-localSpaceCubed*0.5;
              
              var t = orientation.transform(x,y,z);
-             distance = Math.round(t.z);
+             distance = Math.round(Math.sqrt(t.x*t.x+t.y*t.y+t.z*t.z));
+             if (t.z<0) distance*=-1;
              // compute angles
              var phi = Math.atan2(t.x, t.z);
              var rx1 = (modulo2(phi+Math.PI, Math.PI*2) / (Math.PI*2)) * (xw-30) + x1+15;
@@ -843,6 +915,7 @@ function renderEnergy()
 
 function renderGameScreen()
 {
+ // RenderStarDome();
   renderStarfield();
   RenderAsteriods();
   RenderNMEs();
@@ -897,7 +970,7 @@ function render()
   
   DrawRedAlert();
 
- // displayText();
+  displayText();
 }
 
 // per frame tick functions
@@ -1575,6 +1648,50 @@ function PhotonCheck()
           }
       }
    }
+}
+
+const maxpoints = 1024;
+var pointcloud =[];
+
+function InitStarDome()
+{
+   for (var i=0; i<maxpoints;i++)
+   {
+       pointcloud.push(RandomNormal());
+   }
+}
+
+var theta = 0;
+var phi = 0;
+
+function RenderStarDome()
+{ 
+//    theta+=0.01;
+  //  phi+=0.01;
+    var scale = 1000* canvas.height/500;
+    context.beginPath();
+    for (var i=0; i<pointcloud.length; i++)
+    {
+        var point = pointcloud[i];
+        var t = orientation.transform(point.x, point.y, point.z);
+        var x1=t.x*scale;
+        var y1=t.y*scale;
+        var z1=t.z*scale+focalDepth;
+      
+      
+        if (z1+focalDepth<0) continue;
+        var depth = focalPoint*5 / (z1 + focalDepth );
+    
+        var x = x1 * depth + centreX;
+        var y = y1 * depth + centreY;
+        var sz = depth * 0.2;
+
+        // fill a rect
+        context.rect(x,y, 4, 4);
+    }
+  
+    context.fillStyle = '#333333';
+    context.fill();
 }
 
 
