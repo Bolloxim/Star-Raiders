@@ -369,11 +369,18 @@ function SetWarpPoint(x, y, lock)
   warpLocation.y = Math.min(Math.max(y-border.y, 0), mapScale.y*16) / mapScale.y;
   
   warpAnim = 0;
+  startText("Hyperspace Destination Set", border.x, 150);
+
 }
 
 function ClearWarpPoint()
 {
+  if (warpLocked==true)
+  {
+    startText("Cleared Hyperspace Destination", border.x, 150);
+  }
   warpLocked = false;
+
 }
 
 // many thanks to http://www.sonic.net/~nbs/star-raiders/docs/v.html 
