@@ -120,8 +120,11 @@ function randomText()
 
 function startText(string, x, y)
 {
-  var d = new Date();
-  startDisplayTime = d.getTime();
+  if (messageList[currentMessage]==null)
+  {
+    var d = new Date();
+    startDisplayTime = d.getTime();
+  }
   stringToDisplay = string;
   stringDisplayPos = {x:x,y:y}
   repeatTime = 0;
@@ -139,6 +142,7 @@ function displayText()
     {
       startDisplayTime = t;
       repeatTime = 0;
+      currentMessage = 0;
       messageList = [];
     }
   var current = t - startDisplayTime;
@@ -173,12 +177,9 @@ function displayText()
    
 	    cursorPos = context.measureText(stringToDisplay);
       if (repeatTime<t) repeatTime = t + 5000;
-      if (currentMessage+1<messageList.length) 
-      {
-        currentMessage++;
-          var d = new Date();
-        startDisplayTime = d.getTime();
-       }
+         currentMessage++;
+         var d = new Date();
+         startDisplayTime = d.getTime();
   }
   else
   {
