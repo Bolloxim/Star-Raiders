@@ -408,11 +408,16 @@ function shieldFlash(x, y)
   shieldFlashTimer = 30;
 }
 
-var spin =0;
+var spinX =0;
+var spinY
 function renderShield()
 {
    splutterNoise++;
-   spin+=0.01;
+   spindx = angleX-spinX;
+   spinX+=spindx*0.1;
+   spindy = angleY-spinY;
+   spinY+=spindy*0.1;
+   
    if (splutterCount) splutterCount--;
    var splutter = splutterNoise&splutterCount;
    var shieldFlashCol = 0;
@@ -429,7 +434,7 @@ function renderShield()
        context.globalCompositeOperation='lighter';
 
        var phi = Math.PI*0.5;
-       var theta = spin;
+       var theta = spinX;
        var transforms = [];
        var cphi = Math.cos(phi);
        var sphi = Math.sin(phi);
@@ -446,7 +451,7 @@ function renderShield()
           // rotate phi 
           var tx = vert.x * cphi - ty * sphi;
               ty = ty * cphi + vert.x * sphi;
-         
+
           // pixel depth using a long focal distance to ensure all set is in focus
           var depth = 1200 / ((tz + 0.2*256/canvas.height) +1);
           var x1 = tx*depth+centreX;
