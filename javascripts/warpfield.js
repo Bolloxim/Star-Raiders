@@ -66,6 +66,19 @@ Star.prototype.move = function()
   this.z = modulo(this.z + velocity)
 }
 
+Star.prototype.pan = function(horizontal, vertical)
+{
+  // dont really have to move all stars
+  this.x += horizontal*4;
+  this.y += vertical*4;
+  // modulo math went a bit wonky  
+  if (this.x<-1024*sparcity) this.x+=2048*sparcity;
+  if (this.y<-1024*sparcity) this.y+=2048*sparcity;
+  if (this.x>1024*sparcity) this.x-=2048*sparcity;
+  if (this.y<-1024*sparcity) this.y-=2048*sparcity;
+}
+
+
 Star.prototype.draw = function() 
 {
   // compute depth perspective effect, cameraDepth is used when cameraTrick = 1
@@ -167,6 +180,14 @@ function animate()
   render();
   // trigger next frame
   requestAnimationFrame(animate);
+}
+
+function panStarfield(horizontal, vertical)
+{
+  for (i = 0; i < stars.length; i++) 
+  {
+    stars[i].pan(horizontal, vertical);
+  };
 }
 
 function move()
