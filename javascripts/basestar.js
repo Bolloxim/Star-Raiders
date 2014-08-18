@@ -26,7 +26,7 @@ var frameCount=0;
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('cone-cylinder');
+	canvas = document.getElementById('star-raiders');
 	context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
