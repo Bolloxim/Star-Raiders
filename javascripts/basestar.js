@@ -131,8 +131,8 @@ function RenderLazers(x, y, r, baseAngle)
     var r2 = r1;
     var y3 = y;
 
-   RenderCylinder(x-150, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
-   RenderCylinder(x+150, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
+   RenderCylinder(x-r*1.5, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
+   RenderCylinder(x+r*1.5, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
 
 }
 
