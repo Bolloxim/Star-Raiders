@@ -24,7 +24,7 @@ var termVelocity = -10.0;
 const topleft = 0;
 const trackMouse = 1;
 const focalPoint = 256;
-const sparcity = 1.0;
+const sparcity = 2.0;
 const tailLength = 20;
 
 const viewFront = 0;
