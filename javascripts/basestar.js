@@ -94,14 +94,11 @@ function render()
 
 // star base construction - eer well it was but its a cool blue marble demo for now
 // to rotate horizontally switch out the x/y registers.  I should probably make this generic ..  however just want to use this for the starbase construction in star-raiders
-   var lazerLength = 50;
-  var lazerAngle = 0;
 
 function RenderBasestar(x, y, r, baseAngle)
 {  
-    var len = 20;
-    r = 100;
-    var r2 = -100;
+    var len = r/5;
+    var r2 = -r;
   
     // compute y
     var y1 = y+len*2*Math.cos(baseAngle+Math.PI*0.5);
@@ -119,22 +116,22 @@ function RenderBasestar(x, y, r, baseAngle)
     {
       RenderHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2), '#808080', '#808080');
       RenderCylinder(x, y, r2, r, len*2, baseAngle, '#808080', '#808080', 'darkred');
-      RenderLazers(x,y,baseAngle);
+      RenderLazers(x, y, r, baseAngle);
       RenderHemisphere(x, y2, r, baseAngle, '#808080', '#808080');      
     }
     
 }
 
-function RenderLazers(x,y, baseAngle)
+function RenderLazers(x, y, r, baseAngle)
 {
 //   context.rotate(Math.PI*0.5);
   // context.translate(-x+y,-y-x);
-    var r = 10;
-    var r2 = 10;
+    var r1 = r/10;
+    var r2 = r2;
     var y3 = y;
 
-   RenderCylinder(x-150, y3, r2, r, lazerLength, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
-   RenderCylinder(x+150, y3, r2, r, lazerLength, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
+   RenderCylinder(x-150, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
+   RenderCylinder(x+150, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
 
 }
 
