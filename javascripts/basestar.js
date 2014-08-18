@@ -97,6 +97,7 @@ function render()
 
 function RenderBasestar(x, y, r, baseAngle)
 {  
+    if (r < 10) return;
     var len = r/5;
     var r2 = -r;
   
@@ -106,18 +107,18 @@ function RenderBasestar(x, y, r, baseAngle)
   
     if (baseAngle<Math.PI*0.5 || baseAngle>Math.PI*1.5)
     {
-      RenderHemisphere(x, y2, r, baseAngle, '#808080', '#808080');
+      RenderBaseHemisphere(x, y2, r, baseAngle, '#808080', '#808080');
 
       RenderCylinder(x, y, r2, r, len*2, baseAngle, '#808080', '#808080', 'darkred');
       RenderLazers(x,y,baseAngle);
-      RenderHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2),'#808080', '#808080');
+      RenderBaseHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2),'#808080', '#808080');
     }
     else
     {
-      RenderHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2), '#808080', '#808080');
+      RenderBaseHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2), '#808080', '#808080');
       RenderCylinder(x, y, r2, r, len*2, baseAngle, '#808080', '#808080', 'darkred');
       RenderLazers(x, y, r, baseAngle);
-      RenderHemisphere(x, y2, r, baseAngle, '#808080', '#808080');      
+      RenderBaseHemisphere(x, y2, r, baseAngle, '#808080', '#808080');      
     }
     
 }
@@ -135,7 +136,7 @@ function RenderLazers(x, y, r, baseAngle)
 
 }
 
-function RenderHemisphere(x, y, r, angle, colTop, colBot)
+function RenderBaseHemisphere(x, y, r, angle, colTop, colBot)
 {
    // rotation
     m = 0.5522848;
