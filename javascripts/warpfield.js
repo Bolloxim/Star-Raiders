@@ -75,7 +75,7 @@ Star.prototype.pan = function(horizontal, vertical)
   if (this.x<-1024*sparcity) this.x+=2048*sparcity;
   if (this.y<-1024*sparcity) this.y+=2048*sparcity;
   if (this.x>1024*sparcity) this.x-=2048*sparcity;
-  if (this.y<-1024*sparcity) this.y-=2048*sparcity;
+  if (this.y>1024*sparcity) this.y-=2048*sparcity;
 }
 
 
