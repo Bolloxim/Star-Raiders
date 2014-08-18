@@ -110,7 +110,7 @@ function RenderBasestar(x, y, r, baseAngle)
       RenderBaseHemisphere(x, y2, r, baseAngle, '#808080', '#808080');
 
       RenderCylinder(x, y, r2, r, len*2, baseAngle, '#808080', '#808080', 'darkred');
-      RenderLazers(x,y,baseAngle);
+      RenderLazers(x, y, r, baseAngle);
       RenderBaseHemisphere(x, y1, r, (baseAngle+Math.PI)%(Math.PI*2),'#808080', '#808080');
     }
     else
@@ -184,7 +184,6 @@ function RenderBaseHemisphere(x, y, r, angle, colTop, colBot)
 
 function RenderCylinder(x, y, r1, r2, side, angle, colTop, colBot, colSide)
 {
-    if (r1 <1 || r2 <1) return;
    // rotation
     var m = 0.5522848;
 
