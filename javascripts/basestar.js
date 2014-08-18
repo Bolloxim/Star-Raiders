@@ -128,7 +128,7 @@ function RenderLazers(x, y, r, baseAngle)
 //   context.rotate(Math.PI*0.5);
   // context.translate(-x+y,-y-x);
     var r1 = r/10;
-    var r2 = r2;
+    var r2 = r1;
     var y3 = y;
 
    RenderCylinder(x-150, y3, r2, r1, r/2, baseAngle+Math.PI*0.5, 'rgba(255,255,0,1)','rgba(255,128,0,1)','rgba(255,0,0,1)');
