@@ -451,12 +451,12 @@ function UpdateBoard()
     }
     shipPing.x = shipPosition.x;
     shipPing.y = shipPosition.y;
-  }
+  
 
   lastCycle = gameCycle;
 
   UpdateBaseAttack(gameCycle);
-
+  }
 } 
 
 function UpdateBaseAttack(gameCycle)
@@ -494,9 +494,10 @@ function UpdateBaseAttack(gameCycle)
    }
    else
    {
+     if (base.nextMove!=0)
+         startText("Starbase clear", border.x, 150);
      // clear count down
      base.nextMove = 0;  
-     startText("Starbase clear", border.x, 150);
    }
 
    // trigger the end
