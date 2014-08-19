@@ -1,9 +1,29 @@
-// conceptualized and written by andi smithers
-// copyright (C) 2014 andi smithers.
-// freely distributable in whole or in partial
-// please retain credit and comment if distributed
-// thank you. 
 
+/*****************************************************************************
+The MIT License (MIT)
+
+Copyright (c) 2014 Andi Smithers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
+// conceptualized and written by andi smithers
 
 const typeBase = 0;
 const typePatrol = 1;
@@ -73,11 +93,19 @@ BoardPiece.prototype.killTarget = function(shipType)
 
   if (j!=-1)
   {
-    if (shipType==base) startText("Starbase destroyed", border.x, 150);
+    if (shipType==base)
+    {
+      startText("Starbase destroyed", border.x, 150);
+    }
     this.targets.splice(j,1);
     this.numTargets--;
-    if (this.numTargets==0) this.status = 0; // byebye
+    if (this.numTargets==0)
+    {
+      this.status = 0; // bye bye
+      UpdateBaseAttack(lastCycle);
+    }
   }
+  
 }
 
 // render pieces
@@ -424,16 +452,29 @@ function UpdateBoard()
     shipPing.x = shipPosition.x;
     shipPing.y = shipPosition.y;
   }
+
   lastCycle = gameCycle;
-  
+
+  UpdateBaseAttack(gameCycle);
+
+} 
+
+function UpdateBaseAttack(gameCycle)
+{
     // check starbase health and trigger destruction 
    var base = boardPieces[targetBase];
+   if (base.status == 0)
+   {
+      // opps we killed it, how 'strategic' cpu needs new target
+      targetBase++;
+   }
+
    var count = CountHostiles(base.location);
    if (count>=4) // trigger kaboom
    {
      if (base.nextMove==0)
      { 
-        base.nextMove = gameCycle + 2;
+        base.nextMove = gameCycle + 3;
         startText("Starbase under attack", border.x, 150);
      }
      if (base.nextMove<gameCycle)
@@ -453,11 +494,13 @@ function UpdateBoard()
    }
    else
    {
+     // clear count down
      base.nextMove = 0;  
    }
-  
-   if (targetBase == 4 ) // zylons win
+
+   // trigger the end
+   if (targetBase == gameDifficulty+3 ) // zylons win
    {
       BoardSetup(gameDifficulty);
    }
- } 
+}
