@@ -496,6 +496,7 @@ function UpdateBaseAttack(gameCycle)
    {
      // clear count down
      base.nextMove = 0;  
+     startText("Starbase clear", border.x, 150);
    }
 
    // trigger the end
