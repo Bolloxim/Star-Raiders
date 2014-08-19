@@ -102,6 +102,7 @@ BoardPiece.prototype.killTarget = function(shipType)
     if (this.numTargets==0)
     {
       this.status = 0; // bye bye
+      startText("Sector clear", border.x, 150); 
       UpdateBaseAttack(lastCycle);
     }
   }
@@ -453,10 +454,11 @@ function UpdateBoard()
     shipPing.y = shipPosition.y;
   
 
-  lastCycle = gameCycle;
+    lastCycle = gameCycle;
+  }
 
   UpdateBaseAttack(gameCycle);
-  }
+  
 } 
 
 function UpdateBaseAttack(gameCycle)
@@ -474,7 +476,7 @@ function UpdateBaseAttack(gameCycle)
    {
      if (base.nextMove==0)
      { 
-        base.nextMove = gameCycle + 6;
+        base.nextMove = gameCycle + 5;
         startText("Starbase under attack", border.x, 150);
      }
      if (base.nextMove<gameCycle)
