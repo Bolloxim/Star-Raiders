@@ -474,7 +474,7 @@ function UpdateBaseAttack(gameCycle)
    {
      if (base.nextMove==0)
      { 
-        base.nextMove = gameCycle + 3;
+        base.nextMove = gameCycle + 6;
         startText("Starbase under attack", border.x, 150);
      }
      if (base.nextMove<gameCycle)
