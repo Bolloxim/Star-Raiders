@@ -172,3 +172,10 @@ matrix3x3.prototype.transform = function(tx, ty, tz)
           y:tx*this.m[3]+ty*this.m[4]+tz*this.m[5],
           z:tx*this.m[6]+ty*this.m[7]+tz*this.m[8]};
 }
+
+matrix3x3.prototype.invtransform = function(tx, ty, tz)
+{
+  return {x:tx*this.m[0]+ty*this.m[3]+tz*this.m[6], 
+          y:tx*this.m[1]+ty*this.m[4]+tz*this.m[7],
+          z:tx*this.m[2]+ty*this.m[5]+tz*this.m[8]};
+}
