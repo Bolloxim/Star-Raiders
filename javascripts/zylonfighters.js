@@ -193,12 +193,13 @@ function renderZylon(x1, y1, z1, rotation, elevation, parts)
   var y = y1 * depth + centreY;
   var size  = 1 * depth;
 
+/*
   if (!autoRotate)
   {
-    rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
+     rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
      elevation = Math.atan2((y - mouseY) , canvas.height);
   }
-  
+  */
   if (size<=0) return;
   
   var fade = 1.0;
