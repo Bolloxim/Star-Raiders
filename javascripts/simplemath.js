@@ -83,15 +83,25 @@ vector3.prototype.dot = function(vector)
 
 vector3.prototype.normalize = function()
 {
-  var mag = 1 / Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
-  this.x*=mag;
-  this.y*=mag;
-  this.z*=mag;
+  var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  if (mag==0)
+  {
+    this.z=1.0;
+  }
+  else
+  {
+    mag=1.0/mag;
+    this.x*=mag;
+    this.y*=mag;
+    this.z*=mag;
+  }
 }
 
 vector3.prototype.normal = function()
 {
-  var mag = 1 / Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  if (mag==0) return new vector3(0,0,1);
+  mag=1.0/mag;
   return new vector3(this.x*mag, this.y*mag, this.z*mag);
 }
 
