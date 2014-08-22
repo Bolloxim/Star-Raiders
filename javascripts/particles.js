@@ -77,7 +77,7 @@ ExplodeParticleEmitter.prototype.generate = function()
   this.vel = new RandomNormal();
   this.velsize = Math.random()*-1.0;
   this.life = Math.random()*5.0;
-  this.color = 'rgb('+64+this.iteration/4+','+16+this.iteration/16+','+8+this.iteration/32+')';
+  this.color = 'rgb('+64+this.iteration/4+','+this.iteration/16+','+this.iteration/32+')';
   this.iteration++;
 }
 
