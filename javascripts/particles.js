@@ -62,8 +62,8 @@ ExplodeParticleEmitter.prototype.series = function()
 
   this.iteration = 0;
   this.particleCount = 256;
-  this.sx = spawnX;
-  this.sy = spawnY;
+  this.sx = centreX;
+  this.sy = centreY;
   this.size = 6.0;
   this.time = 0;
   this.life = 5;
@@ -73,11 +73,11 @@ ExplodeParticleEmitter.prototype.series = function()
 ExplodeParticleEmitter.prototype.generate = function()
 {
 
-  this.pos = {x:0, y:0, z:0};
+  this.pos = {x:spawnX, y:spawnY, z:spawnZ};
   this.vel = new RandomNormal();
   this.velsize = Math.random()*-1.0;
   this.life = Math.random()*5.0;
-  this.color = 'rgb('+this.iteration/4+','+this.iteration/16+','+this.iteration/32+')';
+  this.color = 'rgb('+64+this.iteration/4+','+32+this.iteration/16+','+8+this.iteration/32+')';
   this.iteration++;
 }
 
@@ -142,17 +142,16 @@ DustParticleEmitter.prototype.series = function()
 
   this.iteration = 0;
   this.particleCount = 64;
-  this.sx = spawnX;
-  this.sy = spawnY;
+  this.sx = centreX;
+  this.sy = centreY;
   this.size = 6.0;
   this.time = 0;
   this.life = 5;
 }
-
 // each iteration will change a property
 DustParticleEmitter.prototype.generate = function()
 {
-  this.pos = {x:0, y:0, z:spawnZ};
+  this.pos = {x:spawnX, y:spawnY, z:spawnZ};
   this.vel = new RandomNormal();//RandomOnPlane(this.plane);
   var speed = Math.random()*2+2;
   this.vel.x*=speed;
