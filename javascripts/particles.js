@@ -125,6 +125,46 @@ PhotonTorpedoEmitter.prototype.generate = function()
   this.iteration++;
 }
 
+function PlasmaEmitter()
+{
+  this.series();
+}
+
+PlasmaEmitter.prototype.create = function()
+{
+    spawnList.push(new ParticleGroup(this));
+   // spawnList.push(new ParticleGroup(this));
+   // spawnList.push(new ParticleGroup(this));
+    //spawnList.push(new ParticleGroup(this));
+}
+
+// define series constants here
+PlasmaEmitter.prototype.series = function()
+{
+  this.plane = {x:1,y:1,z:-1};
+  this.iteration = 0;
+  this.particleCount = 64;
+  this.sx = centreX;
+  this.sy = centreY;
+  this.time = 0;
+  this.life = 3;
+
+}
+
+// each iteration will change a property
+PlasmaEmitter.prototype.generate = function()
+{
+  
+  this.pos = {x:(spawnX-centreX), y:(spawnY-centreY), z:500};
+
+  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
+  this.velsize = -0.01 - (Math.random());
+  this.size = 5.0 *this.iteration*0.1;
+  this.life = 3;
+  this.color = 'rgb(0, 64, 200)';
+  this.iteration++;
+}
+
 function DustParticleEmitter()
 {
   this.series();
