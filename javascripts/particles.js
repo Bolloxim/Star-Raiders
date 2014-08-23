@@ -294,7 +294,7 @@ Particle.prototype.create = function(emitter)
   this.time = emitter.time;
   this.life = emitter.life;
   this.color = emitter.color;
-  this.offset =  (this.emitter instanceof PhotonTorpedoEmitter);
+  this.offset = emitter instanceof PhotonTorpedoEmitter;
 }
 
 Particle.prototype.move = function(plane)
@@ -316,11 +316,11 @@ Particle.prototype.draw = function()
     var offX = 0, offY = 0;
     if (this.offset)
     {
-      offX = cX;
-      offY = cY;
+      offX = cX - centreX;
+      offY = cY - centreY;
     }
-    var x = this.pos.x * depth + this.sx + offX - centreX;
-    var y = this.pos.y * depth + this.sy + offY - centreY;
+    var x = this.pos.x * depth + this.sx + offX;
+    var y = this.pos.y * depth + this.sy + offY;
     var sz = this.size * depth;
 
     // fill a rect
@@ -330,7 +330,7 @@ Particle.prototype.draw = function()
     context.fillStyle = this.color;
     context.fill();
   }
-};
+}
 
 
 // initialization
