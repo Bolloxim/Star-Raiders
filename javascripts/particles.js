@@ -353,6 +353,7 @@ function init()
   explodeEmitter = new ExplodeParticleEmitter();
   torpedoEmitter = new PhotonTorpedoEmitter();
   dustEmitter    = new DustParticleEmitter();
+  plasmaEmitter    = new PlasmaEmitter();
 }
 
 function initDemo()
