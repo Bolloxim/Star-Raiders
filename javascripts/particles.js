@@ -316,7 +316,7 @@ Particle.prototype.draw = function()
     if (this.emitter instanceof PhotonTorpedoEmitter)
     {
       offX = cX;
-      offY - cY;
+      offY = cY;
     }
     var x = this.pos.x * depth + this.sx + offX - centreX;
     var y = this.pos.y * depth + this.sy + offY - centreY;
