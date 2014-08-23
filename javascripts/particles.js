@@ -294,6 +294,7 @@ Particle.prototype.create = function(emitter)
   this.time = emitter.time;
   this.life = emitter.life;
   this.color = emitter.color;
+  this.offset =  (this.emitter instanceof PhotonTorpedoEmitter);
 }
 
 Particle.prototype.move = function(plane)
@@ -313,7 +314,7 @@ Particle.prototype.draw = function()
     var depth = focalPoint / (this.pos.z + focalDepth );
     if (depth<=0) return;
     var offX = 0, offY = 0;
-    if (this.emitter instanceof PhotonTorpedoEmitter)
+    if (this.offset)
     {
       offX = cX;
       offY = cY;
