@@ -155,7 +155,7 @@ PlasmaEmitter.prototype.series = function()
 PlasmaEmitter.prototype.generate = function()
 {
   
-  this.pos = x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
+  this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
 
   this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
   this.velsize = -0.01 - (Math.random());
