@@ -591,6 +591,6 @@ createBrownNoiseBuffer = function(bufferSize)
 };
 
 // entry point
-init();
+//init();
 //SetupButtons();
 //animate();
