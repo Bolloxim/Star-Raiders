@@ -179,11 +179,15 @@ function init()
   window.AudioContext = window.AudioContext||window.webkitAudioContext;
   audioContext = new AudioContext();
 
+  initAudio();
+ }
+
+function initAudio()
+{
   createWhiteNoiseBuffer();
   createPinkNoiseBuffer();
   createBrownNoiseBuffer();
 }
-
 
 // input functions
 
