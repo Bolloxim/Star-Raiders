@@ -494,27 +494,31 @@ function PlayExit()
 }
 
 
-function PlayPhoton(button)
+function PlayPhoton()
 {
-    waveform = 0;
+    waveform = 3;
     freqSelect = 1;
     photonTone= new FMSynth();
-    photonTone.play(0, audioContext.currentTime, 0.4);
-    photonTone.oscilator.frequency.linearRampToValueAtTime(220,audioContext.currentTime);
-    photonTone.oscilator.frequency.linearRampToValueAtTime(50,audioContext.currentTime+0.1);
-    photonTone.oscilator.frequency.linearRampToValueAtTime(100,audioContext.currentTime+1.4);
+    photonTone.play(0, audioContext.currentTime, 3);
+    photonTone.oscilator.frequency.linearRampToValueAtTime(600,audioContext.currentTime);
+    photonTone.oscilator.frequency.linearRampToValueAtTime(155,audioContext.currentTime+0.2);
+    photonTone.oscilator.frequency.linearRampToValueAtTime(0,audioContext.currentTime+1.4);
 
 
     waveform = 4;
     freqSelect = 1;
+    noiseSelect = 0;
   
     photonSound = new FMSynth();
-    photonSound.play(0, audioContext.currentTime, 1.2);
+    photonSound.play(0, audioContext.currentTime, 3);
     photonSound.filter.frequency.linearRampToValueAtTime(2000, audioContext.currentTime);
-    photonSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+2);
+    photonSound.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+2);
     photonSound.filter.Q.linearRampToValueAtTime(40, audioContext.currentTime);
     photonSound.filter.Q.linearRampToValueAtTime(10, audioContext.currentTime+0.5);
-    photonSound.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+1.2);
+    photonSound.filter.Q.linearRampToValueAtTime(20, audioContext.currentTime+1.2);
+
+    photonSound.gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime);
+    photonSound.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime+3);
 }
 
 function PlayShield()
