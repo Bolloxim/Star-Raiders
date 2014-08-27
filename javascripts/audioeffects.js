@@ -76,7 +76,8 @@ Envelope.prototype.init = function(dv,at,dt,st,rt)
 Envelope.prototype.node = function(time)
 {
    this.time = time || audioContext.currentTime;
-   this.gain.gain.linearRampToValueAtTime(1.0, time+this.attach);
+   this.gain.gain.linearRampToValueAtTime(0.0, time);
+   this.gain.gain.linearRampToValueAtTime(1.0, time+this.attack);
    this.gain.gain.linearRampToValueAtTime(this.decay2, time+this.decay);
    this.gain.gain.setValueAtTime(this.decay2, time+this.sustain);
    this.gain.gain.linearRampToValueAtTime(0.0, time+this.release);
@@ -163,8 +164,8 @@ FMSynth.prototype.play = function(note, delay, duration)
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('audio');
-	context = canvas.getContext('2d');
+  canvas = document.getElementById('audio');
+  context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
   resize();
@@ -181,18 +182,17 @@ function init()
   createWhiteNoiseBuffer();
   createPinkNoiseBuffer();
   createBrownNoiseBuffer();
-  
-  SetupButtons();
 }
+
 
 // input functions
 
 function mouseMove(event) 
 {
-	var rect = canvas.getBoundingClientRect();
+  var rect = canvas.getBoundingClientRect();
 
-	mouseX = event.clientX - rect.left,
-	mouseY = event.clientY - rect.top
+  mouseX = event.clientX - rect.left,
+  mouseY = event.clientY - rect.top
 }
 
 function mouseClick()
@@ -269,6 +269,7 @@ function SetupButtons()
   new Button(mx, by+50, 140, 40, "Play Photon", PlayPhoton, '3');
   new Button(mx, by+100, 140, 40, "Play Disrubtor", PlayDisruptor, '3');
   new Button(mx, by+150, 140, 40, "Play Explosion", PlayExplosion, '3');
+  new Button(mx-150, by+150, 140, 40, "Play Explosion Thud", PlayExplosionThud, '3');
   new Button(mx+150, by+150, 140, 40, "Play Shield", PlayShield, '3');
   new Button(mx, by+200, 140, 40, "Hyperspace", PlayHyperspace, '3');
   new Button(mx+150, by+200, 140, 40, "Hyperspace Exit", PlayExit, '3');
@@ -378,43 +379,87 @@ function PlayExplosion()
     freqSelect = 2;
     waveform = 0;
     noiseSelect = 0;
-    (new FMSynth()).play(24, audioContext.currentTime, 0.2);
+    (new FMSynth()).play(24, audioContext.currentTime, 0.5);
   
     waveform = 4;
-    noiseSelect = 1;
+    noiseSelect = 0;
     explode1 = new FMSynth();
     explode1.play(0, audioContext.currentTime, 2);
-    explode1.filter.frequency.linearRampToValueAtTime(10, audioContext.currentTime);
-    explode1.filter.frequency.linearRampToValueAtTime(1700, audioContext.currentTime+1);
+    explode1.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
+    explode1.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+1);
+      explode1.filter.frequency.linearRampToValueAtTime(8200, audioContext.currentTime+2);
   
-    explode1.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime);
-    explode1.filter.Q.linearRampToValueAtTime(0.1, audioContext.currentTime+1);
-    explode1.filter.Q.linearRampToValueAtTime(3.5, audioContext.currentTime+1.1);
+    explode1.filter.Q.linearRampToValueAtTime(0.1, audioContext.currentTime);
+    explode1.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+1);
+    explode1.filter.Q.linearRampToValueAtTime(2.5, audioContext.currentTime+1.7);
   
-    envelope = new Envelope(0, 0.5, 0.7, 1, 1.5);
+    envelope = new Envelope(0, 0.9, 0.5, 1.2, 1.4);
     explode1.filter.disconnect(explode1.gainNode);
     explode1.gainNode = envelope.node(audioContext.currentTime);
     explode1.filter.connect(explode1.gainNode);
     explode1.gainNode.connect(audioContext.destination);
   
-    noiseSelect = 2;
+    noiseSelect = 1;
     explode2 = new FMSynth();
     explode2.play(0, audioContext.currentTime, 2);
-    explode2.filter.frequency.linearRampToValueAtTime(2600, audioContext.currentTime);
-    explode2.filter.frequency.linearRampToValueAtTime(10, audioContext.currentTime+2);
-    explode2.filter.Q.linearRampToValueAtTime(0.1, audioContext.currentTime);
+    explode2.filter.frequency.linearRampToValueAtTime(1600, audioContext.currentTime);
+    explode2.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+1);
+    explode2.filter.frequency.linearRampToValueAtTime(18000, audioContext.currentTime+2);
+    explode2.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime);
     explode2.filter.Q.linearRampToValueAtTime(10.3, audioContext.currentTime+1);
-    explode2.filter.Q.linearRampToValueAtTime(1.5, audioContext.currentTime+2.1);
-//    explode2.gainNode.gain.linearRampToValueAtTime(1.0, audioContext.currentTime);
-//    explode2.gainNode.gain.linearRampToValueAtTime(0.0, audioContext.currentTime+0.5);
-  
-    envelope = new Envelope(0.05, 1.3, 0.2, 1.4, 1.5);
+    explode2.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+2);
+ 
+    envelope = new Envelope(0.0, 0.9, 0.4, 1.0, 2);
     explode2.filter.disconnect(explode2.gainNode);
     explode2.gainNode = envelope.node(audioContext.currentTime);
     explode2.filter.connect(explode2.gainNode);
     explode2.gainNode.connect(audioContext.destination);
     
 }
+
+function PlayExplosionThud()
+{
+    freqSelect = 2;
+    waveform = 0;
+    noiseSelect = 0;
+    (new FMSynth()).play(24, audioContext.currentTime, 0.5);
+  
+    waveform = 4;
+    noiseSelect = 0;
+    explode1 = new FMSynth();
+    explode1.play(0, audioContext.currentTime, 1);
+    explode1.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
+    explode1.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+1);
+
+  
+    explode1.filter.Q.linearRampToValueAtTime(0.1, audioContext.currentTime);
+    explode1.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+1);
+    explode1.filter.Q.linearRampToValueAtTime(2.5, audioContext.currentTime+1.7);
+  
+    envelope = new Envelope(0, 0.9, 0.5, 1.2, 1.4);
+    explode1.filter.disconnect(explode1.gainNode);
+    explode1.gainNode = envelope.node(audioContext.currentTime);
+    explode1.filter.connect(explode1.gainNode);
+    explode1.gainNode.connect(audioContext.destination);
+  
+    noiseSelect = 1;
+    explode2 = new FMSynth();
+    explode2.play(0, audioContext.currentTime, 1);
+    explode2.filter.frequency.linearRampToValueAtTime(1600, audioContext.currentTime);
+    explode2.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+1);
+    explode2.filter.frequency.linearRampToValueAtTime(18000, audioContext.currentTime+2);
+    explode2.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime);
+    explode2.filter.Q.linearRampToValueAtTime(10.3, audioContext.currentTime+1);
+    explode2.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+2);
+ 
+    envelope = new Envelope(0.0, 0.9, 0.4, 1.0, 2);
+    explode2.filter.disconnect(explode2.gainNode);
+    explode2.gainNode = envelope.node(audioContext.currentTime);
+    explode2.filter.connect(explode2.gainNode);
+    explode2.gainNode.connect(audioContext.destination);
+    
+}
+
 
 function PlayHyperspace()
 {
@@ -482,7 +527,7 @@ function PlayShield()
     shield.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime);
     shield.filter.Q.linearRampToValueAtTime(12, audioContext.currentTime+0.25);
   
-    PlayExplosion();
+    PlayExplosionThud();
 }
 
 function PlayNoise(button)
@@ -547,4 +592,5 @@ createBrownNoiseBuffer = function(bufferSize)
 
 // entry point
 init();
-animate();
+//SetupButtons();
+//animate();
