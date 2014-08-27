@@ -46,6 +46,7 @@ var whiteNoiseBuffer;
 var pinkNoiseBuffer;
 var brownNoiseBuffer;
 var noiseSelect = 0;
+var compressor;
 
 var finTable = [1789790.0, 63921.0, 15699.9];
 
@@ -135,7 +136,7 @@ FMSynth.prototype.init = function(noise)
         this.filter.connect( this.gainNode);
     }
     
-  this.gainNode.connect(audioContext.destination);
+  this.gainNode.connect(compressor);
 
 }
 
@@ -178,16 +179,21 @@ function init()
   // initialze variables  
   window.AudioContext = window.AudioContext||window.webkitAudioContext;
   audioContext = new AudioContext();
-
+  
   initAudio();
- }
+}
 
 function initAudio()
 {
   createWhiteNoiseBuffer();
   createPinkNoiseBuffer();
   createBrownNoiseBuffer();
+  
+  compressor = audioContext.createDynamicsCompressor();
+  compressor.connect(audioContext.destination);
 }
+
+
 
 // input functions
 
@@ -391,7 +397,7 @@ function PlayExplosion()
     explode1.play(0, audioContext.currentTime, 2);
     explode1.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
     explode1.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+1);
-      explode1.filter.frequency.linearRampToValueAtTime(8200, audioContext.currentTime+2);
+    explode1.filter.frequency.linearRampToValueAtTime(8200, audioContext.currentTime+2);
   
     explode1.filter.Q.linearRampToValueAtTime(0.1, audioContext.currentTime);
     explode1.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+1);
@@ -401,7 +407,7 @@ function PlayExplosion()
     explode1.filter.disconnect(explode1.gainNode);
     explode1.gainNode = envelope.node(audioContext.currentTime);
     explode1.filter.connect(explode1.gainNode);
-    explode1.gainNode.connect(audioContext.destination);
+    explode1.gainNode.connect(compressor);
   
     noiseSelect = 1;
     explode2 = new FMSynth();
@@ -417,7 +423,7 @@ function PlayExplosion()
     explode2.filter.disconnect(explode2.gainNode);
     explode2.gainNode = envelope.node(audioContext.currentTime);
     explode2.filter.connect(explode2.gainNode);
-    explode2.gainNode.connect(audioContext.destination);
+    explode2.gainNode.connect(compressor);
     
 }
 
@@ -444,7 +450,7 @@ function PlayExplosionThud()
     explode1.filter.disconnect(explode1.gainNode);
     explode1.gainNode = envelope.node(audioContext.currentTime);
     explode1.filter.connect(explode1.gainNode);
-    explode1.gainNode.connect(audioContext.destination);
+    explode1.gainNode.connect(compressor);
   
     noiseSelect = 1;
     explode2 = new FMSynth();
@@ -460,7 +466,7 @@ function PlayExplosionThud()
     explode2.filter.disconnect(explode2.gainNode);
     explode2.gainNode = envelope.node(audioContext.currentTime);
     explode2.filter.connect(explode2.gainNode);
-    explode2.gainNode.connect(audioContext.destination);
+    explode2.gainNode.connect(compressor);
     
 }
 
@@ -494,11 +500,12 @@ function PlayExit()
 }
 
 
-function PlayPhoton()
+function PlayPhoton(button)
 {
     waveform = 3;
     freqSelect = 1;
     photonTone= new FMSynth();
+    photonTone.gainNode.gain.value = 0.25;
     photonTone.play(0, audioContext.currentTime, 2);
     photonTone.oscilator.frequency.linearRampToValueAtTime(600,audioContext.currentTime);
     photonTone.oscilator.frequency.linearRampToValueAtTime(155,audioContext.currentTime+0.2);
@@ -511,14 +518,15 @@ function PlayPhoton()
     noiseSelect = 0;
   
     photonSound = new FMSynth();
-    photonSound.play(0, audioContext.currentTime, 2);
-    photonSound.filter.frequency.linearRampToValueAtTime(2000, audioContext.currentTime);
-    photonSound.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+2);
-    photonSound.filter.Q.linearRampToValueAtTime(40, audioContext.currentTime);
-    photonSound.filter.Q.linearRampToValueAtTime(30, audioContext.currentTime+0.5);
-    photonSound.filter.Q.linearRampToValueAtTime(20, audioContext.currentTime+1.2);
+    photonSound.gainNode.gain.value = 0.25;
+    photonSound.play(0, audioContext.currentTime, 1.5);
+    photonSound.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime);
+    photonSound.filter.frequency.linearRampToValueAtTime(38000, audioContext.currentTime+2);
+    photonSound.filter.Q.linearRampToValueAtTime(5, audioContext.currentTime);
+    photonSound.filter.Q.linearRampToValueAtTime(2, audioContext.currentTime+0.5);
+    photonSound.filter.Q.linearRampToValueAtTime(1, audioContext.currentTime+1.2);
 
-    photonSound.gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime);    photonSound.gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime+1.5);
+    photonSound.gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime);    photonSound.gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime+1.5);
     photonSound.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime+2);
 }
 
