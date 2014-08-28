@@ -48,6 +48,8 @@ var brownNoiseBuffer;
 var noiseSelect = 0;
 var compressor;
 
+var hyperSound;
+
 var finTable = [1789790.0, 63921.0, 15699.9];
 
 // starts high C
@@ -156,10 +158,17 @@ FMSynth.prototype.play = function(note, delay, duration)
   
    var playNode = this.node;
    playNode.start(delay);
-   playNode.stop(delay+duration);
-  
+   if (duration>0)
+   {
+     playNode.stop(delay+duration);
+   }
 }
 
+FMSynth.prototype.stop = function(delay)
+{
+  var playNode = this.node;
+  playNode.stop(audioContext.currentTime+delay);
+}
 // initialization
 
 function init()
@@ -546,6 +555,51 @@ function PlayShield()
   
     PlayExplosionThud();
 }
+
+function InitEngine()
+{
+    waveform = 4;
+    noiseSelect = 2;
+    hyperSound = new FMSynth();
+    hyperSound.play(0, audioContext.currentTime,10000000);
+    hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
+    hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime);
+    hyperSound.gainNode.gain.value = 0.3;
+}
+
+function PlayEngine(velocity)
+{
+    hyperSound.filter.frequency.linearRampToValueAtTime(100+velocity*25, audioContext.currentTime);
+    hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime+freqHz);
+//    hyperSound.gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime+1);
+}
+
+function StopEngine()
+{
+    hyperSound.stop();
+    hyperSound = null;
+}
+
+function PlayBeginHyperspace()
+{
+    hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
+    hyperSound.filter.Q.linearRampToValueAtTime(25, audioContext.currentTime);
+    hyperSound.gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime+2);
+}
+
+function UpdateHyperspaceSound(velocity)
+{
+    hyperSound.filter.frequency.linearRampToValueAtTime(100+velocity*25, audioContext.currentTime+freqHz);
+    hyperSound.filter.Q.linearRampToValueAtTime(Math.abs(velocity-50)*0.4, audioContext.currentTime+freqHz);
+}
+
+function CancelHyperSound()
+{
+   hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
+   hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime);
+   hyperSound.gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime+2);
+}
+
 
 function PlayNoise(button)
 {
