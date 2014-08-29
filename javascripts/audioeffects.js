@@ -354,9 +354,10 @@ function PlayConfirm(count)
     }
 }
 
-function PlayRedAlert()
+function PlayRedAlert(time)
 {
-    time = 0
+    var time = time || 0;
+    time += audioContext.currentTime;
     inc = 1/3;
     dur = inc;
     freqSelect = 1;
@@ -366,14 +367,14 @@ function PlayRedAlert()
     for (var i=0; i<4; i++)
     {
       waveform = 1;freqSelect=1;
-      (new FMSynth()).play(note1, audioContext.currentTime+time, dur);
+      (new FMSynth()).play(note1, time, dur);
             waveform = 0;freqSelect=2;
-      (new FMSynth()).play(note1, audioContext.currentTime+time, dur);
+      (new FMSynth()).play(note1, time, dur);
       time += inc;
                   waveform = 1;freqSelect=1;
-      (new FMSynth()).play(note2, audioContext.currentTime+time, dur);
+      (new FMSynth()).play(note2, time, dur);
                   waveform = 0;freqSelect=2;
-      (new FMSynth()).play(note2, audioContext.currentTime+time, dur);
+      (new FMSynth()).play(note2, time, dur);
         time += inc;
     }
 }
