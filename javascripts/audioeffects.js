@@ -338,15 +338,16 @@ function PlayScaleUp(button)
   }
 }
 
-function PlayConfirm()
+function PlayConfirm(count)
 {
+    var chirps = count || 3;
     time = 0
     inc = 1/8;
     dur = inc/2;
     freqSelect = 0;
     waveform = 3;
      note = 36;
-    for (var i=0; i<3; i++)
+    for (var i=0; i<chirps; i++)
     {
         (new FMSynth()).play(note, audioContext.currentTime+time, dur);
         time += inc;
@@ -364,10 +365,16 @@ function PlayRedAlert()
     note2 = 26;
     for (var i=0; i<4; i++)
     {
-    (new FMSynth()).play(note1, audioContext.currentTime+time, dur);
-    time += inc;
-    (new FMSynth()).play(note2, audioContext.currentTime+time, dur);
+      waveform = 1;freqSelect=1;
+      (new FMSynth()).play(note1, audioContext.currentTime+time, dur);
+            waveform = 0;freqSelect=2;
+      (new FMSynth()).play(note1, audioContext.currentTime+time, dur);
       time += inc;
+                  waveform = 1;freqSelect=1;
+      (new FMSynth()).play(note2, audioContext.currentTime+time, dur);
+                  waveform = 0;freqSelect=2;
+      (new FMSynth()).play(note2, audioContext.currentTime+time, dur);
+        time += inc;
     }
 }
 
@@ -446,7 +453,7 @@ function PlayExplosionThud()
     waveform = 4;
     noiseSelect = 0;
     explode1 = new FMSynth();
-    explode1.play(0, audioContext.currentTime, 1);
+    explode1.play(0, audioContext.currentTime, 0.6);
     explode1.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
     explode1.filter.frequency.linearRampToValueAtTime(1000, audioContext.currentTime+1);
 
@@ -463,7 +470,7 @@ function PlayExplosionThud()
   
     noiseSelect = 1;
     explode2 = new FMSynth();
-    explode2.play(0, audioContext.currentTime, 1);
+    explode2.play(0, audioContext.currentTime, 0.6);
     explode2.filter.frequency.linearRampToValueAtTime(1600, audioContext.currentTime);
     explode2.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+1);
     explode2.filter.frequency.linearRampToValueAtTime(18000, audioContext.currentTime+2);
@@ -478,6 +485,7 @@ function PlayExplosionThud()
     explode2.gainNode.connect(compressor);
     
 }
+
 
 
 function PlayHyperspace()
@@ -591,6 +599,12 @@ function UpdateHyperspaceSound(velocity)
 {
     hyperSound.filter.frequency.linearRampToValueAtTime(100+velocity*25, audioContext.currentTime+freqHz);
     hyperSound.filter.Q.linearRampToValueAtTime(Math.abs(velocity-50)*0.4, audioContext.currentTime+freqHz);
+}
+
+function PauseHyperspaceSound(time)
+{
+    hyperSound.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime);
+    hyperSound.gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime+1);
 }
 
 function CancelHyperSound()
