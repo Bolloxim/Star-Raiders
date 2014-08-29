@@ -502,16 +502,17 @@ function PlayHyperspace()
     photonSound.filter.Q.linearRampToValueAtTime(19, audioContext.currentTime+5.1);
 }
 
-function PlayExit()
+function PlayExit(time)
 {
+    time+=audioContext.currentTime;
     waveform = 4;
     noiseSelect = 2;
     photonSound = new FMSynth();
-    photonSound.play(0, audioContext.currentTime, 2);
-    photonSound.filter.frequency.linearRampToValueAtTime(2500, audioContext.currentTime);
-    photonSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+2);     
-    photonSound.filter.Q.linearRampToValueAtTime(21, audioContext.currentTime);
-    photonSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime+2);
+    photonSound.play(0, time, 2);
+    photonSound.filter.frequency.linearRampToValueAtTime(2500, time);
+    photonSound.filter.frequency.linearRampToValueAtTime(100, time+2);     
+    photonSound.filter.Q.linearRampToValueAtTime(21, time);
+    photonSound.filter.Q.linearRampToValueAtTime(8, time+2);
 
 
 }
@@ -604,14 +605,14 @@ function UpdateHyperspaceSound(velocity)
 function PauseHyperspaceSound(time)
 {
     hyperSound.gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime);
-    hyperSound.gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime+1);
+    hyperSound.gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime+time);
 }
 
-function CancelHyperSound()
+function CancelHyperSound(time)
 {
-   hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
-   hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime);
-   hyperSound.gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime+2);
+   hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime+time);
+   hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime+time);
+   hyperSound.gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime+time+2);
 }
 
 
