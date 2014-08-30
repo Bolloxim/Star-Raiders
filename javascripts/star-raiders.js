@@ -130,6 +130,7 @@ function SetupNMEs(boardItem)
 
 function UpdateNMEs()
 {
+
   for (var i=0; i<nmes.length; i++)
   {
      if (nmes[i].hitpoints)
@@ -141,23 +142,110 @@ function UpdateNMEs()
        nmes[i].pos.x = x;
        nmes[i].pos.y = y;
        nmes[i].pos.z = z;
-     }
-  
-    if (nmes[i].type==base)  
-    {
-       // compute distance
-       var delta = nmes[i].delta();
-       var t = orientation.transform(delta.x, delta.y, delta.z);
+       
+        switch(nmes[i].type)
+        {
+          case fighter:
+            ZylonFighterAI(nmes[i]);
+            break;
+          case base:
+          {
+             // compute distance
+             var delta = nmes[i].delta();
+             var t = orientation.transform(delta.x, delta.y, delta.z);
 
-       // compute angles
-       var phi = Math.atan2(t.x, t.z);
-       var theta = Math.atan2(t.y, Math.sqrt(t.x*t.x+t.z*t.z));
-       var a = Math.abs(gradon(phi));
-       var b = Math.abs(gradon(theta));
-       var dock = (a <= 1 && b <= 1 && t.z <= 5) ? true:false;
+             // compute angles
+             var phi = Math.atan2(t.x, t.z);
+             var theta = Math.atan2(t.y, Math.sqrt(t.x*t.x+t.z*t.z));
+             var a = Math.abs(gradon(phi));
+             var b = Math.abs(gradon(theta));
+             var dock = (a <= 1 && b <= 1 && t.z <= 5) ? true:false;
 
-       EnableDocking(dock);
+             EnableDocking(dock);
+             break;
+          }
+          default:
+            ZylonFighterAI(nmes[i]);
+            break;
+         }
     }
+  }
+}
+
+
+// each iteration will change a property
+PlasmaEmitter.prototype.generate = function()
+{
+  
+  this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
+
+  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
+  this.velsize = -0.01 - (Math.random()*0.2);
+  this.size = 3.0 *this.iteration*0.02;
+  this.life = 3;
+  this.color = 'rgb(0, 64, 200)';
+  this.iteration++;
+}
+
+function nmeShoot(pos)
+{
+    var scale =512/canvas.height;
+  
+    var x = modulo2(localPosition.x - pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+    var y = modulo2(localPosition.y - pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+    var z = modulo2(localPosition.z - pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+
+    var t = orientation.transform(x, y, z);
+    if (Math.abs(t.z)>128) return;
+  
+    var depth = focalPoint*5 / ((t.z + 5*scale) +1);
+    if (depth<0) depth *= -1;
+
+  
+    var depthInv = focalPoint / ((t.z + focalDepth) +1);
+    spawnX = (t.x*depth)/depthInv+centreX;
+    spawnY = (t.y*depth)/depthInv+centreY;
+    spawnZ = t.z;
+
+    plasmaEmitter.create();
+     PlayDisruptor();
+
+}
+
+function ZylonFighterAI(nme)
+{
+var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-50},{x:0, y:0, z:70},{x:20, y:10, z:50},{x:-30, y:10, z:30}];
+   var targ = shipOrientation.invtransform(targetLocations[nme.target].x,targetLocations[nme.target].y,targetLocations[nme.target].z);
+   var dir = nme.targetPoint(targ);
+   // always swarm player
+//   var dir = nme.deltaAhead(-100);
+   // we want to go that way
+   var dirn = new vector3(dir.x, dir.y, dir.z);
+   dirn.normalize();
+   var dx = nme.vel.x - dirn.x;
+   var dy = nme.vel.y - dirn.y;
+   var dz = nme.vel.z - dirn.z;
+   nme.vel.x+=dirn.x*0.1;   
+   nme.vel.y+=dirn.y*0.1;
+   nme.vel.z+=dirn.z*0.1;
+     var tmp = new vector3(  nme.vel.x,   nme.vel.y,   nme.vel.z);
+   tmp.normalize();
+  nme.vel.x = tmp.x;
+  nme.vel.y = tmp.y;
+  nme.vel.z = tmp.z;
+  
+  if (dir.lengthSquared()<25) 
+  {
+    nme.pass = (nme.pass+1) &63;
+    if (nme.pass == 0)
+        nme.target = (nme.target+1) % targetLocations.length;
+  }
+  nme.calcypr(); 
+  
+  // randomize fire
+  if ((Math.random() * 100) >99)
+  {
+    nmeShoot(nme.pos);
   }
 }
 
@@ -205,6 +293,11 @@ function NME()
   this.damage = 0;
   this.type = 0; // 0 = fighter, 1 = cruiser, 2 = basestar
   this.hitpoints = 0;
+  this.target = 0;
+  this.pass = 0;
+  
+  this.theta = 0;
+  this.phi = 0;
 }
 
 NME.prototype.randomize = function(type)
@@ -231,6 +324,20 @@ NME.prototype.delta = function()
    return {x:x, y:y, z:z};
 }
 
+NME.prototype.targetPoint = function(target)
+{
+   var x = modulo2((localPosition.x+target.x) - this.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
+   var y = modulo2((localPosition.y+target.y) - this.pos.y, localSpaceCubed)-localSpaceCubed*0.5;
+   var z = modulo2((localPosition.z+target.z) - this.pos.z, localSpaceCubed)-localSpaceCubed*0.5;
+   return new vector3(x, y, z);
+}
+
+NME.prototype.calcypr = function()
+{
+   this.theta = Math.atan2(this.vel.x, this.vel.z) ;//+ Math.PI*0.5;
+   this.phi = 0;//Math.asin(this.vel.y);
+}
+
 NME.prototype.render = function()
 {
    var x = modulo2(localPosition.x - this.pos.x, localSpaceCubed)-localSpaceCubed*0.5;
@@ -250,7 +357,16 @@ NME.prototype.render = function()
           if (camspace.z>0) RenderStarbase(sx, sy, sz, Math.atan2(camspace.z, camspace.y)+Math.PI);
           break;
        case fighter:
-          renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
+          renderZylon(camspace.x, camspace.y, camspace.z, this.theta, this.phi);
+          break;
+       case basestar:
+          var scale = 512/canvas.height;
+          var depth = focalPoint*5 / camspace.z + 5*scale;
+          var sx = camspace.x * depth + centreX;
+          var sy = camspace.y * depth + centreY;
+          var sz = 1 * depth;
+
+          if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y*2)+Math.PI);
           break;
        default:
           renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
@@ -291,6 +407,7 @@ function EnableDocking(dock)
 function SetRedAlert()
 {
    redTime = (new Date()).getTime();
+   PlayRedAlert(2);
 }
 
 function DrawRedAlert()
@@ -309,7 +426,7 @@ function DrawRedAlert()
     redAlertColor = (Math.floor(delta/500) & 1)*64;
     context.globalAlpha = 1.0;
     context.font = '40pt Orbitron';
-    context.fillStyle = 'rgb('+(redAlertColor^64)+',0,'+redAlertColor+')';
+    context.fillStyle = 'rgb('+(redAlertColor*3^192)+',0,'+redAlertColor*3+')';
     context.textAlign = "center";
     context.fillText('RED ALERT', canvas.width/2, 50);
     
@@ -401,6 +518,8 @@ function renderLongRangeScanner()
   strobe+=1;
   for (var i=0; i<nmes.length; i++)
   {
+     if (nmes[i].hitpoints<=0) continue;
+    
       var x = modulo(localPosition.x - nmes[i].pos.x)-512;
       var y = modulo(localPosition.y - nmes[i].pos.y)-512;
       var z = modulo(localPosition.z - nmes[i].pos.z)-512;
@@ -551,6 +670,12 @@ function init()
   canvas.addEventListener("mousewheel", mouseWheel, false);
   document.addEventListener('keydown', processKeydown, false);
   window.addEventListener('resize', resize);
+   // initialze variables  
+  window.AudioContext = window.AudioContext||window.webkitAudioContext;
+  audioContext = new AudioContext();
+  
+  // audio
+  initAudio();
   
   // initialze variables  
   SetShipLocation(galaxyMapSize.x*0.5, galaxyMapSize.y*0.5);
@@ -580,7 +705,8 @@ function init()
   // override
   warpspread = 2;
   // testing this
-  PressButton("Target Comp");
+ // PressButton("Target Comp");
+  InitEngine();
 }
 
 // input functions
@@ -628,7 +754,7 @@ function mouseClick()
    {
      return;
    }
-  
+ 
    if (overlayMode == eNone || overlayMode == eTargetComputer)
    {
       FirePhotons();
@@ -709,6 +835,32 @@ function renderGalaxyInformation()
       if (boardPieces[i].type==base) targets = 'starbase';
    }
   
+   // render timer
+    var piece = boardPieces[targetBase];
+    if (piece.nextMove!=0)
+    {
+      var x = piece.location.x*scaleX+border.x+mapCentreX;
+      var y = piece.location.y*scaleY+border.y+mapCentreY;
+      var currentTime = (new Date()).getTime() ;
+      var gameTime = Math.floor((currentTime - gameStart));
+      var remainingTime= Math.floor((piece.nextMove * 10000 - gameTime) / 600);
+      
+      var segment = (Math.PI*2 * remainingTime / 100);
+      context.beginPath();
+      context.moveTo(x+scaleX*0.5, y+scaleY*0.5);
+      context.arc(x+scaleX*0.5, y+scaleY*0.5, scaleX<scaleY?scaleY:scaleY, Math.PI*1.5-segment, Math.PI*1.5);
+      context.fillStyle = 'rgba(255,0,0,0.7)';
+      context.fill();
+      context.strokeStyle = 'rgba(255,128,0,0.7)';
+      context.stroke();
+      
+      context.globalAlpha = 1.0;
+      context.font = '12pt Orbitron';
+      context.fillStyle = 'rgb(255,128,0)';
+      context.textAlign = "right";
+      context.fillText('.' + Math.floor(remainingTime), x+scaleX*0.9, y+20);      
+    }
+  
     context.globalAlpha = 1.0;
     context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,0)';
@@ -764,9 +916,10 @@ function renderIconShip(posx, posy, scale)
     var x = posx+mapCentreX;
     var y = posy+mapCentreY;
   
-    context.fillStyle = 'rgb(255,255,0)';
     context.beginPath();
     context.arc(x, y, scale*0.5, 0, Math.PI*2);
+    context.strokeStyle = 'rgb(255,255,255)';
+    context.lineWidth =1;
     context.stroke();
     context.moveTo(x, y-scale*1.5);
     context.lineTo(x-scale, y+scale*1.5);
@@ -1120,9 +1273,29 @@ function SwitchToGalaxyChart(button)
 
 function ToggleWarp(button)
 {
+  // cant cancel now
+  if (triggerWarp == inHyperspace) return;
+  
   button.state^=1;
   if (button.state == false && triggerWarp!=normalSpace) triggerWarp=cancelHyperspace;
-  else triggerWarp = enterHyperspace;
+  else
+  {
+    triggerWarp = enterHyperspace;
+    PlayBeginHyperspace();
+  }
+  
+  if (warpLocked && triggerWarp==enterHyperspace)
+  {
+      startText("jumping to hyperspace", border.x, 150);
+  }
+  else if (!warpLocked && triggerWarp==enterHyperspace)
+  {
+      startText("No hyperspace location set.\nYou could end up anywhere", border.x, 150);
+  }
+  else
+  {
+      startText("Aborting jump to hyperspace", border.x, 150);                
+  }
 }
 
 function ToggleShields(button)
@@ -1133,11 +1306,12 @@ function ToggleShields(button)
   splutterCount = 30;
   splutterNoise = 60;
   startText(shieldUp?"Shields Activated": "Shields Deactivated", border.x, 150);
+  PlayConfirm();
 }
 
 function ToggleTargetComp(button)
 {
- 
+   PlayConfirm();
    if (overlayMode != eTargetComputer)
    {
      overlayMode = eTargetComputer;
@@ -1159,12 +1333,16 @@ function ToggleTrackingComp(button)
 {
   button.state^=1;
   trackingComputer= button.state;
+  startText(trackingComputer?"ship tracking enabled": "ship tracking disabled", border.x, 150);
+       PlayConfirm();
 }
 
 function TogglePauseGame(button)
 {
   button.state^=1;
   pauseGame = button.state;
+  startText(pauseGame ? "Paused Game":"Resume Game", border.x, 150);
+
 }
 
 // flight controls
@@ -1257,6 +1435,8 @@ function UpdateShipControls()
   localPosition.y += orientation.m[7]*speed;
   localPosition.z += orientation.m[8]*speed;
 
+//  UpdateEngineSound(shipVelocity);
+  
  }
 
 var starTheta = 0;
@@ -1267,8 +1447,10 @@ function TestMoveUnderMouse(mouseX, mouseY)
 {
   // calculate the fov angle from the centre to the mouse
   var dx = centreX - mouseX;
+  dx = Math.max(Math.min(dx, 512), -512); // clamp rotation spee
   var sx = dx * focalPoint*5 / 1000;
   var dy = centreY - mouseY;
+  dy = Math.max(Math.min(dy, 512), -512);
   var sy = -dy * focalPoint*5 / 1000;
   //convert into angle
   angleX = Math.tan(sx/1000);
@@ -1311,6 +1493,10 @@ function TestMoveUnderMouse(mouseX, mouseY)
   // changing
   initVelocity = -setShipVelocity*0.05;
   if (viewingAft()) initVelocity*=-1;
+  
+  panStarfield(angleX, angleY);
+  
+  if (triggerWarp == normalSpace)  PlayEngine(shipVelocity);
   
 }
 
@@ -1414,6 +1600,7 @@ function EnteringWarp()
 {
    if (triggerWarp==enterHyperspace)
    {
+      UpdateHyperspaceSound(shipVelocity);
       setShipVelocity = 99.99;
       if (!enterWarp && shipVelocity >90)
       {
@@ -1432,6 +1619,10 @@ function EnteringWarp()
     // waiting destination 
     if (enterWarp == false)
     {
+       PlayConfirm();
+       PauseHyperspaceSound(2);
+       PlayExit(2);
+       CancelHyperSound(2);
        triggerWarp = normalSpace;
        var slider = GetControl("throttle");
        SetThrottle(slider);
@@ -1452,7 +1643,11 @@ function EnteringWarp()
        SetupAsteriods(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
        warpLocked = false;
-       energy-=warpEnergy;
+       energy-=warpEnergy;      
+    }
+    else
+    {
+      UpdateHyperspaceSound(shipVelocity+warpTime*0.5);
     }
   }
   if (triggerWarp == cancelHyperspace)
@@ -1461,6 +1656,8 @@ function EnteringWarp()
      var slider = GetControl("throttle");
      SetThrottle(slider);
      energy-=100;
+     PlayExit();
+     CancelHyperSound();
   }
 }
 
@@ -1473,6 +1670,7 @@ function FirePhotons()
    torpedoEmitter.create();
    if (shipDamage.photons==false) shipFireX*=-1;
    energy-=10;
+   PlayPhoton();
 }
 
 function CheckShields()
@@ -1492,11 +1690,20 @@ function CheckShields()
       var scale =512/canvas.height;
       var t = orientation.transform(x, y, z);
       var depth = focalPoint*5 / ((t.z + 5*scale) +1);
-
-      spawnX = t.x*depth+centreX;
-      spawnY = t.y*depth+centreY;
-      spawmZ =0;
+      var depthInv = focalPoint / (t.z + focalDepth);
+      if (depth>0)
+      {
+      spawnX = (t.x*depth)/depthInv;
+      spawnY = (t.y*depth)/depthInv;
+      }
+      else
+        {
+          spawnX = t.x;
+          spawnY = t.y;
+        }
+      spawmZ = 0;
       dustEmitter.create();
+
       ShieldHit(spawnX, spawnY, 100/(1<<roid.fragment));
       // delete roid
       asteriods.splice(i,1);
@@ -1511,16 +1718,19 @@ function ShieldHit(x, y, damage)
   {
      // gameover
     energy = 0;
+    PlayExplosion();
   }
   else
   {
      shieldFlash(x, y);
+     PlayShield();
   }
 }
 
-function CollideAsteriods(sx, sy, sz)
+function CollideAsteriods(sx, sy, photon)
 {
-    var scale =512/canvas.height;
+   var sz = photon.z;
+   var scale =512/canvas.height;
 
   for (var j = 0; j<asteriods.length; j++)
   {
@@ -1548,10 +1758,11 @@ function CollideAsteriods(sx, sy, sz)
 */
       if (dx*dx+dy*dy < size*size && dz*dz < 4000)
       {
+          var depthInv = focalPoint / ((t.z + focalDepth) +1);
+          spawnX = (t.x*depth)/depthInv;
+          spawnY = (t.y*depth)/depthInv;
+          spawnZ = t.z*4;
           // create particle
-          spawnX=sx
-          spawnY=sy;
-          spawnZ=t.z*4;
 
           dustEmitter.create();
 
@@ -1560,15 +1771,16 @@ function CollideAsteriods(sx, sy, sz)
             asteriods[j].init();    // destroy
           else
             FragmentAsteriod(asteriods[j]);
-
+            PlayExplosionThud();
           return true;
       }
   }
   return false;
 }
 
-function CollideNMEs(sx, sy, sz)
+function CollideNMEs(sx, sy, photon)
 {
+    var sz = photon.z;
     var scale =512/canvas.height;
     var zylonHitBox = gameDifficultyHitBox+0.5;
   
@@ -1610,20 +1822,23 @@ function CollideNMEs(sx, sy, sz)
                 nme.hitpoints--;
               }
               // create particle
-              spawnX=sx;
-              spawnY=sy;
+              var depthInv = focalPoint / ((t.z + focalDepth) +1);
+              spawnX = (t.x*depth)/depthInv;
+              spawnY = (t.y*depth)/depthInv;
               spawnZ=t.z;
 
               if (nme.hitpoints != 0)
               {
                  spawnZ*=8.0;
                  dustEmitter.create();
+                 PlayExplosionThud();
               }
               else
               {
                  explodeEmitter.create();
                  dustEmitter.create();
                  KillNmeType(nme.type);
+                 PlayExplosion();
               }
 
               return true;
@@ -1633,13 +1848,57 @@ function CollideNMEs(sx, sy, sz)
    return false;
 }
 
+function CollidePlasma(sx, sy, photon)
+{
+    var plasmaHitBox = (gameDifficultyHitBox+0.5)*2;
+  
+    for (var i = 0; i< spawnList.length; i++) 
+    {
+        if (spawnList[i].emitter instanceof PlasmaEmitter)
+        {
+            var pos = spawnList[i].particles[63].pos;
 
+            var depth = focalPoint / (pos.z + focalDepth );
+            if (depth<=0) continue;
+
+            var x1 = pos.x * depth + spawnList[i].particles[63].sx;// + cX-centreX;
+            var y1 = pos.y * depth + spawnList[i].particles[63].sy;// + cY-centreY;
+            var z1 = spawnList[i].particles[63].size * depth;
+            var size = depth*plasmaHitBox;
+            var dx = sx-x1;
+            var dy = sy-y1;
+
+            if (dx*dx+dy*dy<size*size)
+            {
+               spawnList[i].life = 0;
+               spawnX = pos.x;
+               spawnY = pos.y;
+               spawnZ = pos.z*2;
+
+               dustEmitter.create();                
+               PlayExplosionThud();
+               return true;      
+            }
+        }
+    }
+}
+
+function CollideShip(sx, sy, plasma)
+{
+   if (Math.abs(plasma.z)<3)
+   {
+       ShieldHit(sx, sy, 100);
+   }
+}
 
 function PhotonCheck()
 {
 
   for (var i = 0; i< spawnList.length; i++)
   {
+      // ignore dead particles
+      if (spawnList[i].life<=0) continue;
+    
       if (spawnList[i].emitter instanceof PhotonTorpedoEmitter)
       {
           var pos = spawnList[i].particles[63].pos;
@@ -1650,21 +1909,54 @@ function PhotonCheck()
           var sx = pos.x * depth + spawnList[i].particles[63].sx + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy + cY-centreY;
           var sz = spawnList[i].particles[63].size * depth;
-/*        
+ /* debug collision    
           context.beginPath();
           context.arc(sx, sy, sz, 0, Math.PI*2);
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
-*/        
-          if (CollideAsteriods(sx, sy, pos.z))
+ */     
+          if (CollideAsteriods(sx, sy, pos))
           {
             // destroy photon
             spawnList[i].life = 0;
+
           }
-          else if (CollideNMEs(sx, sy, pos.z))
+          else if (CollideNMEs(sx, sy, pos))
           {
             // destroy photon
-            spawnList[i].life = 0;             
+            spawnList[i].life = 0; 
+          }
+          else if (CollidePlasma(sx, sy, pos))
+          {
+            spawnList[i].life = 0;
+          }
+      }
+      else if (spawnList[i].emitter instanceof PlasmaEmitter)
+      {
+          var pos = spawnList[i].particles[63].pos;
+
+          var depth = focalPoint / (pos.z + focalDepth );
+          if (depth<=0) continue;
+    
+          var sx = pos.x * depth + spawnList[i].particles[63].sx;// + cX-centreX;
+          var sy = pos.y * depth + spawnList[i].particles[63].sy;// + cY-centreY;
+          var sz = spawnList[i].particles[63].size * depth;
+/* debug collision volumes
+          context.beginPath();
+          context.lineWidth =8;
+          context.arc(sx, sy, sz, 0, Math.PI*2);
+          context.strokeStyle = 'rgb(255,255,255)';
+          context.stroke();
+*/      
+          if (CollideAsteriods(sx, sy, pos))
+          {
+            // destroy plasma
+            spawnList[i].life = 0;
+          }
+          else if (CollideShip(sx, sy, pos))
+          {
+            // destroy plasma
+            spawnList[i].life = 0; 
           }
       }
    }
@@ -1713,6 +2005,8 @@ function RenderStarDome()
     context.fillStyle = '#333333';
     context.fill();
 }
+
+
 
 
 // entry point
