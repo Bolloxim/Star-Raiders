@@ -110,6 +110,7 @@ function blinky(x, t)
 
 function rank(score)
 {
+  if (score<=-1000) return "UNRANKED";
   if (score<0) return msgs[0];
   if (score<48) return msgs[2];
   
