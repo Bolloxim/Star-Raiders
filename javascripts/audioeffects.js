@@ -571,7 +571,7 @@ function InitEngine()
     waveform = 4;
     noiseSelect = 2;
     hyperSound = new FMSynth();
-    hyperSound.play(0, audioContext.currentTime,10000000);
+    hyperSound.play(0, audioContext.currentTime,-1);
     hyperSound.filter.frequency.linearRampToValueAtTime(100, audioContext.currentTime);
     hyperSound.filter.Q.linearRampToValueAtTime(8, audioContext.currentTime);
     hyperSound.gainNode.gain.value = 0.3;
