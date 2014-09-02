@@ -33,6 +33,12 @@ const eLongRange = 2;
 const eTargetComputer = 3;
 const shieldRange = 5;
 
+// end game scenerios
+const aborted    = 0;
+const destroyed  = 1;
+const energylost = 2;
+const basesGone  = 3;
+
 var backgroundColor;
 // variables
 var centreX;
@@ -107,38 +113,59 @@ var angleY = 0;
 
 var nmes = [];
 var gameDifficultyHitBox = 1.5;
-var statistics = {roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0,deflects:0,jumped:0,travelled:0};
-var totals = {roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0,deflects:0,jumped:0,travelled:0};
+var statistics = {kills:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0};
+var totals = {kills:0,roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0};
+
 
 var currentBoardItem = null;
 var pauseGame = false;
 var titleScreen = true;
-var bestScores = [-100];
-var lastScore = -100;
+var attractMode = 0;
+var bestRanks = [{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()}];
+var lastScore = {rank:-1000, date:new Date()};
+
 
 function UpdateAllTotals()
 {
+   // update end game data
+   statistics.energy+=9999-energy;
+   statistics.kills=kills;
+   statistics.timePlayed = (new Date().getTime()) - gameStart;
+   if (statistics.shots == 0)
+     statistics.accuracy = 0;
+   else
+     statistics.accurracy = statistics.deflects+statistics.roidsFragmented+statistics.roidsHit+statistics.shipsHit / statistics.shots * 100;
+  
    totals.roidsFragmented += statistics.roidsFragmented;
    totals.roidsHit+=statistics.roidsHit;
    totals.refuel+=statistics.refuel;
-   totals.shieldsHit+=statistics.sheildsHit;
+   totals.shieldsHit+=statistics.shieldsHit;
    totals.shipsHit+=statistics.shipsHit;
    totals.killTypes[0]+=statistics.killTypes[0];
-   totals.killTypes[2]+=statistics.killTypes[1];
+   totals.killTypes[1]+=statistics.killTypes[1];
    totals.killTypes[2]+=statistics.killTypes[2];
    totals.killTypes[3]+=statistics.killTypes[3];
    totals.damaged+=statistics.damaged;
-   totals.shots+=statistics.shot;
+   totals.shots+=statistics.shots;
    totals.deflects+=statistics.deflects;
-   totals.jumoed+=statistics.jumped;
+   totals.jumped+=statistics.jumped;
+   totals.jumpedEnergy+=statistics.jumpedEnergy;
    totals.travelled+=statistics.travelled;
+   totals.energy+=statistics.energy;
+   totals.kills+=statistics.kills;
+   totals.timePlayed+=statistics.timePlayed;
+   totals.distance+=statistics.distance;
+  
+   if (totals.shots == 0) 
+     totals.accuracy = 0;
+   else
+   totals.accurracy = totals.deflects+totals.roidsFragmented+totals.roidsHit+totals.shipsHit / totals.shots * 100;
+
 }
 
 // difficulty setup, novice , pilot, warrior, commander
 function ClearGame()
 {
-
-  statistics = {roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0};
   shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
   
   // clear ship details
@@ -740,6 +767,10 @@ function init()
 
 function TitleScreen()
 {
+  // enable title
+  titleScreen = true;
+  // credit time
+  titleStartTime = new Date().getTime();
   // populate local space
   SetupAsteriods(localSpaceCubed*0.25);
   SetupTitleButtons();
@@ -751,6 +782,10 @@ function TitleScreen()
   // centre tracking
   tX = cX;
   tY = cY;
+  
+  // set scroller
+  initVelocity = -1.0;
+  termVelocity = -10.0;
 }
   
 function StartGame(difficulty)
@@ -1158,7 +1193,15 @@ function renderVelocity()
   context.fillStyle = 'rgb(255,255,0)';
   context.textAlign = "right";
   leadingzero = shipVelocity<10 ? '0':'';
-  context.fillText('V: ' + leadingzero + shipVelocity.toFixed(2), canvas.width-mapScale.x, 30);
+    context.textAlign = "right";
+  context.fillText('Velocity: ', canvas.width-mapScale.x-40, 30);
+    context.textAlign = "right";
+  var intVel = Math.floor(shipVelocity);
+  context.fillText(leadingzero + intVel, canvas.width-mapScale.x, 30);
+      context.textAlign = "left";
+  var fracVel = Math.floor((shipVelocity-intVel)*100);
+  postZero = fracVel<10? '0':'';
+    context.fillText('.' + fracVel + postZero, canvas.width-mapScale.x, 30);
 }
 
 function renderEnergy()
@@ -1183,6 +1226,154 @@ function renderGameScreen()
   renderShield();
 }
 
+function RenderRanks()
+{
+   context.textAlign = "center";
+   context.fillStyle = 'rgb(0,0,255)';
+   context.font = '20pt Orbitron';
+   context.fillText('Best Ranks', canvas.width/2, 150);
+
+   for (var i=0; i<bestRanks.length; i++)
+   {
+      if ((i*50+180) < (canvas.height-90))
+      {
+        context.font = '20pt Orbitron';
+        context.fillText('Rank: '+ rank(bestRanks[i].rank), canvas.width/2, 180+i*50);
+        context.font = '12pt Orbitron';
+        context.fillText('Date: '+ bestRanks[i].date, canvas.width/2, 200+i*50);
+      }
+   }
+}
+
+function RenderStatistics(stat, lastgame, fade)
+{
+  var x = canvas.width/2 - 500;
+  var y = 150;
+  var yinc = 20;
+  context.lineWidth = 1;
+  context.font = '20pt Orbitron';
+  context.strokeStyle = 'rgba(0,255,0,'+fade+')';
+  context.textAlign = 'left';
+  context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
+  y+=20;
+  context.fillStyle = 'rgba(255,0,0,'+fade+')';
+  context.font = '14pt Orbitron';
+  context.fillText('Meteors Fragmented: '+ stat.roidsFragmented, x, y+=yinc);
+  context.fillText('Meteors Destroyed: '+ stat.roidsHit, x, y+=yinc);  
+  context.fillText('Refueled: '+ stat.refuel.toFixed(2), x, y+=yinc);
+  context.fillText('Shots Fired: '+ stat.shots, x, y+=yinc);
+  context.fillText('Shields Hit: '+ stat.shieldsHit, x, y+=yinc);
+  context.fillText('Ships Hit: '+ stat.shipsHit, x, y+=yinc);
+  context.fillText('Shots Hit: '+ stat.deflects, x, y+=yinc);
+  context.fillText('Accuracy: '+ stat.accuracy.toFixed(2), x, y+=yinc);
+  context.fillText('Starbases lost: '+ stat.bases, x, y+=yinc);
+  context.fillText('Starbases killed: '+ stat.killTypes[0], x, y+=yinc);
+  context.fillText('Fighters killed: '+ stat.killTypes[1], x, y+=yinc);
+  context.fillText('Cruisers killed: '+ stat.killTypes[2], x, y+=yinc);
+  context.fillText('Basestars killed: '+ stat.killTypes[3], x, y+=yinc);
+  context.fillText('Times jumped: '+ stat.jumped, x, y+=yinc);
+  context.fillText('Energy jumped: '+ stat.jumpedEnergy.toFixed(2), x, y+=yinc);
+  context.fillText('Damaged Systems: '+ stat.damaged, x, y+=yinc);
+  context.fillText('Metrons Travelled: '+ stat.distance.toFixed(2), x, y+=yinc);
+  context.fillText('Energy Used: '+ stat.energy.toFixed(2), x, y+=yinc);
+}
+
+function RenderCreditsEtc()
+{
+  var time = new Date().getTime() - titleStartTime;
+  var dt   = modulo2(time, 30000);
+  if (dt<1000) 
+      fade = dt/1000;
+  else if (dt<10000)
+      fade = 1;
+  else if (dt>10000)
+      fade = (11000-dt)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  
+  context.fillStyle = 'rgba(255,64,0,'+fade+')';
+    
+  context.font = '20pt Orbitron';
+  context.fillText('original game written by', canvas.width/2, 150);
+  context.fillText('Respectfully rejuvenated by', canvas.width/2, 250);
+  context.font = '30pt Orbitron';
+  context.fillStyle = 'rgba(255,128,0,'+fade+')';
+  context.fillText('Doug Neubauer, Atari, 1979', canvas.width/2, 200);
+  context.fillText('Andi Smithers, 2014', canvas.width/2,300);
+  
+  fade = 0;
+  if (dt>20000) 
+      fade = (21000-dt)/1000;
+  else if (dt>11000)
+      fade = 1;
+  else if (dt>10000)
+      fade = (dt-10000)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) - 500;
+  context.fillStyle = 'rgba(128,128,128,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "left";
+  context.fillText('Keyboard short cuts', x, 150);
+  context.fillStyle = 'rgba(0, 255,255,'+fade+')';
+  context.fillText('S : Shields', x, 180);
+  context.fillText('H : Hyperspace', x, 210);
+  context.fillText('L : Longrange scanner',x, 240);
+  context.fillText('G : Galactic chart', x, 270);
+  context.fillText('C : Computer', x,300);
+  context.fillText('M : Select Target', x,330);
+  context.fillText('A : Aft/Front view', x,360);
+
+  context.fillText('0-9 : Throttle', x,390);
+  fade = 0;
+  if (dt<1000 && time>30000) 
+      fade = (1000-dt)/1000;
+  else if (dt>21000)
+      fade = 1;
+  else if (dt>20000)
+      fade = (dt-20000)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) + 500;
+  context.fillStyle = 'rgba(128,128,128,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "right";
+  context.fillText('Instructions', x, 150);
+  context.fillStyle = 'rgba(0,255,0,'+fade+')';
+  context.fillText('Protect starbases from being destroyed', x, 180);
+  context.fillText('Use Hyperspace chart to warp to a sector',x, 270);
+  context.fillText('Clear all enemies in a sector to remove threat', x, 330);
+  context.fillText('Use shields to defend against meteors and weapons', x,390);
+  context.fillStyle = 'rgba(0,192,0,'+fade+')';
+  context.fillText('Starbases are vunerable when surrounded', x, 210);
+  context.fillText('Select sector with cross hair before warping',x, 300);
+  context.fillText('Dock at starbases to replenish energy', x,360);
+
+}
+
+function RenderStats()
+{
+  var time = new Date().getTime() - titleStartTime;
+  var dt   = modulo2(time, 30000);
+  var fade = 0;
+  if (dt<1000) 
+    fade = dt/1000;
+  else
+    fade = (16000-dt)/1000;
+  fade = Math.min(1, Math.max(0, fade));
+  RenderStatistics(statistics, true, fade);
+
+  fade = 0;
+  if (dt<1000 && time>30000)
+    fade = (1000-dt)/1000;
+  else if (dt<15000)
+    fade = 0;
+  else
+    fade = (dt-15000)/1000;
+  fade = Math.min(1, Math.max(0, fade));
+  RenderStatistics(totals, false, fade);
+}
+
 function RenderTitleScreen()
 {
   
@@ -1190,16 +1381,38 @@ function RenderTitleScreen()
   RenderAsteriods();
   RenderButtons();
   
+  switch (attractMode)
+  {
+    case 0:
+      RenderCreditsEtc();
+      break;
+    case 1:
+      RenderStats();
+      break;
+    case 2:
+      RenderRanks();
+      break;
+  }
+  
+  context.font = '61pt Orbitron';
+  context.lineWidth = 8;
+  context.textAlign = "center";
+  context.strokeStyle = 'rgba(0,128,0,0.5)';
+  context.strokeText('STAR RAIDERS - 2014', canvas.width/2,100);
+  context.lineWidth = 1;
   context.font = '60pt Orbitron';
   context.fillStyle = 'rgb(255,255,0)';
-  context.textAlign = "center";
   context.fillText('STAR RAIDERS - 2014', canvas.width/2,100);
+  var titlepixel = context.measureText('STAR RAIDERS - 2014');
+  
+
+  context.textAlign = "center";
   context.font = '20pt Orbitron';
-  context.fillText('original game written by', canvas.width/2, 150);
-  context.fillText('Respectfully rejuvenated by', canvas.width/2, 250);
-  context.font = '30pt Orbitron';
-  context.fillText('Doug Neubauer, Atari, 1979', canvas.width/2, 200);
-  context.fillText('Andi Smithers, 2014', canvas.width/2,300);
+  context.fillStyle = 'rgb(0,0,255)';
+  context.textAlign = "center";
+  context.fillText('Last Score: '+ rank(lastScore.rank), canvas.width/2, canvas.height- 40);
+  context.font = '12pt Orbitron';
+  context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
 }
 
 // setup buttons
@@ -1212,10 +1425,13 @@ function SetupTitleButtons()
   var bx = border.x*0.2;
   var bw = border.x*0.6;
   
-  new Button(bx, b.y*2.2, bw, ms.y*0.6, "Novice", StartNovice, '0');
-  new Button(bx, b.y*3.2, bw, ms.y*0.6, "Pilot", StartPilot, '1');
-  new Button(bx, b.y*4.2, bw, ms.y*0.6, "Warrior", StartWarrior, '2');
-  new Button(bx, b.y*5.2, bw, ms.y*0.6, "Commander", StartCommander, '3');
+  new Button(bx, b.y*3.2, bw, ms.y*0.7, "Novice", StartNovice, '0');
+  new Button(bx, b.y*4.2, bw, ms.y*0.7, "Pilot", StartPilot, '1');
+  new Button(bx, b.y*5.2, bw, ms.y*0.7, "Warrior", StartWarrior, '2');
+  new Button(bx, b.y*6.2, bw, ms.y*0.7, "Commander", StartCommander, '3');
+  new Button(bx, b.y*7.2, bw, ms.y*0.7, "Statistics", ViewStats, '4');
+  new Button(bx, b.y*8.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
+  new Button(bx, b.y*9.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
 }
 
 function StartNovice()
@@ -1241,6 +1457,27 @@ function StartCommander()
   PlayConfirm();
   StartGame(commander);
 }
+
+function ViewInstructions()
+{
+  PlayConfirm();
+  attractMode = 0;
+  titleStartTime = new Date().getTime();
+}
+
+function ViewStats()
+{
+  PlayConfirm();
+  attractMode = 1;
+  titleStartTime = new Date().getTime();
+}
+
+function ViewRanks()
+{
+  PlayConfirm();
+  attractMode = 2;
+}
+
 
 function UpdateTitleScreen()
 {
@@ -1383,7 +1620,7 @@ function SetupButtons()
   var ms = mapScale;
   var bx = border.x*0.2;
   var bw = border.x*0.6;
-  
+
   new Button(bx, b.y*2.2, bw, ms.y*0.6, "Long Range", SwitchToLongRange, 'L');
   new Button(bx, b.y*3.2, bw, ms.y*0.6, "Galaxy Chart", SwitchToGalaxyChart, 'G');
   new Button(bx, b.y*4.2, bw, ms.y*0.6, "Hyperspace", ToggleWarp, 'H');
@@ -1392,6 +1629,7 @@ function SetupButtons()
   new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking", ToggleTrackingComp, 'T');
   new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", swapView, 'A');
   new Button(bx, b.y*1.2, bw, ms.y*0.6, "Pause Game", TogglePauseGame, 'P');
+  new Button(bx, b.y*0.2, bw, ms.y*0.6, "Abort Mission", AbortMission, 'Q');  
 
   new Slider(ms.x*20, b.y*2, border.x*0.25, ms.y*6, 10, true, 10, "throttle", SetThrottle);
  
@@ -1497,12 +1735,47 @@ function ToggleTrackingComp(button)
 
 function TogglePauseGame(button)
 {
+  PlayConfirm();
   button.state^=1;
   pauseGame = button.state;
   startText(pauseGame ? "Paused Game":"Resume Game", border.x, 150);
 
 }
 
+function AbortMission(button)
+{
+  if (GetControl("Confirm")==null)
+  {
+    PlayConfirm();
+    startText("Abort Mission (Y/N) ?", border.x, 150);
+    var b = border;
+    var ms = mapScale;
+    var bx = b.x*0.2;
+    var bw = b.x*0.6;
+    new Button(bx+bw*1.06, b.y*0.2, bw, ms.y*0.6, "Confirm", AbortMissionConfirm, 'Y');
+    new Button(bx+bw*2.12, b.y*0.2, bw, ms.y*0.6, "Cancel", AbortMissionCancel, 'N');
+  }
+}
+
+function AbortMissionConfirm(button)
+{
+  PlayConfirm();
+  EndGame(aborted);
+  startText("Aborting Mission ", border.x, 150);
+}
+
+function AbortMissionCancel(button)
+{
+  PlayConfirm();
+  SetupButtons();
+  startText("Cancelled Abort Mission ", border.x, 150);
+}
+
+function EndGame()
+{
+   UpdateAllTotals();
+   TitleScreen();
+}
 // flight controls
 var dragStart = {x:0,y:0};
 var dragging = false;
@@ -1594,7 +1867,7 @@ function UpdateShipControls()
   localPosition.z += orientation.m[8]*speed;
 
 //  UpdateEngineSound(shipVelocity);
-  
+
  }
 
 var starTheta = 0;
@@ -1648,6 +1921,9 @@ function TestMoveUnderMouse(mouseX, mouseY)
   localPosition.x += shipOrientation.m[6]*speed;
   localPosition.y += shipOrientation.m[7]*speed;
   localPosition.z += shipOrientation.m[8]*speed;
+  // update stats
+  statistics.distance+=Math.abs(speed);
+  
   // changing
   initVelocity = -setShipVelocity*0.05;
   if (viewingAft()) initVelocity*=-1;
@@ -1795,13 +2071,19 @@ function EnteringWarp()
            x = Math.random()*badDriving*2 - 1;
            y = Math.random()*badDriving*2 - 1;
        }
-      
+       
+       // update stats - sectors covered, jumped and energy
+       statistics.travelled += (x-shipLocation.x) + (y-shipLocation.y);
+       statistics.jumpEnergy+=warpEnergy;
+       statistics.jumped++;
+       
        SetShipLocation(x, y);
        // Setup NME's
        SetupAsteriods(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
        warpLocked = false;
-       energy-=warpEnergy;      
+       energy-=warpEnergy;
+
     }
     else
     {
@@ -1816,6 +2098,9 @@ function EnteringWarp()
      energy-=100;
      PlayExit();
      CancelHyperSound();
+    
+     // statistics 
+     statistics.jumpEnergy-=100;
   }
 }
 

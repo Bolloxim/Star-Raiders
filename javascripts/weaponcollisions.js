@@ -34,6 +34,8 @@ function FirePhotons()
    if (shipDamage.photons==false) shipFireX*=-1;
    energy-=10;
    PlayPhoton();
+   // increment shots
+   statistics.shots++;
 }
 
 function CheckShields()
@@ -77,14 +79,15 @@ function CheckShields()
 function ShieldHit(x, y, damage)
 {
   energy-=damage;
-  if (shieldUp==false) // dead
+  if (shieldUp==false || energy<=0) // dead
   {
      // gameover
-    energy = 0;
     PlayExplosion();
+    EndGame(destroyed);
   }
   else
   {
+     statistics.shieldsHit++;
      shieldFlash(x, y);
      PlayShield();
   }
@@ -131,10 +134,16 @@ function CollideAsteriods(sx, sy, photon)
 
           // fragment rock
           if (asteriods[j].fragment==2)
+          {
             asteriods[j].init();    // destroy
+            statistics.roidsHit++;
+          }
           else
+          {
             FragmentAsteriod(asteriods[j]);
-            PlayExplosionThud();
+            statistics.roidsFragmented++;
+          }
+          PlayExplosionThud();
           return true;
       }
   }
@@ -189,12 +198,13 @@ function CollideNMEs(sx, sy, photon)
               spawnX = (t.x*depth)/depthInv;
               spawnY = (t.y*depth)/depthInv;
               spawnZ=t.z;
-
+              statistics.shipsHit++;
               if (nme.hitpoints != 0)
               {
                  spawnZ*=8.0;
                  dustEmitter.create();
                  PlayExplosionThud();
+                 
               }
               else
               {
@@ -240,6 +250,7 @@ function CollidePlasma(sx, sy, photon)
 
                dustEmitter.create();                
                PlayExplosionThud();
+               statistics.deflects++;
                return true;      
             }
         }
