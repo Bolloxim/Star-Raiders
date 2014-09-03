@@ -36,8 +36,9 @@ const shieldRange = 5;
 // end game scenerios
 const aborted    = 0;
 const destroyed  = 1;
-const energylost = 2;
+const energyLost = 2;
 const basesGone  = 3;
+const allDead    = 4;
 
 var backgroundColor;
 // variables
@@ -113,8 +114,8 @@ var angleY = 0;
 
 var nmes = [];
 var gameDifficultyHitBox = 1.5;
-var statistics = {kills:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0};
-var totals = {kills:0,roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0};
+var statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
+var totals = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
 
 
 var currentBoardItem = null;
@@ -134,8 +135,10 @@ function UpdateAllTotals()
    if (statistics.shots == 0)
      statistics.accuracy = 0;
    else
-     statistics.accurracy = statistics.deflects+statistics.roidsFragmented+statistics.roidsHit+statistics.shipsHit / statistics.shots * 100;
+     statistics.accuracy = ((statistics.deflects+statistics.roidsFragmented+statistics.roidsHit+statistics.shipsHit) / statistics.shots) * 100;
   
+   totals.played++;
+   totals.diffculty+=statistics.difficulty; // make array?
    totals.roidsFragmented += statistics.roidsFragmented;
    totals.roidsHit+=statistics.roidsHit;
    totals.refuel+=statistics.refuel;
@@ -155,11 +158,16 @@ function UpdateAllTotals()
    totals.kills+=statistics.kills;
    totals.timePlayed+=statistics.timePlayed;
    totals.distance+=statistics.distance;
+   totals.endgames[0]+=statistics.endgames[0];
+   totals.endgames[1]+=statistics.endgames[1];
+   totals.endgames[2]+=statistics.endgames[2];
+   totals.endgames[3]+=statistics.endgames[3];
+   totals.endgames[4]+=statistics.endgames[4];
   
    if (totals.shots == 0) 
      totals.accuracy = 0;
    else
-   totals.accurracy = totals.deflects+totals.roidsFragmented+totals.roidsHit+totals.shipsHit / totals.shots * 100;
+    totals.accuracy = ((totals.deflects+totals.roidsFragmented+totals.roidsHit+totals.shipsHit) / totals.shots) * 100;
 
 }
 
@@ -480,6 +488,8 @@ function EnableDocking(dock)
   
    if (docking && dockTimer<(new Date()).getTime())
    {
+      // refuel
+      statistics.refuel = 9999-energy;
       energy = 9999;
       dockTimer+=100000;
       startText("transfer completed", border.x, 150);
@@ -489,7 +499,7 @@ function EnableDocking(dock)
 function SetRedAlert()
 {
    redTime = (new Date()).getTime();
-   PlayRedAlert(2);
+   PlayRedAlert(0.5);
 }
 
 function DrawRedAlert()
@@ -1258,6 +1268,14 @@ function RenderStatistics(stat, lastgame, fade)
   y+=20;
   context.fillStyle = 'rgba(255,0,0,'+fade+')';
   context.font = '14pt Orbitron';
+  context.fillText('You Won : '+ stat.endgames[allDead], x, y+=yinc);
+  context.fillText('You were destroyed: '+ stat.endgames[destroyed], x, y+=yinc);
+  context.fillText('You run out of energy: '+ stat.endgames[energyLost], x, y+=yinc);
+  context.fillText('All your bases gone: '+ stat.endgames[basesGone], x, y+=yinc);
+  context.fillText('Manually Aborted: '+ stat.endgames[aborted], x, y+=yinc);
+  context.fillText('Difficulty: '+ stat.difficulty, x, y+=yinc);
+  context.fillText('Played: '+ stat.played, x, y+=yinc);
+
   context.fillText('Meteors Fragmented: '+ stat.roidsFragmented, x, y+=yinc);
   context.fillText('Meteors Destroyed: '+ stat.roidsHit, x, y+=yinc);  
   context.fillText('Refueled: '+ stat.refuel.toFixed(2), x, y+=yinc);
@@ -1273,6 +1291,7 @@ function RenderStatistics(stat, lastgame, fade)
   context.fillText('Basestars killed: '+ stat.killTypes[3], x, y+=yinc);
   context.fillText('Times jumped: '+ stat.jumped, x, y+=yinc);
   context.fillText('Energy jumped: '+ stat.jumpedEnergy.toFixed(2), x, y+=yinc);
+  context.fillText('Sectors jumped: '+ stat.travelled, x, y+=yinc);
   context.fillText('Damaged Systems: '+ stat.damaged, x, y+=yinc);
   context.fillText('Metrons Travelled: '+ stat.distance.toFixed(2), x, y+=yinc);
   context.fillText('Energy Used: '+ stat.energy.toFixed(2), x, y+=yinc);
@@ -1281,7 +1300,7 @@ function RenderStatistics(stat, lastgame, fade)
 function RenderCreditsEtc()
 {
   var time = new Date().getTime() - titleStartTime;
-  var dt   = modulo2(time, 30000);
+  var dt   = modulo2(time, 40000);
   if (dt<1000) 
       fade = dt/1000;
   else if (dt<10000)
@@ -1326,8 +1345,8 @@ function RenderCreditsEtc()
 
   context.fillText('0-9 : Throttle', x,390);
   fade = 0;
-  if (dt<1000 && time>30000) 
-      fade = (1000-dt)/1000;
+  if (dt>30000) 
+      fade = (31000-dt)/1000;
   else if (dt>21000)
       fade = 1;
   else if (dt>20000)
@@ -1349,6 +1368,33 @@ function RenderCreditsEtc()
   context.fillText('Select sector with cross hair before warping',x, 300);
   context.fillText('Dock at starbases to replenish energy', x,360);
 
+  fade = 0;
+  if (dt<1000 && time>40000) 
+      fade = (1000-dt)/1000;
+  else if (dt>31000)
+      fade = 1;
+  else if (dt>30000)
+      fade = (dt-30000)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) - 500;
+  context.fillStyle = 'rgba(128,128,128,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "left";
+  context.fillText('A note from the author- sept 2014', x, 150);
+  context.fillStyle = 'rgba(128,255,0,'+fade+')';
+  context.fillText('This game is completely procedural.', x, 180);
+  context.fillText('This project started out as an excersize', x, 240);
+  context.fillText('the need to go into webGL or other extensions', x, 300);
+  context.fillText('Taking about 2 weeks for all modules', x,360);
+  context.fillText('It was written in about 3 hours per evening over 5 weeks', x,420);
+  context.fillStyle = 'rgba(0,192,0,'+fade+')';
+  context.fillText('Art, Sound and data are all generated',x, 210);
+  context.fillText('into creating HTML5 canvas games without', x,270);
+  context.fillText('The project was built with about 8 or so modules',x, 330);
+  context.fillText('However it took 3 more weeks to build them into the game', x,390);
+  context.fillText('whilst my wife, sheri and son, edward slept - andi.', x,450);
+  
 }
 
 function RenderStats()
@@ -1771,11 +1817,15 @@ function AbortMissionCancel(button)
   startText("Cancelled Abort Mission ", border.x, 150);
 }
 
-function EndGame()
+function EndGame(endType)
 {
+   // andi: needs the tickers sequence
+   statistics.endgames[endType]++;
+  
    UpdateAllTotals();
    TitleScreen();
 }
+
 // flight controls
 var dragStart = {x:0,y:0};
 var dragging = false;
@@ -2028,6 +2078,9 @@ function energyManagement()
   
   // check damage
   CheckShields();
+  
+  // end game
+  if (energy < 0 ) EndGame(energyLost);
 }
 
 function EnteringWarp()
@@ -2074,7 +2127,7 @@ function EnteringWarp()
        
        // update stats - sectors covered, jumped and energy
        statistics.travelled += (x-shipLocation.x) + (y-shipLocation.y);
-       statistics.jumpEnergy+=warpEnergy;
+       statistics.jumpedEnergy+=warpEnergy;
        statistics.jumped++;
        
        SetShipLocation(x, y);
