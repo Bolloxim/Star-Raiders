@@ -46,8 +46,8 @@ var frameCount=0;
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('star-raiders');
-	context = canvas.getContext('2d');
+  canvas = document.getElementById('cruiser');
+  context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
   resize();
@@ -65,10 +65,10 @@ function init()
 
 function mouseMove(event) 
 {
-	var rect = canvas.getBoundingClientRect();
+  var rect = canvas.getBoundingClientRect();
 
-	mouseX = event.clientX - rect.left,
-	mouseY = event.clientY - rect.top
+  mouseX = event.clientX - rect.left,
+  mouseY = event.clientY - rect.top
 }
 
 function mouseClick()
@@ -97,35 +97,34 @@ function render()
 
    var x = centreX;
    var y = centreY;
-   var r = 200;
-  demoAngle=(demoAngle+0.01)%(Math.PI*2);
+   var r = 10;
+   demoAngle=(demoAngle+0.01)%(Math.PI*2);
+  demoPhiAngle=Math.PI*0.45;
 
-
-  RenderCruiser(x, y, r, demoAngle);
+  RenderCruiser(x, y, r, demoPhiAngle, demoAngle);
   
   context.globalAlpha = 1.0;
   context.font = '20pt Calibri';
   context.fillStyle = 'rgb(255,255,255)';
   context.textAlign = "center";
   context.fillText('3D Cylinder/Cone rendering on a 2D canvas', canvas.width/2, 40);
-  context.fillText('Basestar for star-raiders', canvas.width/2, canvas.height-80);
-  context.fillText('combines 2 hemispheres an inverted cylinder with r, -r', canvas.width/2, canvas.height-60);    context.fillText('plus 2 side cylinders at the side to show well cylinders', canvas.width/2, canvas.height-40);
+  context.fillText('Zylon Cruiser for star-raiders', canvas.width/2, canvas.height-80);
+  context.fillText('Uses cylinders, cones and hemispheres', canvas.width/2, canvas.height-60);    context.fillText('Modeled roughly to a klingon cruiser', canvas.width/2, canvas.height-40);
 }
 
 // star base construction - eer well it was but its a cool blue marble demo for now
 // to rotate horizontally switch out the x/y registers.  I should probably make this generic ..  however just want to use this for the starbase construction in star-raiders
-   var lazerLength = 50;
-  var lazerAngle = 0;
 
-function RenderCruiser(x, y, r, baseAngle)
+
+function RenderCruiser(x, y, r, baseAngle, theta)
 {  
-    var len = 5;
-    r = 50;
-    var r2 = 50;
-    var hullr = 150;
+    var len = r/10;
+    var r2 = r;
+    var hullr = r*3;
+    var fuseLen = r*3
   
     // compute y
-    var y1 = y+250*2*Math.cos(baseAngle);
+    var y1 = y+r*5*2*Math.cos(baseAngle);
     var y2 = y-len*2*Math.cos(baseAngle+Math.PI*0.5);
   
     var fusalageOrder =(baseAngle<Math.PI || baseAngle>Math.PI*2);
@@ -133,9 +132,9 @@ function RenderCruiser(x, y, r, baseAngle)
     {
       if (!fusalageOrder) 
       {
-          RenderNacells(x, y1, hullr, len*8, baseAngle);
+        RenderNacells(x, y1, hullr, len*8, baseAngle);
         RenderHull(x, y1, hullr, len*8, baseAngle);
-        RenderFusalage(x,y,r*3,baseAngle);
+        RenderFusalage(x,y,r,fuseLen,baseAngle);
       }
       
       RenderHemisphere(x, y2, r*0.8, baseAngle, '#800000', '#800000');
@@ -143,7 +142,7 @@ function RenderCruiser(x, y, r, baseAngle)
       
       if (fusalageOrder)
       {
-        RenderFusalage(x,y,r*3,baseAngle);
+        RenderFusalage(x,y,r,fuseLen,baseAngle);
         RenderHull(x, y1, hullr, len*8, baseAngle);
         RenderNacells(x, y1, hullr, len*8, baseAngle);
       }
@@ -154,13 +153,13 @@ function RenderCruiser(x, y, r, baseAngle)
       {
         RenderNacells(x, y1, hullr, len*8, baseAngle);
         RenderHull(x, y1, hullr, len*8, baseAngle);
-        RenderFusalage(x, y, r*3, baseAngle);
+        RenderFusalage(x, y, r,fuseLen, baseAngle);
       }
       RenderBridge(x, y, r, r, len*2, baseAngle, '#203040', '#607080', '#304050');
       RenderHemisphere(x, y2, r*0.8, baseAngle, '#800000', '#800000');
       if (fusalageOrder)
       {
-        RenderFusalage(x,y,r*3,baseAngle);
+        RenderFusalage(x,y,r,fuseLen,baseAngle);
         RenderHull(x, y1, hullr, len*8, baseAngle);
         RenderNacells(x, y1, hullr, len*8, baseAngle);
       }
@@ -169,13 +168,13 @@ function RenderCruiser(x, y, r, baseAngle)
     
 }
 
-function RenderFusalage(x,y, len,baseAngle)
+function RenderFusalage(x, y, r, len, baseAngle)
 {
-    var r = 15;
-    var r2 = 10;
-    var y3 = y+Math.cos(baseAngle)*(50+len);
+    var r1 = r/3;
+    var r2 = r/5;
+    var y3 = y+Math.cos(baseAngle)*(r+len);
 
-    RenderBridge(x, y3, r2, r, len, baseAngle+Math.PI*0.5, '#103040', '#103040', '#103040');
+    RenderBridge(x, y3, r2, r1, len, baseAngle+Math.PI*0.5, '#103040', '#103040', '#103040');
 }
 
 function RenderHemisphere(x, y, r, angle, colTop, colBot)
@@ -224,16 +223,17 @@ function RenderHemisphere(x, y, r, angle, colTop, colBot)
 
 }
 
-function RenderNacells(x, y, r1, side, angle)
+function RenderHull(x, y, r1, side, angle)
 {
    RenderBridge(x, y, r1*0.8, r1*1.1, side, angle, '#203040', '#607080', '#304050');
 }
 
-function RenderHull(x, y, r1, side, angle)
+function RenderNacells(x, y, r1, side, angle)
 {
     var y2 = y-side*Math.cos(angle+Math.PI*0.5);
-    RenderBridge(x-180, y2, 10, 30, 150, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
-    RenderBridge(x+180, y2, 10, 30, 150, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
+    var r2 = r1/7.5;
+    RenderBridge(x-r1-r2, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
+    RenderBridge(x+r1+r2, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
 }
 
 function RenderBridge(x, y, r1, r2, side, angle, colTop, colBot, colSide, glow)
