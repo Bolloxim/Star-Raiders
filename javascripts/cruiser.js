@@ -97,9 +97,9 @@ function render()
 
    var x = centreX;
    var y = centreY;
-   var r = 10;
+   var r = 25;
    demoAngle=(demoAngle+0.01)%(Math.PI*2);
-  demoPhiAngle=Math.PI*0.45;
+  demoPhiAngle=Math.PI*1.4;
 
   RenderCruiser(x, y, r, demoPhiAngle, demoAngle);
   
@@ -125,42 +125,43 @@ function RenderCruiser(x, y, r, baseAngle, theta)
   
     // compute y
     var y1 = y+r*5*2*Math.cos(baseAngle);
-    var y2 = y-len*2*Math.cos(baseAngle+Math.PI*0.5);
+    var y2 = y+len*2*Math.cos(baseAngle+Math.PI*0.5);
+    var oppositeAngle = (baseAngle+Math.PI)%(Math.PI*2);
   
     var fusalageOrder =(baseAngle<Math.PI || baseAngle>Math.PI*2);
-    if (baseAngle<Math.PI*0.5 || baseAngle>Math.PI*1.5)
+    if (baseAngle>Math.PI*0.5 && baseAngle<Math.PI*1.5)
     {
       if (!fusalageOrder) 
       {
         RenderNacells(x, y1, hullr, len*8, baseAngle);
-        RenderHull(x, y1, hullr, len*8, baseAngle);
+        RenderHull(x, y1, hullr, len*8, oppositeAngle);
         RenderFusalage(x,y,r,fuseLen,baseAngle);
       }
       
-      RenderHemisphere(x, y2, r*0.8, baseAngle, '#800000', '#800000');
-      RenderBridge(x, y, r, r, len*2, baseAngle, '#203040', '#607080', '#304050');
+      RenderHemisphere(x, y2, r*0.8, oppositeAngle, '#800000', '#800000');
+      RenderBridge(x, y, r, r, len*2, oppositeAngle, '#203040', '#607080', '#304050');
       
       if (fusalageOrder)
       {
         RenderFusalage(x,y,r,fuseLen,baseAngle);
-        RenderHull(x, y1, hullr, len*8, baseAngle);
         RenderNacells(x, y1, hullr, len*8, baseAngle);
+        RenderHull(x, y1, hullr, len*8, oppositeAngle);
       }
     }
     else
     {
       if (!fusalageOrder)
       {
+        RenderHull(x, y1, hullr, len*8, oppositeAngle);
         RenderNacells(x, y1, hullr, len*8, baseAngle);
-        RenderHull(x, y1, hullr, len*8, baseAngle);
         RenderFusalage(x, y, r,fuseLen, baseAngle);
       }
-      RenderBridge(x, y, r, r, len*2, baseAngle, '#203040', '#607080', '#304050');
-      RenderHemisphere(x, y2, r*0.8, baseAngle, '#800000', '#800000');
+      RenderBridge(x, y, r, r, len*2, oppositeAngle, '#203040', '#607080', '#304050');
+      RenderHemisphere(x, y2, r*0.8, oppositeAngle, '#800000', '#800000');
       if (fusalageOrder)
       {
         RenderFusalage(x,y,r,fuseLen,baseAngle);
-        RenderHull(x, y1, hullr, len*8, baseAngle);
+        RenderHull(x, y1, hullr, len*8, oppositeAngle);
         RenderNacells(x, y1, hullr, len*8, baseAngle);
       }
       
@@ -230,10 +231,10 @@ function RenderHull(x, y, r1, side, angle)
 
 function RenderNacells(x, y, r1, side, angle)
 {
-    var y2 = y-side*Math.cos(angle+Math.PI*0.5);
+    var y2 = y+side*1.5*Math.cos(angle+Math.PI*0.5);
     var r2 = r1/7.5;
-    RenderBridge(x-r1-r2, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
-    RenderBridge(x+r1+r2, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
+    RenderBridge(x-r1, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
+    RenderBridge(x+r1, y2, r1/15, r2, r1, angle+Math.PI*0.5, '#f08040', '#f08040', '#f04050', true);
 }
 
 function RenderBridge(x, y, r1, r2, side, angle, colTop, colBot, colSide, glow)
@@ -340,5 +341,5 @@ function animate()
 
 
 // entry point
-init();
+//init();
 //animate();
