@@ -114,8 +114,8 @@ var angleY = 0;
 
 var nmes = [];
 var gameDifficultyHitBox = 1.5;
-var statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
-var totals = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
+var statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
+var totals = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
 
 
 var currentBoardItem = null;
@@ -154,6 +154,7 @@ function UpdateAllTotals()
    totals.jumped+=statistics.jumped;
    totals.jumpedEnergy+=statistics.jumpedEnergy;
    totals.travelled+=statistics.travelled;
+   totals.jumpCancelled+=statistics.jumpCancelled;
    totals.energy+=statistics.energy;
    totals.kills+=statistics.kills;
    totals.timePlayed+=statistics.timePlayed;
@@ -174,6 +175,8 @@ function UpdateAllTotals()
 // difficulty setup, novice , pilot, warrior, commander
 function ClearGame()
 {
+  // clear stats
+  statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
   shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
   
   // clear ship details
@@ -448,6 +451,15 @@ NME.prototype.render = function()
           break;
        case fighter:
           renderZylon(camspace.x, camspace.y, camspace.z, this.theta, this.phi);
+          break;
+       case cruiser:
+          var scale = 512/canvas.height;
+          var depth = focalPoint*5 / camspace.z + 5*scale;
+          var sx = camspace.x * depth + centreX;
+          var sy = camspace.y * depth + centreY;
+          var sz = 1 * depth;
+
+          if (camspace.z>0) RenderCruiser(sx, sy, sz, Math.atan2(camspace.y, camspace.z)+Math.PI*1.5);
           break;
        case basestar:
           var scale = 512/canvas.height;
@@ -1292,12 +1304,13 @@ function RenderStatistics(stat, lastgame, fade)
   context.fillText('Times jumped: '+ stat.jumped, x, y+=yinc);
   context.fillText('Energy jumped: '+ stat.jumpedEnergy.toFixed(2), x, y+=yinc);
   context.fillText('Sectors jumped: '+ stat.travelled, x, y+=yinc);
+  context.fillText('Jumps cancelled: '+ stat.jumpCancelled, x, y+=yinc);
   context.fillText('Damaged Systems: '+ stat.damaged, x, y+=yinc);
   context.fillText('Metrons Travelled: '+ stat.distance.toFixed(2), x, y+=yinc);
   context.fillText('Energy Used: '+ stat.energy.toFixed(2), x, y+=yinc);
 }
 
-function RenderCreditsEtc()
+function RenderInstructions()
 {
   var time = new Date().getTime() - titleStartTime;
   var dt   = modulo2(time, 40000);
@@ -1329,32 +1342,8 @@ function RenderCreditsEtc()
       fade = (dt-10000)/1000;
   
   fade = Math.min(1, Math.max(0, fade));
-  var x = (canvas.width/2) - 500;
-  context.fillStyle = 'rgba(128,128,128,'+fade+')';
-  context.font = '20pt Orbitron';
-  context.textAlign = "left";
-  context.fillText('Keyboard short cuts', x, 150);
-  context.fillStyle = 'rgba(0, 255,255,'+fade+')';
-  context.fillText('S : Shields', x, 180);
-  context.fillText('H : Hyperspace', x, 210);
-  context.fillText('L : Longrange scanner',x, 240);
-  context.fillText('G : Galactic chart', x, 270);
-  context.fillText('C : Computer', x,300);
-  context.fillText('M : Select Target', x,330);
-  context.fillText('A : Aft/Front view', x,360);
-
-  context.fillText('0-9 : Throttle', x,390);
-  fade = 0;
-  if (dt>30000) 
-      fade = (31000-dt)/1000;
-  else if (dt>21000)
-      fade = 1;
-  else if (dt>20000)
-      fade = (dt-20000)/1000;
-  
-  fade = Math.min(1, Math.max(0, fade));
   var x = (canvas.width/2) + 500;
-  context.fillStyle = 'rgba(128,128,128,'+fade+')';
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
   context.font = '20pt Orbitron';
   context.textAlign = "right";
   context.fillText('Instructions', x, 150);
@@ -1367,7 +1356,135 @@ function RenderCreditsEtc()
   context.fillText('Starbases are vunerable when surrounded', x, 210);
   context.fillText('Select sector with cross hair before warping',x, 300);
   context.fillText('Dock at starbases to replenish energy', x,360);
+  context.fillText('Keep Warp Cursor Centred for optimal warp', x,420);
+  
+  fade = 0;
+  if (dt>30000) 
+      fade = (31000-dt)/1000;
+  else if (dt>21000)
+      fade = 1;
+  else if (dt>20000)
+      fade = (dt-20000)/1000;
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) - 500;
 
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "left";
+  context.fillText('Keyboard short cuts', x, 150);
+  context.fillStyle = 'rgba(0, 255,255,'+fade+')';
+  context.fillText('S : Shields', x, 180);
+  context.fillText('H : Hyperspace', x, 210);
+  context.fillText('L : Longrange scanner',x, 240);
+  context.fillText('G : Galactic chart', x, 270);
+  context.fillText('C : Computer', x,300);
+  context.fillText('T : Tracking', x,330);
+  context.fillText('M : Select Target', x,360);
+  context.fillText('A : Aft/Front view', x,390);
+  context.fillText('0-9 : Throttle  (Mousewheel as well)', x,420);
+  context.fillText('Mouse to target, Left Mouse fires weapons', x,450);
+  
+  fade = 0;
+  if (dt<1000 && time>40000) 
+      fade = (1000-dt)/1000;
+  else if (dt>31000)
+      fade = 1;
+  else if (dt>30000)
+      fade = (dt-30000)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) + 500;
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "right";
+  context.fillText('Strategies', x, 150);
+  context.fillStyle = 'rgba(128,255,0,'+fade+')';
+  context.fillText('Destroy Fast moving patrols first', x, 180);
+  context.fillText('Starbases when destroyed will spawn a new enemy patrol', x,240);
+  context.fillText('Destroying Asteriods is for fun only',x, 300);
+  context.fillText('Cancel Hyperwarps before 99 and you get a free boost(well almost free)',x, 360);
+  context.fillText('Watch your Energy and dont forget to refuel', x,420);
+  context.fillStyle = 'rgba(0,192,0,'+fade+')';
+  context.fillText('Patrols move every 30 seconds or so', x, 210);
+  context.fillText('If you cant save the base, destroying it denies the enemy', x,270);
+  context.fillText('Never come out of warp without shields up', x,330);
+  context.fillText('12.00 is a good cruise speed', x,390);
+  
+}
+
+function RenderCredits()
+{
+  var time = new Date().getTime() - titleStartTime;
+  var dt   = modulo2(time, 40000);
+  if (dt<1000) 
+      fade = dt/1000;
+  else if (dt<10000)
+      fade = 1;
+  else if (dt>10000)
+      fade = (11000-dt)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  
+  context.fillStyle = 'rgba(255,64,0,'+fade+')';
+    
+  context.font = '20pt Orbitron';
+  context.fillText('original game written by', canvas.width/2, 150);
+  context.fillText('Respectfully rejuvenated by', canvas.width/2, 250);
+  context.font = '30pt Orbitron';
+  context.fillStyle = 'rgba(255,128,0,'+fade+')';
+  context.fillText('Doug Neubauer, Atari, 1979', canvas.width/2, 200);
+  context.fillText('Andi Smithers, 2014', canvas.width/2,300);
+  
+  fade = 0;
+  if (dt>20000) 
+      fade = (21000-dt)/1000;
+  else if (dt>11000)
+      fade = 1;
+  else if (dt>10000)
+      fade = (dt-10000)/1000;
+  
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) + 500;
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "right";
+  context.fillText('Thanks', x, 150);
+  context.fillStyle = 'rgba(0,255,0,'+fade+')';
+  context.fillText('Brian Dumlao for QA pass in his off hours', x, 180);
+  context.fillText('Codepen for making it easy to prototype',x, 270);
+  context.fillText('All the Disney folks I work with daily',x, 330);
+  context.fillStyle = 'rgba(0,192,0,'+fade+')';
+  context.fillText('Chris Chapman for pointing me at some cool webresources', x, 210);
+  context.fillText('Sheri Smithers for putting up with my late nights',x, 300);
+
+  
+  fade = 0;
+  if (dt>30000) 
+      fade = (31000-dt)/1000;
+  else if (dt>21000)
+      fade = 1;
+  else if (dt>20000)
+      fade = (dt-20000)/1000;
+  fade = Math.min(1, Math.max(0, fade));
+  var x = (canvas.width/2) - 500;
+
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
+  context.font = '20pt Orbitron';
+  context.textAlign = "left";
+  context.fillText('Objective of this project', x, 150);
+  context.fillStyle = 'rgba(128,255,0,'+fade+')';
+  context.fillText('This game is completely procedural.', x, 180);
+  context.fillText('This project started out as an exercise', x, 240);
+  context.fillText('the need to go into webGL or other extensions', x, 300);
+  context.fillText('Taking about 2 weeks for all modules', x,360);
+  context.fillText('It was written in about 3 hours per evening over 5 weeks', x,420);
+  context.fillStyle = 'rgba(0,192,0,'+fade+')';
+  context.fillText('Art, Sound and data are all generated',x, 210);
+  context.fillText('into creating HTML5 canvas games without', x,270);
+  context.fillText('The project was built with about 8 or so modules',x, 330);
+  context.fillText('However it took 3 more weeks to build them into the game', x,390);
+  context.fillText('whilst my wife, sheri and son, edward slept - andi.', x,450);
+  
   fade = 0;
   if (dt<1000 && time>40000) 
       fade = (1000-dt)/1000;
@@ -1378,13 +1495,13 @@ function RenderCreditsEtc()
   
   fade = Math.min(1, Math.max(0, fade));
   var x = (canvas.width/2) - 500;
-  context.fillStyle = 'rgba(128,128,128,'+fade+')';
+  context.fillStyle = 'rgba(255,255,255,'+fade+')';
   context.font = '20pt Orbitron';
   context.textAlign = "left";
   context.fillText('A note from the author- sept 2014', x, 150);
   context.fillStyle = 'rgba(128,255,0,'+fade+')';
   context.fillText('This game is completely procedural.', x, 180);
-  context.fillText('This project started out as an excersize', x, 240);
+  context.fillText('This project started out as an exercise', x, 240);
   context.fillText('the need to go into webGL or other extensions', x, 300);
   context.fillText('Taking about 2 weeks for all modules', x,360);
   context.fillText('It was written in about 3 hours per evening over 5 weeks', x,420);
@@ -1430,13 +1547,16 @@ function RenderTitleScreen()
   switch (attractMode)
   {
     case 0:
-      RenderCreditsEtc();
+      RenderInstructions();
       break;
     case 1:
       RenderStats();
       break;
     case 2:
       RenderRanks();
+      break;
+    case 3:
+      RenderCredits();
       break;
   }
   
@@ -1466,18 +1586,21 @@ function SetupTitleButtons()
 {
   // erase old buttons
   buttons = [];
+  var w = canvas.width;
   var b = border;
   var ms = mapScale;
   var bx = border.x*0.2;
   var bw = border.x*0.6;
   
-  new Button(bx, b.y*3.2, bw, ms.y*0.7, "Novice", StartNovice, '0');
-  new Button(bx, b.y*4.2, bw, ms.y*0.7, "Pilot", StartPilot, '1');
-  new Button(bx, b.y*5.2, bw, ms.y*0.7, "Warrior", StartWarrior, '2');
-  new Button(bx, b.y*6.2, bw, ms.y*0.7, "Commander", StartCommander, '3');
-  new Button(bx, b.y*7.2, bw, ms.y*0.7, "Statistics", ViewStats, '4');
-  new Button(bx, b.y*8.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
-  new Button(bx, b.y*9.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
+  new Button(w-bx-bw, b.y*3.2, bw, ms.y*0.7, "Novice", StartNovice, '0');
+  new Button(w-bx-bw, b.y*4.2, bw, ms.y*0.7, "Pilot", StartPilot, '1');
+  new Button(w-bx-bw, b.y*5.2, bw, ms.y*0.7, "Warrior", StartWarrior, '2');
+  new Button(w-bx-bw, b.y*6.2, bw, ms.y*0.7, "Commander", StartCommander, '3');
+  
+  new Button(bx, b.y*3.2, bw, ms.y*0.7, "Statistics", ViewStats, '4');
+  new Button(bx, b.y*4.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
+  new Button(bx, b.y*5.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
+  new Button(bx, b.y*6.2, bw, ms.y*0.7, "Credits", ViewCredits, '7');
 }
 
 function StartNovice()
@@ -1508,7 +1631,7 @@ function ViewInstructions()
 {
   PlayConfirm();
   attractMode = 0;
-  titleStartTime = new Date().getTime();
+  titleStartTime = new Date().getTime()-11000;
 }
 
 function ViewStats()
@@ -1522,6 +1645,13 @@ function ViewRanks()
 {
   PlayConfirm();
   attractMode = 2;
+}
+
+function ViewCredits()
+{
+  PlayConfirm();
+  attractMode = 3;
+  titleStartTime = new Date().getTime();
 }
 
 
@@ -2126,7 +2256,7 @@ function EnteringWarp()
        }
        
        // update stats - sectors covered, jumped and energy
-       statistics.travelled += (x-shipLocation.x) + (y-shipLocation.y);
+       statistics.travelled += Math.round(Math.abs(x-shipLocation.x) + Math.abs(y-shipLocation.y));
        statistics.jumpedEnergy+=warpEnergy;
        statistics.jumped++;
        
@@ -2153,7 +2283,8 @@ function EnteringWarp()
      CancelHyperSound();
     
      // statistics 
-     statistics.jumpEnergy-=100;
+     statistics.jumpedEnergy-=100;
+     statistics.jumpCancelled++;
   }
 }
 

@@ -586,8 +586,11 @@ function PlayEngine(velocity)
 
 function StopEngine()
 {
-    hyperSound.stop();
-    hyperSound = null;
+    if (hyperSound)
+    {
+        hyperSound.stop();
+        hyperSound = null;
+    }
 }
 
 function PlayBeginHyperspace()
