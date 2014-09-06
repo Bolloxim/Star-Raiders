@@ -122,12 +122,18 @@ function rank(score)
     r>>=1;
     quality = ( ((score-48) - (r<<5)) >>3) + 1;
   }
-  else r-=4;
-	if (r>9) r = 9;
-  if (r==9) // special case for star commander in formula
-   quality = ((score-272) >> 3) +1;
-
-  if (quality>4) quality = 4;
+  else 
+  {
+    r-=5;
+    // special case for star-commander incase of huge scores
+	  if (r>=9)
+    { 
+      r = 9;
+      quality = ((score-272) >> 3) +1;
+      if (quality>4) quality = 4;
+    }
+  }
+  
 
   return  ranks[4+r+r] + ' class ' + quality;
   
