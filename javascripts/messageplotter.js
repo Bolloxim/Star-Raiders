@@ -111,8 +111,8 @@ function blinky(x, t)
 function rank(score)
 {
   if (score<=-1000) return "UNRANKED";
-  if (score<24) return msgs[0];
-  if (score<48) return msgs[2];
+  if (score<24) return ranks[0];
+  if (score<48) return ranks[2];
   
   var r = (score - 48) >>4;
   var quality = (((score-48) - (r<<4)) >>2) + 1;
@@ -123,7 +123,11 @@ function rank(score)
     quality = ( ((score-48) - (r<<5)) >>3) + 1;
   }
   else r-=4;
-	if (r>10) r = 10;
+	if (r>9) r = 9;
+  if (r==9) // special case for star commander in formula
+   quality = ((score-272) >> 3) +1;
+
+  if (quality>4) quality = 4;
 
   return  ranks[4+r+r] + ' class ' + quality;
   
