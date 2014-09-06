@@ -117,7 +117,7 @@ function rank(score)
   var r = (score - 48) >>4;
   var quality = (((score-48) - (r<<4)) >>2) + 1;
 
-  if (r<=8)
+  if (r<8)
   {
     r>>=1;
     quality = ( ((score-48) - (r<<5)) >>3) + 1;
