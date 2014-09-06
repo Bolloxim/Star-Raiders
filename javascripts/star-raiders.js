@@ -114,24 +114,29 @@ var angleY = 0;
 
 var nmes = [];
 var gameDifficultyHitBox = 1.5;
-var statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
-var totals = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
+var statistics = {rank:0, kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
+var totals = {rank:0, kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
 
 
 var currentBoardItem = null;
 var pauseGame = false;
 var titleScreen = true;
 var attractMode = 0;
-var bestRanks = [{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()},{rank:-1000, date:new Date()}];
-var lastScore = {rank:-1000, date:new Date()};
+var bestRanks = [{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date:new Date(), percentile:100}];
+var lastScore = {rank:-1000, date:new Date(), percentile:100};
 
+var difficultyNames = ['Novice', 'Pilot', 'Warrior', 'Commander'];
 
 function UpdateAllTotals()
 {
    // update end game data
    statistics.energy+=9999-energy;
    statistics.kills=kills;
-   statistics.timePlayed = (new Date().getTime()) - gameStart;
+   
+   var gameTime = currentTime - gameStart;
+   var decimalTime = gameTime / 60000;
+   statistics.timePlayed = decimalTime;
+  
    if (statistics.shots == 0)
      statistics.accuracy = 0;
    else
@@ -200,6 +205,8 @@ function ClearGame()
    kills = 0;
    badDriving = 0;
    redAlertColor = 0;
+  
+    shieldUp = false;
 }
 
 
@@ -354,6 +361,7 @@ function DestroyStarbase()
        spawnZ = nmes[0].pos.z;
        explodeEmitter.create();
        dustEmitter.create();
+       PlayExplosion();
     }
 }
 
@@ -778,17 +786,32 @@ function init()
   window.AudioContext = window.AudioContext||window.webkitAudioContext;
   audioContext = new AudioContext();
   
+  // init parse
+  Parse.initialize("QiC9M2aTG3f4OpldOxdbav1VAwDuwDIX65GyBmYe", "RMg2Xv02FXTXu3d1UfiMeTsYbotrH4oSB7Pcbvyi");
+  // track views
+  var details = { Width:''+canvas.width, Height:''+canvas.height, Browser:window.navigator.userAgent};
+  
+  Parse.Analytics.track('Viewed', details);
+
   // audio
   initAudio();
-  
+  // load cookies
+  // emergency delete
+  //  DeleteCookie("lastScore");
+  // DeleteCookie("bestRanks");
+  LoadRanks();
   // start game
 //  StartGame(novice);
   // init title
   TitleScreen();
+  
 }
 
 function TitleScreen()
 {
+  clearTitleClick = true;
+  // init engine sounds
+  StopEngine();
   // enable title
   titleScreen = true;
   // credit time
@@ -814,6 +837,10 @@ function StartGame(difficulty)
 {
   // remove titlescreen
   titleScreen = false;
+  clearTitleClick = false;
+  
+  // log
+  Parse.Analytics.track('Started', {difficulty:difficultyNames[difficulty]});
   
   // initialze variables  
   ClearGame();
@@ -869,6 +896,7 @@ function mouseMove(event)
 function mouseDown(event)
 {
   console.log("mousedown" + event.which);
+  if (clearTitleClick==false) return;
   if (CheckButtons(mouseX, mouseY, false) == true) return;
   
   if (event.which&1)
@@ -880,6 +908,7 @@ function mouseDown(event)
 
 function mouseUp(event)
 {
+  clearTitleClick=true;
   if (event.which&1 && dragging)
   {
       DragEventDone(event);
@@ -1451,11 +1480,12 @@ function RenderCredits()
   context.fillText('Thanks', x, 150);
   context.fillStyle = 'rgba(0,255,0,'+fade+')';
   context.fillText('Brian Dumlao for QA pass in his off hours', x, 180);
-  context.fillText('Codepen for making it easy to prototype',x, 270);
-  context.fillText('All the Disney folks I work with daily',x, 330);
+  context.fillText('Codepen for making it easy to prototype',x, 240);
+  context.fillText('All the Disney folks I work with daily',x, 300);
   context.fillStyle = 'rgba(0,192,0,'+fade+')';
   context.fillText('Chris Chapman for pointing me at some cool webresources', x, 210);
-  context.fillText('Sheri Smithers for putting up with my late nights',x, 300);
+  context.fillText('Parse for a real easy to use datastore',x, 270);
+  context.fillText('Sheri Smithers for putting up with my late nights',x, 330);
 
   
   fade = 0;
@@ -1579,6 +1609,63 @@ function RenderTitleScreen()
   context.fillText('Last Score: '+ rank(lastScore.rank), canvas.width/2, canvas.height- 40);
   context.font = '12pt Orbitron';
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
+}
+
+
+function ranksort(a, b)
+{
+   return (b.rank-a.rank);
+}
+
+function  AddNewRank(ranking, date)
+{
+  
+   var percentile = 100;
+   lastScore.date = date;
+   lastScore.rank = ranking;
+   lastScore.percentile = percentile; // compute using database
+   
+   // adds a rank making it 11
+   bestRanks.push({rank:ranking, date:date, percentile:percentile});
+   // sorts rank in high to low
+   bestRanks.sort(ranksort);
+   // pops the 11th off
+   bestRanks.pop();
+
+   // update local db
+   SaveRanks();
+}
+
+function LoadRanks()
+{
+   var result = LoadCookie("lastScore");
+   if (result) lastScore = result;
+   var result = LoadCookie("bestRanks");
+   if (result) bestRanks = result;  
+}
+
+function SaveRanks()
+{
+   SaveCookie("lastScore", lastScore);
+   SaveCookie("bestRanks", bestRanks);
+}
+
+function SaveCookie(name, value) 
+{
+  var cookie = [name, '=', JSON.stringify(value), '; domain=.', window.location.host.toString(), '; path=/;'].join('');
+  document.cookie = cookie;
+}
+
+function LoadCookie(name) 
+{
+   var result = document.cookie.match(new RegExp(name + '=([^;]+)'));
+   result && (result = JSON.parse(result[1]));
+   return result;
+}
+
+function DeleteCookie(name) 
+{
+  document.cookie = [name, '=; expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/; domain=.', window.location.host.toString()].join('');
 }
 
 // setup buttons
@@ -1952,8 +2039,122 @@ function EndGame(endType)
    // andi: needs the tickers sequence
    statistics.endgames[endType]++;
   
+   if (endType == destroyed)
+   {
+      DestroyShip();
+   }
+  
+   if (endType == energyLost)
+   {
+      PowerDownShip();   
+   }
+  
+   // clear all buttons
+   buttons = [];
+   // clear redalert
+   redTime = 0;
+  
+   // update statistics
    UpdateAllTotals();
+  
+   // calculate the player rank
+   var ranking = CalculateScore();
+   AddNewRank(ranking, new Date());
+  
+   // save stats and rank to server
+   SaveStatistics();
+   
+   // 
+  
    TitleScreen();
+}
+
+function DestroyShip()
+{
+    // explode (asteriods)
+    trackingComputer=false;
+    targetComputer = false;
+    shieldUp = false;
+  
+         // detroy base
+   SpawnAsteriodsAt(localPosition);
+   spawnX = localPosition.x;
+   spawnY = localPosition.y;
+   spawnZ = localPosition.z;
+   explodeEmitter.create();
+   dustEmitter.create();
+   PlayExplosion();
+}
+
+function PowerDownShip()
+{
+    // explode (asteriods)
+    trackingComputer=false;
+    targetComputer = false;
+    shieldUp = false;
+    setShipVelocity = 0;
+}
+
+function CalculateScore(endType)
+{
+  var Mtable = 
+    [ 80, 60, 40,
+      76, 60, 50,
+      60, 50, 40,
+      111, 100, 90];
+  // compute M
+  var mindex = gameDifficulty*3;
+  if (endType == destroyed) mindex++;
+  if (endType != allDead) mindex++;
+  
+  var M = Mtable[mindex];
+  M += 6*kills;
+  M -= Math.floor(statistics.energy/100);
+  M -= statistics.killTypes[base] * 3;
+  M -= statistics.bases * 18;
+  M -= Math.floor(statistics.timePlayed);  // time is decimalized
+  
+  statistics.rank = M;
+  totals.rank+=statistics.rank;
+  
+  return M;
+}
+
+function SaveStatistics()
+{
+  // save 
+  var Statistics = Parse.Object.extend("Statistics");
+
+  var rankings = new Statistics();
+//  var statsjson = JSON.stringify(statistics);
+//  console.log("jsonstring = "+statsjson);
+  rankings.set('rank', statistics.rank);
+  rankings.set('kills', statistics.kills);
+  rankings.set('timePlayed', statistics.timePlayed);
+  rankings.set('difficulty', statistics.difficulty);
+  rankings.set('played',statistics.played);
+  rankings.set('roidsFragmented',statistics.roidsFragmented);
+  rankings.set('roidsHit',statistics.roidsHit);
+  rankings.set('refuel',statistics.refuel);
+  rankings.set('shieldsHit',statistics.shieldsHit);
+  rankings.set('bases',statistics.bases);
+  rankings.set('shipsHit',statistics.shipsHit);
+  rankings.set('killTypes',statistics.killTypes);
+  rankings.set('damaged',statistics.damaged);
+  rankings.set('shots',statistics.shots);
+  rankings.set('deflects',statistics.deflects);
+  rankings.set('jumped',statistics.jumped);
+  rankings.set('jumpedEnergy',statistics.jumpedEnergy);
+  rankings.set('jumpCancelled',statistics.jumpCancelled);
+  rankings.set('accuracy',statistics.accuracy);
+  rankings.set('energy',statistics.energy);
+  rankings.set('distance',statistics.distance);
+  rankings.set('endgames',statistics.endgames);
+
+  rankings.save().then(function(object) 
+  {
+    console.log("uploaded statistics");
+  });
 }
 
 // flight controls
@@ -2176,9 +2377,11 @@ function mouseWheel(event)
 {
     var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
     var slider = GetControl("throttle"); 
-    
-    slider.value+=delta*freqHz*6;
-    SetThrottle(slider);
+    if (slider)
+    {
+      slider.value+=delta*freqHz*6;
+      SetThrottle(slider);
+    }
 }
 
 function SetThrottle(slider)

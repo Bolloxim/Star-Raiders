@@ -486,6 +486,7 @@ function UpdateBaseAttack(gameCycle)
        startText("Starbase destroyed", border.x, 150);
        var patrol = new BoardPiece(base.location.x, base.location.y, typePatrol)
        boardPieces.push(patrol);
+       statistics.bases++;
        // is ship in same sector
        if (shipLocation.x == base.location.x && shipLocation.y == base.location.y)
        {
@@ -505,6 +506,7 @@ function UpdateBaseAttack(gameCycle)
    // trigger the end
    if (targetBase == gameDifficulty+3 ) // zylons win
    {
-      BoardSetup(gameDifficulty);
+      //BoardSetup(gameDifficulty);
+      EndGame(basesGone);
    }
 }
