@@ -1,5 +1,32 @@
+
+/*****************************************************************************
+The MIT License (MIT)
+
+Copyright (c) 2014 Andi Smithers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
+// conceptualized and written by andi smithers
+
 // constant options
-const focalDepth = 80;
+const focalDepth = 1400;
 const focalPoint = 256;
 
 
@@ -44,24 +71,28 @@ Part.prototype.move = function()
   this.pos.z+=this.vel.z;
   
   this.vel.x*=1.03;
-    this.vel.y*=1.03;
-    this.vel.z*=1.03;
+  this.vel.y*=1.03;
+  this.vel.z*=1.03;
 }
 // initialization
 
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('moon');
+	canvas = document.getElementById('star-raiders');
 	context = canvas.getContext('2d');
   
   // set canvas to be window dimensions
   resize();
 
   // create event listeners
+  window.addEventListener('resize', resize);
+}
+
+function initDemo()
+{
   canvas.addEventListener('mousemove', mouseMove);
   canvas.addEventListener('click', mouseClick);
-  window.addEventListener('resize', resize);
   
   mouseX = centreX;
   mouseY = centreY;
@@ -152,25 +183,29 @@ function render()
    }
 }
 
-function renderZylon(x1, y1, z1, rotation, elevation)
+function renderZylon(x1, y1, z1, rotation, elevation, parts)
 {
   
   // compute depth and 3D position
-  var depth = focalPoint / (z1 + focalDepth);
+  var scale = 512/canvas.height;
+  var depth = focalPoint*5 / (z1 + 5*scale);
   var x = x1 * depth + centreX;
   var y = y1 * depth + centreY;
-  var size  = 100 * depth;
+  var size  = 1 * depth;
+
 
   if (!autoRotate)
   {
-	 rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
-    elevation = Math.atan2((y - mouseY) , canvas.height);
+     rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
+     elevation = Math.atan2((y - mouseY) , canvas.height);
   }
   
   if (size<=0) return;
   
-  context.globalAlpha = 1.0;
-  if (z1>5000) context.globalAlpha = 1.0 - (z1-5000)/5000;
+  var fade = 1.0;
+  if (z1>128)  fade = 1.0 - (z1-128)/128;
+  if (fade<0) fade = 0;
+  context.globalAlpha = fade;
   // rotate the ship
   var angle = rotation;
   var c = Math.sin(angle+Math.PI*0.5);
@@ -362,4 +397,5 @@ function animate()
 
 // entry point
 init();
-animate();
+//initDemo();
+//animate();

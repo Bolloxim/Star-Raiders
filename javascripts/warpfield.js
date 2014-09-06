@@ -1,9 +1,38 @@
+
+/*****************************************************************************
+The MIT License (MIT)
+
+Copyright (c) 2014 Andi Smithers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
+// conceptualized and written by andi smithers
+
+
 // globals
 var canvas, context, alpha;
 var cX, cY, tX, tY, mouseX, mouseY, density;
 var stars = [];
 var cameraDepth=0;
 var enterWarp, warpStartDepth, warpTime, velocity;
+var warpspread = 3;
 
 // define to 0 to brute force move all stars
 const cameraTrick = 1;
@@ -15,8 +44,13 @@ var termVelocity = -10.0;
 const topleft = 0;
 const trackMouse = 1;
 const focalPoint = 256;
-const sparcity = 1.0;
+const sparcity = 2.0;
 const tailLength = 20;
+
+const viewFront = 0;
+const viewAft = 1;
+var   viewIs = viewFront;
+var   starsColorAlias = 'black';
 
 // depth modulo fucntion. custom
 function modulo(a)
@@ -52,9 +86,23 @@ Star.prototype.move = function()
   this.z = modulo(this.z + velocity)
 }
 
+Star.prototype.pan = function(horizontal, vertical)
+{
+  // dont really have to move all stars
+  this.x += horizontal*4;
+  this.y += vertical*4;
+  // modulo math went a bit wonky  
+  if (this.x<-1024*sparcity) this.x+=2048*sparcity;
+  if (this.y<-1024*sparcity) this.y+=2048*sparcity;
+  if (this.x>1024*sparcity) this.x-=2048*sparcity;
+  if (this.y>1024*sparcity) this.y-=2048*sparcity;
+}
+
+
 Star.prototype.draw = function() 
 {
   // compute depth perspective effect, cameraDepth is used when cameraTrick = 1
+
   var depth = focalPoint / (modulo(this.z + cameraDepth) +1);
   var x = this.x * depth + cX;
   var y = this.y * depth + cY;
@@ -67,7 +115,7 @@ Star.prototype.draw = function()
   context.fill();
   // use border edge for twinkle effect 
   context.lineWidth = 0;
-  context.strokeStyle = 'black';
+  context.strokeStyle = starsColorAlias;
   context.stroke();
 };
 
@@ -114,12 +162,12 @@ Star.prototype.warpline = function()
 function init()
 {
   // setup canvas and context
-	canvas = document.getElementById('starfield');
+	canvas = document.getElementById('star-raiders');
 	context = canvas.getContext('2d');
   // set canvas to be window dimensions
   resize();
   canvas.addEventListener('mousemove', mousemove);
-  canvas.addEventListener('click', mouseclick);
+  //canvas.addEventListener('click', mouseclick);
   window.addEventListener('resize', resize);
 
   // compute center of screen (its really centre but for americans I change it)
@@ -154,7 +202,20 @@ function animate()
   requestAnimationFrame(animate);
 }
 
+function panStarfield(horizontal, vertical)
+{
+  for (i = 0; i < stars.length; i++) 
+  {
+    stars[i].pan(horizontal, vertical);
+  };
+}
+
 function move()
+{
+  moveStarfield();
+}
+
+function moveStarfield()
 {
   
   if (enterWarp)
@@ -212,16 +273,8 @@ function render()
   // brute force clear
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  // draw all stars
-  for (i = 0; i < stars.length; i++) 
-  {
-    var index = cameraTrick==1 ? modulo2((i + 1 + Math.floor(cameraDepth)*density) , stars.length) : i;
-    // depending on direction of travel is order of drawing trails
-    if (enterWarp && termVelocity<=0) stars[index].warpline();
-    stars[index].draw();
-    if (enterWarp && termVelocity>0) stars[index].warpline();
-  };
-  
+  renderStarfield();
+
   createButton(canvas.width/2-100, 10, 200, 32, termVelocity>0?"Aft View":"Bow View");
   
   // banner for a about 12 seconds
@@ -236,6 +289,20 @@ function render()
   context.fillText('* Left Click Warps *', canvas.width/2, 140);
 }
 
+function renderStarfield()
+{
+  context.globalCompositeOperation='source-over';
+  // draw all stars
+  for (i = 0; i < stars.length; i++) 
+  {
+    var index = cameraTrick==1 ? modulo2((i + 1 + Math.floor(cameraDepth)*density) , stars.length) : i;
+    // depending on direction of travel is order of drawing trails
+    if (enterWarp && termVelocity<=0 && (index%warpspread)==0) stars[index].warpline();
+    stars[index].draw();
+    if (enterWarp && termVelocity>0 && (index%warpspread)==0) stars[index].warpline();
+  };  
+}
+
 function mousemove(event) 
 {
 	var rect = canvas.getBoundingClientRect();
@@ -247,7 +314,7 @@ function mousemove(event)
   {
     tX = mouseX;
     tY = mouseY;
-    if (termVelocity>0)
+    if (termVelocity<=0)
     {
       tX = canvas.width - tX;
       tY = canvas.height - tY;
@@ -286,8 +353,21 @@ function resize()
   canvas.height = window.innerHeight;
 }
 
+function viewingFront()
+{
+  return viewIs == viewFront;
+}
+
+function viewingAft()
+{
+  return viewIs == viewAft;
+}
+
 function swapView()
 {
+  // toggle view
+  viewIs ^= 1;
+
   // inverse the velocities
   initVelocity*=-1;
   termVelocity*=-1;
@@ -318,31 +398,7 @@ function swapView()
 
 }
 
-function hitButton(x, y, w, h)
-{
-  return (mouseX>x && mouseX<x+w && mouseY>y && mouseY<y+h) ? true : false;
-}
-
-function createButton(x, y, w, h, name)
-{
-    // fill a rect
-  context.beginPath();
-  context.rect(x, y, w,h);
-  context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  context.fill();
-
-  context.lineWidth = 2;
-  context.strokeStyle = 'rgba(120, 120, 120, 0.5)';
-  context.stroke();
-  
-  context.moveTo(x,y);
-  context.font = '20pt Calibri';
-  context.fillStyle = 'rgba(255,255,255, 1)';
-  context.textAlign = "center";
-  context.fillText(name, x+w/2, y+h-9);
-}
-
 // entry point
 init();
-animate();
+
 

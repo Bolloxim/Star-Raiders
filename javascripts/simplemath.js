@@ -1,4 +1,30 @@
 
+/*****************************************************************************
+The MIT License (MIT)
+
+Copyright (c) 2014 Andi Smithers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*****************************************************************************/
+
+// conceptualized and written by andi smithers
+
 
 // depth modulo fucntion. custom
 function modulo(a)
@@ -57,15 +83,25 @@ vector3.prototype.dot = function(vector)
 
 vector3.prototype.normalize = function()
 {
-  var mag = 1 / Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
-  this.x*=mag;
-  this.y*=mag;
-  this.z*=mag;
+  var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  if (mag==0)
+  {
+    this.z=1.0;
+  }
+  else
+  {
+    mag=1.0/mag;
+    this.x*=mag;
+    this.y*=mag;
+    this.z*=mag;
+  }
 }
 
 vector3.prototype.normal = function()
 {
-  var mag = 1 / Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  var mag = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
+  if (mag==0) return new vector3(0,0,1);
+  mag=1.0/mag;
   return new vector3(this.x*mag, this.y*mag, this.z*mag);
 }
 
@@ -106,7 +142,7 @@ matrix3x3.prototype.rotateY = function(angle)
 {
    var c = Math.cos(angle);
    var s = Math.sin(angle);
-   this.matrix = [c,0,s,0,1,0,-s, 0, c];
+   this.m = [c,0,s,0,1,0,-s, 0, c];
 }
 matrix3x3.prototype.rotateZ = function(angle)
 {
@@ -135,4 +171,11 @@ matrix3x3.prototype.transform = function(tx, ty, tz)
   return {x:tx*this.m[0]+ty*this.m[1]+tz*this.m[2], 
           y:tx*this.m[3]+ty*this.m[4]+tz*this.m[5],
           z:tx*this.m[6]+ty*this.m[7]+tz*this.m[8]};
+}
+
+matrix3x3.prototype.invtransform = function(tx, ty, tz)
+{
+  return {x:tx*this.m[0]+ty*this.m[3]+tz*this.m[6], 
+          y:tx*this.m[1]+ty*this.m[4]+tz*this.m[7],
+          z:tx*this.m[2]+ty*this.m[5]+tz*this.m[8]};
 }
