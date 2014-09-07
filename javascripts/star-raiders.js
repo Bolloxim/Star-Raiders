@@ -39,6 +39,7 @@ const destroyed  = 1;
 const energyLost = 2;
 const basesGone  = 3;
 const allDead    = 4;
+const playing    = 5;
 
 var backgroundColor;
 // variables
@@ -126,6 +127,12 @@ var bestRanks = [{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date
 var lastScore = {rank:-1000, date:new Date(), percentile:100};
 
 var difficultyNames = ['Novice', 'Pilot', 'Warrior', 'Commander'];
+
+// endgame event
+var endGameTime;
+var endGameEvent;
+var endGameLastMessage;
+var endGameRank;
 
 function UpdateAllTotals()
 {
@@ -343,7 +350,7 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
   nme.calcypr(); 
   
   // randomize fire
-  if ((Math.random() * 100) >99)
+  if (endGameEvent==playing && (Math.random() * 100) >99)
   {
     nmeShoot(nme.pos);
   }
@@ -465,7 +472,7 @@ NME.prototype.render = function()
           var depth = focalPoint*5 / camspace.z + 5*scale;
           var sx = camspace.x * depth + centreX;
           var sy = camspace.y * depth + centreY;
-          var sz = 1 * depth;
+          var sz = 0.5 * depth;
 
           if (camspace.z>0) RenderCruiser(sx, sy, sz, Math.atan2(camspace.y, camspace.z)+Math.PI*1.5);
           break;
@@ -800,6 +807,8 @@ function init()
   //  DeleteCookie("lastScore");
   // DeleteCookie("bestRanks");
   LoadRanks();
+  // load stats from local store
+  LoadStats();
   // start game
 //  StartGame(novice);
   // init title
@@ -838,6 +847,7 @@ function StartGame(difficulty)
   // remove titlescreen
   titleScreen = false;
   clearTitleClick = false;
+  endGameEvent = playing;
   
   // log
   Parse.Analytics.track('Started', {difficulty:difficultyNames[difficulty]});
@@ -918,7 +928,7 @@ function mouseUp(event)
 function mouseClick()
 {
    buttonpressed = CheckButtons(mouseX, mouseY, true);
-   if (buttonpressed)
+   if (buttonpressed || endGameEvent!=playing)
    {
      return;
    }
@@ -1289,7 +1299,7 @@ function RenderRanks()
       if ((i*50+180) < (canvas.height-90))
       {
         context.font = '20pt Orbitron';
-        context.fillText('Rank: '+ rank(bestRanks[i].rank), canvas.width/2, 180+i*50);
+        context.fillText('Rank: '+ rank(bestRanks[i].rank)+'  ('+bestRanks[i].percentile.toFixed(2)+'%)', canvas.width/2, 180+i*50);
         context.font = '12pt Orbitron';
         context.fillText('Date: '+ bestRanks[i].date, canvas.width/2, 200+i*50);
       }
@@ -1567,6 +1577,7 @@ function RenderStats()
   RenderStatistics(totals, false, fade);
 }
 
+
 function RenderTitleScreen()
 {
   
@@ -1606,7 +1617,7 @@ function RenderTitleScreen()
   context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
   context.textAlign = "center";
-  context.fillText('Last Score: '+ rank(lastScore.rank), canvas.width/2, canvas.height- 40);
+  context.fillText('Last Score: '+ rank(lastScore.rank) +'  ('+lastScore.percentile.toFixed(2)+'%)', canvas.width/2, canvas.height- 40);
   context.font = '12pt Orbitron';
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
 }
@@ -1636,12 +1647,34 @@ function  AddNewRank(ranking, date)
    SaveRanks();
 }
 
+function LoadStats()
+{
+  var result = LoadCookie("statistics");
+  if (result) statistics = result;
+  var result = LoadCookie("totals");
+  if (result) totals = result;
+}
+
+function SaveStats()
+{
+  SaveCookie("statistics", statistics);
+  SaveCookie("totals", totals);
+}
+
 function LoadRanks()
 {
    var result = LoadCookie("lastScore");
-   if (result) lastScore = result;
+   if (result) 
+   {
+     lastScore = result;
+     lastScore.date = new Date(lastScore.date);
+   }
    var result = LoadCookie("bestRanks");
-   if (result) bestRanks = result;  
+   if (result)
+   { 
+     bestRanks = result;
+     for (var i=0; i<bestRanks.length;i++) bestRanks[i].date = new Date(bestRanks[i].date);
+   }
 }
 
 function SaveRanks()
@@ -1791,13 +1824,15 @@ function render()
   
   renderGameScreen();
 
-  renderOverlays();
-
-  renderInformation();
-  
+  if (endGameEvent == playing)
+  {
+    renderOverlays();
+    renderInformation();
+  }
   RenderButtons();
   
-  WeaponCollisions();
+  if (endGameEvent == playing)
+    WeaponCollisions();
   
   DrawRedAlert();
 
@@ -1826,19 +1861,30 @@ function update()
    if (pauseGame == true) return;
    if (titleScreen == true) return UpdateTitleScreen();
   
+   if (endGameEvent!=playing)
+   {
+        tX = cX;
+        tY = cY;
+   }
    moveStarfield();
   
    UpdateAsteriods();
 
-   UpdateBoard();
+   if (endGameEvent == playing)
+   {
+      UpdateBoard();
   
-   UpdateShipControls();
+      UpdateShipControls();
+   }
   
    UpdateNMEs();
   
    UpdateParticles();
   
-   energyManagement();
+  if (endGameEvent == playing)
+     energyManagement();
+  else  
+     EndGameEvent();
 }
 
 
@@ -2023,8 +2069,11 @@ function AbortMission(button)
 function AbortMissionConfirm(button)
 {
   PlayConfirm();
+  startText(" ", border.x, 150);
+  startText(" ", border.x, 150);
+  startText(" ", border.x, 150);
+  
   EndGame(aborted);
-  startText("Aborting Mission ", border.x, 150);
 }
 
 function AbortMissionCancel(button)
@@ -2036,6 +2085,9 @@ function AbortMissionCancel(button)
 
 function EndGame(endType)
 {
+   // not sure how we got back here if we're not playing
+   if (endGameEvent != playing) return;
+  
    // andi: needs the tickers sequence
    statistics.endgames[endType]++;
   
@@ -2051,6 +2103,7 @@ function EndGame(endType)
   
    // clear all buttons
    buttons = [];
+  
    // clear redalert
    redTime = 0;
   
@@ -2064,9 +2117,52 @@ function EndGame(endType)
    // save stats and rank to server
    SaveStatistics();
    
-   // 
+   // save stats to local storage
+   SaveStats();
   
-   TitleScreen();
+   // need to go back to title. 
+//   TitleScreen();
+   endGameTime = new Date().getTime();
+   endGameEvent = endType;
+   endGameLastMessage=-1;
+   endGameRank = rank(ranking);
+  
+   // main menu
+   new Button(border.x, canvas.height/2, border.x, mapScale.y*0.6, "Return to Main Menu", TitleScreen, ' ');  
+}
+
+function EndGameEvent()
+{
+   if (endGameEvent == playing) return;
+  
+   var currentTime = new Date().getTime();
+   var dx = currentTime - endGameTime;
+   var messageNum = Math.floor(dx/2500)%4;
+   console.log(messageNum);
+   if (endGameLastMessage != messageNum)
+   {
+       var endMessages = [
+      "Star fleet to all units",
+      "Star Cruiser 7 aborted mission",                         // aborted
+      "Star Cruiser 7 destroyed by zlyon fire",                 // destroyed
+      "Star Cruiser 7 depleted energy, mission aborted",        // energylost
+      "Star Cruiser 7 all starbases lost, mission aborted",     // basesGone
+      "Star Cruiser 7 all enemy units destroyed",               // allDead
+      "Posthumous rank: ",
+      "Rank: "];
+     endGameLastMessage = messageNum;
+
+     if (messageNum == 0)
+     {
+       startText("",border.x, 150);
+       startText(endMessages[0], border.x, 150);
+     }
+     else if (messageNum == 1)
+       startText(endMessages[endGameEvent+1], border.x, 150);
+     else if (messageNum == 2)
+       startText(endMessages[endGameEvent==destroyed?6:7] + endGameRank,border.x, 150);
+
+   }
 }
 
 function DestroyShip()
