@@ -168,6 +168,9 @@ BoardPiece.prototype.updateKnowns = function()
 BoardPiece.prototype.move = function(gameCycle)
 {
    this.updateKnowns();
+
+   // dont need to do anything for dead pieces (status 2 was bring the piece back alive)
+   if (this.status == 0) return;
   
    // scale game cycle time (radar beats every 10s)
    aiCycle = Math.floor(gameCycle/cycleScalar);
@@ -182,17 +185,21 @@ BoardPiece.prototype.move = function(gameCycle)
       // bee-line
       var dx = target.x - this.location.x;
       var dy = target.y - this.location.y;
-      x = Math.max(Math.min(dx, 1), -1) + this.location.x;
-      y = Math.max(Math.min(dy, 1), -1) + this.location.y;
-      
+      do
+      {
+        x = Math.max(Math.min(dx, 1), -1) + this.location.x;
+        y = Math.max(Math.min(dy, 1), -1) + this.location.y;
+      } while( x<0 || y<0 || x>=galaxyMapSize.x || y>=galaxyMapSize.y);
+
       var p = GetBoardPiece(x, y);
-      if ((p>=0 || x<0 || y<0 || x>=galaxyMapSize.x || y>=galaxyMapSize.y) && p.type!=0) 
+      if (p>=0 && isAlive(p)) 
       {
           if (dx==0) x = Math.floor(Math.random()*2)*2-1 + this.location.x;
           else y = Math.floor(Math.random()*2)*2-1 + this.location.y;
           p = GetBoardPiece(x, y);
           // off board or occupied
-          if (p>=0 || x<0 || y<0 || x>=galaxyMapSize.x || y>=galaxyMapSize.y) return;
+          if (x<0 || y<0 || x>=galaxyMapSize.x || y>=galaxyMapSize.y) return;
+          if (p>=0 && isAlive(p)) return;
       }
 
      // update movement time
@@ -363,6 +370,12 @@ function GetBoardPiece(x, y, useKnown)
       }      
   }
   return -1;
+}
+
+function isAlive(index)
+{
+  if (index==-1) return false;
+  return boardPieces[index].status != 0;
 }
 
 function GetBoardPieceScreen(sx, sy, lastKnown)
