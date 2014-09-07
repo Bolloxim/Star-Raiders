@@ -210,14 +210,11 @@ BoardPiece.prototype.move = function(gameCycle)
      this.status = 2;
 
      // lets check again see if ships arrived
-    if (shipLocation.x == this.location.x && shipLocation.y == this.location.y)
-    {
-      SetupNMEs(this);
-    }
-
+     if (shipLocation.x == this.location.x && shipLocation.y == this.location.y)
+     {
+       SetupNMEs(this);
+     }
    }
-
-
 }
 
 // help functoin to convert from map to screen space
@@ -471,7 +468,21 @@ function UpdateBoard()
   }
 
   UpdateBaseAttack(gameCycle);
-  
+
+  // did we vanquish
+  if (isAnyAlive()== false)
+  {
+    EndGame(allDead);
+  }
+}
+
+function isAnyAlive()
+{
+  for (var b=0; b<boardPieces.length; b++)
+  {
+    if (boardPieces[b].type!=typeBase && boardPieces[b].status!=0) return true;
+  }
+  return false;
 } 
 
 function UpdateBaseAttack(gameCycle)
