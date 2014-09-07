@@ -956,7 +956,7 @@ function resize()
   canvas.width = window.innerWidth;
   //canvas.height = window.innerHeight;
   canvas.height = (canvas.width/16) * 9;
-  if (canvas.height>window.innerHeight canvas.height==window.innerHeight);
+  if (canvas.height>window.innerHeight) canvas.height=window.innerHeight;
 
     // compute centre of screen
   centreX = canvas.width/2;
