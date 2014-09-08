@@ -184,10 +184,21 @@ Button.prototype.render = function()
   context.stroke();
   
   context.moveTo(this.x, this.y);
-  context.font = '12pt Orbitron';
+  //scale text logic  
+  if (this.h < 32)
+  {
+    context.font = this.h*0.7 + 'px Orbitron';
+  }
+  else
+  {
+    scale = 0.7 - (this.h-32)*0.01;
+    context.font = this.h*scale + 'px Orbitron';
+  }
   context.fillStyle = 'rgba(127,255,127, 1)';
   context.textAlign = "center";
-  context.fillText(this.name, this.x+this.w/2, this.y+this.h-9);
+  context.textBaseline = 'middle';
+  context.fillText(this.name, this.x+this.w/2, this.y+this.h*0.5);
+  context.textBaseline = 'alphabetic';
 }
 
 Button.prototype.hit = function(x, y, checking)
