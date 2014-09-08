@@ -100,6 +100,8 @@ var shipDamage = {photons:false, engines:false, shields:false, computer:false, l
 // difficulty settings
 var maxAsteriods = 32;
 var maxNMEs = 8;
+var noContact = true;
+var noDeaths= true;
 
 // needs moving
 var targetComputer = false;
@@ -224,7 +226,8 @@ function SetupNMEs(boardItem)
   nmes = [];
   currentBoardItem = boardItem;
   if (boardItem == null) return;
-  
+  noContact = true; 
+  noDeaths = true;
   for (var i=0; i<boardItem.numTargets; i++)
   {
      var nme = new NME();
@@ -271,6 +274,13 @@ function UpdateNMEs()
              EnableDocking(dock);
              break;
           }
+          case cruiser:
+            ZylonCruiserAI(nmes[i]);
+            break;
+          case basestar:
+            ZylonBaseStarAI(nmes[i]);
+            break;
+            
           default:
             ZylonFighterAI(nmes[i]);
             break;
@@ -279,20 +289,6 @@ function UpdateNMEs()
   }
 }
 
-
-// each iteration will change a property
-PlasmaEmitter.prototype.generate = function()
-{
-  
-  this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
-
-  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
-  this.velsize = -0.01 - (Math.random()*0.2);
-  this.size = 3.0 *this.iteration*0.02;
-  this.life = 3;
-  this.color = 'rgb(0, 64, 200)';
-  this.iteration++;
-}
 
 function nmeShoot(pos)
 {
@@ -308,15 +304,15 @@ function nmeShoot(pos)
     var depth = focalPoint*5 / ((t.z + 5*scale) +1);
     if (depth<0) depth *= -1;
 
-  
     var depthInv = focalPoint / ((t.z + focalDepth) +1);
     spawnX = (t.x*depth)/depthInv+centreX;
     spawnY = (t.y*depth)/depthInv+centreY;
     spawnZ = t.z;
 
     plasmaEmitter.create();
-     PlayDisruptor();
-
+    PlayDisruptor();
+    // escalate
+    noContact = false;
 }
 
 function ZylonFighterAI(nme)
@@ -356,6 +352,83 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
   }
 }
 
+function ZylonCruiserAI(nme)
+{
+   var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:100},{x:-20, y:30, z:-50},{x:0, y:0, z:70},{x:20, y:10, z:-50},{x:-30, y:10, z:40}];
+   var targ = shipOrientation.invtransform(targetLocations[nme.target].x,targetLocations[nme.target].y,targetLocations[nme.target].z);
+   var dir = nme.targetPoint(targ);
+   if  (dir.lengthSquared() > 400*400 && noContact==true) dir = dir.mul(-1);
+   // always swarm player
+  //   var dir = nme.deltaAhead(-100);
+   // we want to go that way
+   var dirn = new vector3(dir.x, dir.y, dir.z);
+   dirn.normalize();
+   var dx = nme.vel.x - dirn.x;
+   var dy = nme.vel.y - dirn.y;
+   var dz = nme.vel.z - dirn.z;
+   nme.vel.x+=dirn.x*0.1;   
+   nme.vel.y+=dirn.y*0.1;
+   nme.vel.z+=dirn.z*0.1;
+   var tmp = new vector3(  nme.vel.x,   nme.vel.y,   nme.vel.z);
+   tmp.normalize();
+    nme.vel.x = tmp.x;
+    nme.vel.y = tmp.y;
+    nme.vel.z = tmp.z;
+  
+  if (dir.lengthSquared()<25) 
+  {
+    nme.pass = (nme.pass+1) &63;
+    if (nme.pass == 0)
+        nme.target = (nme.target+1) % targetLocations.length;
+  }
+  nme.calcypr(); 
+  
+  // randomize fire
+  if (endGameEvent==playing && (Math.random() * 100) >97)
+  {
+    nmeShoot(nme.pos);
+  }
+}
+
+function ZylonBaseStarAI(nme)
+{
+   var targetLocations = [{x:30, y:0, z:-70},{x:0, y:-30, z:-80},{x:-30, y:00, z:-50},{x:0, y:30, z:-70},{x:40, y:40, z:70},{x:-40, y:40, z:60},{x:-40, y:-40, z:90},{x:40, y:-40, z:40}];
+   var targ = shipOrientation.invtransform(targetLocations[nme.target].x,targetLocations[nme.target].y,targetLocations[nme.target].z);
+   var dir = nme.targetPoint(targ);
+   if  (dir.lengthSquared() > 300*300 && noDeaths==true) dir=dir.mul(-1);
+   // always swarm player
+  //   var dir = nme.deltaAhead(-100);
+   // we want to go that way
+   var dirn = new vector3(dir.x, dir.y, dir.z);
+   dirn.normalize();
+   var dx = nme.vel.x - dirn.x;
+   var dy = nme.vel.y - dirn.y;
+   var dz = nme.vel.z - dirn.z;
+   nme.vel.x+=dirn.x*0.1;   
+   nme.vel.y+=dirn.y*0.1;
+   nme.vel.z+=dirn.z*0.1;
+   var tmp = new vector3(  nme.vel.x,   nme.vel.y,   nme.vel.z);
+   tmp.normalize();
+    nme.vel.x = tmp.x;
+    nme.vel.y = tmp.y;
+    nme.vel.z = tmp.z;
+  
+  if (dir.lengthSquared()<25) 
+  {
+    nme.pass = (nme.pass+1) &63;
+    if (nme.pass == 0)
+        nme.target = (nme.target+1) % targetLocations.length;
+  }
+  nme.calcypr(); 
+  
+  // randomize fire
+  if (endGameEvent==playing && (Math.random() * 100) >95)
+  {
+    nmeShoot(nme.pos);
+  }
+}
+
+
 function DestroyStarbase()
 {
     // verify base
@@ -389,6 +462,9 @@ function KillNmeType(shipType)
   statistics.killTypes[shipType]++;
   // update board item
   currentBoardItem.killTarget(shipType);
+  // escalate
+  noContact = false;
+  noDeaths = false;
 }
 
 // nme objects
@@ -473,7 +549,12 @@ NME.prototype.render = function()
           var sx = camspace.x * depth + centreX;
           var sy = camspace.y * depth + centreY;
           var sz = 0.5 * depth;
-
+          if (sz<=0) return;
+  
+          var fade = 1.0;
+          if (camspace.z>128)  fade = 1.0 - (camspace.z-128)/128;
+          if (fade<0) fade = 0;
+          context.globalAlpha = fade;
           if (camspace.z>0) RenderCruiser(sx, sy, sz, Math.atan2(camspace.y, camspace.z)+Math.PI*1.5);
           break;
        case basestar:
@@ -482,7 +563,14 @@ NME.prototype.render = function()
           var sx = camspace.x * depth + centreX;
           var sy = camspace.y * depth + centreY;
           var sz = 1 * depth;
-
+         
+          if (sz<=0) return;
+          var fade = 1.0;
+          if (camspace.z>128)  fade = 1.0 - (camspace.z-128)/128;
+          if (fade<0) fade = 0;
+          context.globalAlpha = fade;
+         
+         
           if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y*2)+Math.PI);
           break;
        default:
