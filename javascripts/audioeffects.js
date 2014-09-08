@@ -627,8 +627,8 @@ function PlayNoise(button)
 
 createWhiteNoiseBuffer = function(bufferSize)
 {
-  bufferSize = bufferSize || 131072;
-  whiteNoiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+  var bufSize = bufferSize || 131072;
+  whiteNoiseBuffer = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
   var dataChannel = whiteNoiseBuffer.getChannelData(0);
   
   console.log(dataChannel.length);
@@ -642,8 +642,8 @@ createWhiteNoiseBuffer = function(bufferSize)
 
 createPinkNoiseBuffer = function(bufferSize) 
 {
-    bufferSize = bufferSize || 131072;
-    pinkNoiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+    var bufSize = bufferSize || 131072;
+    pinkNoiseBuffer = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
     var output = pinkNoiseBuffer.getChannelData(0);
 
   var b0, b1, b2, b3, b4, b5, b6;
@@ -666,7 +666,7 @@ createPinkNoiseBuffer = function(bufferSize)
 
 createBrownNoiseBuffer = function(bufferSize) 
 {
-   bufferSize = bufferSize || 131072;
+   var bufSize = bufSize || 131072;
    var lastOut = 0.0;
     brownNoiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     var output = brownNoiseBuffer.getChannelData(0);
