@@ -259,7 +259,11 @@ function CollidePlasma(sx, sy, photon)
 
 function CollideShip(sx, sy, plasma)
 {
-   if (Math.abs(plasma.z)<3)
+   var x = sx - centreX;
+   var y = sy - centreY;
+   var area = (canvas.width/2) * (canvas.width/2) + (canvas.height/2) * (canvas.height/2);
+//    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
+   if (Math.abs(plasma.z)<3 && x*x+y*y < area)
    {
        ShieldHit(sx, sy, 100);
    }
@@ -310,7 +314,7 @@ function WeaponCollisions()
           var pos = spawnList[i].particles[63].pos;
 
           var depth = focalPoint / (pos.z + focalDepth );
-          if (depth<=0) continue;
+          if (depth<=0) depth*=-1;
     
           var sx = pos.x * depth + spawnList[i].particles[63].sx;// + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy;// + cY-centreY;
