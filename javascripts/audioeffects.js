@@ -648,7 +648,7 @@ createPinkNoiseBuffer = function(bufferSize)
 
   var b0, b1, b2, b3, b4, b5, b6;
   b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-    for (var i = 0; i < bufferSize; i++) 
+    for (var i = 0; i < output.length; i++) 
      {
       var white = Math.random() * 2 - 1;
       b0 = 0.99886 * b0 + white * 0.0555179;
@@ -668,10 +668,10 @@ createBrownNoiseBuffer = function(bufferSize)
 {
    var bufSize = bufSize || 131072;
    var lastOut = 0.0;
-    brownNoiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+    brownNoiseBuffer = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
     var output = brownNoiseBuffer.getChannelData(0);
 
-    for (var i = 0; i < bufferSize; i++)
+    for (var i = 0; i < output.length; i++)
      {
       var white = Math.random() * 2 - 1;
       output[i] = (lastOut + (0.02 * white)) / 1.02;
