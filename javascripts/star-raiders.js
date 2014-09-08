@@ -231,7 +231,7 @@ function SetupNMEs(boardItem)
      nme.randomize(boardItem.targets[i]);
      nmes.push(nme);
   }
-  
+  console.log(boardItem.numTargets);
   if (boardItem.type != base) SetRedAlert();
 }
 
@@ -954,10 +954,7 @@ function resize()
 {
   
   canvas.width = window.innerWidth;
-  //canvas.height = window.innerHeight;
-  canvas.height = (canvas.width/16) * 9;
-  if (canvas.height>window.innerHeight) canvas.height=window.innerHeight;
-
+  canvas.height = window.innerHeight;
     // compute centre of screen
   centreX = canvas.width/2;
   centreY = canvas.height/2;
@@ -984,8 +981,10 @@ function resize()
   // reset buttons
   if (titleScreen == true)
     SetupTitleButtons();
-  else
+  else if (endGameEvent ==playing)
     SetupButtons();
+  else
+    SetupMainMenuButton();
 }
 
 function renderInformation()
@@ -2129,8 +2128,13 @@ function EndGame(endType)
    endGameEvent = endType;
    endGameLastMessage=-1;
    endGameRank = rank(ranking);
-  
+   SetupMainMenuButton();
+}
+
+function  SetupMainMenuButton()
+{
    // main menu
+   buttons = [];
    new Button(border.x, canvas.height/2, border.x, mapScale.y*0.6, "Return to Main Menu", TitleScreen, ' ');  
 }
 
@@ -2633,8 +2637,6 @@ function RenderStarDome()
     context.fillStyle = '#333333';
     context.fill();
 }
-
-
 
 
 // entry point
