@@ -136,6 +136,10 @@ var endGameEvent;
 var endGameLastMessage;
 var endGameRank;
 
+// global ranking
+var gameTotalPlays=0;
+var gameHitsPerRanks = [];
+
 function UpdateAllTotals()
 {
    // update end game data
@@ -928,6 +932,9 @@ function TitleScreen()
   // set scroller
   initVelocity = -1.0;
   termVelocity = -10.0;
+  
+  // fetch ranks
+  CacheGlobalRankings();
 }
   
 function StartGame(difficulty)
@@ -1386,6 +1393,9 @@ function RenderRanks()
 
    for (var i=0; i<bestRanks.length; i++)
    {
+       // update the last score percentile
+      bestRanks[i].percentile = UpdatePercentile(bestRanks[i].rank);
+
       if ((i*50+180) < (canvas.height-90))
       {
         context.font = '20pt Orbitron';
@@ -1701,8 +1711,10 @@ function RenderTitleScreen()
   context.fillStyle = 'rgb(255,255,0)';
   context.fillText('STAR RAIDERS - 2014', canvas.width/2,100);
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
-  
 
+  // update the last score percentile
+  lastScore.percentile = UpdatePercentile(lastScore.rank);
+  
   context.textAlign = "center";
   context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
@@ -1712,6 +1724,13 @@ function RenderTitleScreen()
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
 }
 
+function UpdatePercentile(rank)
+{
+  var percentile = 100;
+  // update percentiles
+  if (gameHitsPerRanks[rank+248]) percentile = 100 - (gameHitsPerRanks[rank+248] / gameTotalPlays * 100);
+  return percentile;
+}
 
 function ranksort(a, b)
 {
@@ -1719,9 +1738,9 @@ function ranksort(a, b)
 }
 
 function  AddNewRank(ranking, date)
-{
+{  
+   var percentile = UpdatePercentile(ranking);
   
-   var percentile = 100;
    lastScore.date = date;
    lastScore.rank = ranking;
    lastScore.percentile = percentile; // compute using database
@@ -2210,6 +2229,9 @@ function EndGame(endType)
    // save stats to local storage
    SaveStats();
   
+   // save new rank
+   UpdateRankings(ranking);
+  
    // need to go back to title. 
 //   TitleScreen();
    endGameTime = new Date().getTime();
@@ -2218,6 +2240,7 @@ function EndGame(endType)
    endGameRank = rank(ranking);
    SetupMainMenuButton();
 }
+
 
 function  SetupMainMenuButton()
 {
@@ -2346,6 +2369,72 @@ function SaveStatistics()
   {
     console.log("uploaded statistics");
   });
+}
+
+function UpdateRankings(ranking)
+{
+  // range to the min/max
+  if (ranking < -248) ranking = -248;
+  else if (ranking >320) ranking = 320;
+  
+  var Ranks = Parse.Object.extend("Ranks");
+
+  var query = new Parse.Query(Ranks);
+  query.equalTo("rank", ranking);
+  query.first(
+    {
+        success: function(object) 
+        {
+            if (object)
+            {
+              object.increment("hits");
+              object.save();
+            }
+            else
+            {
+              var rankings = new Ranks();
+              rankings.set("rank", ranking);
+              rankings.set("hits", 0);
+              rankings.save();
+            }
+        },
+        error: function(error) 
+        {
+            console.log("Error: " + error.code + " " + error.message);
+        }
+    });
+  
+}
+
+function CacheGlobalRankings()
+{
+  var Ranks = Parse.Object.extend("Ranks");
+  var query = new Parse.Query(Ranks);
+
+  query.greaterThan("rank", -250);
+  query.ascending("rank");
+  query.limit(570);
+  query.find(
+  {
+    success: function(results) 
+    {
+       gameTotalPlays = 0;
+       for (var i=0; i<results.length; i++)
+       {
+          var index = results[i].get("rank");
+          var count = results[i].get("hits");
+         gameTotalPlays+=count;
+         gameHitsPerRanks[index+248] = gameTotalPlays;
+       }
+       console.log("results = "+ results.length);
+       console.log("numtotalplays = " + gameTotalPlays);
+    },
+    error: function(error) 
+    {
+      console.log("error fetching data : "+error.message);
+    }
+  });
+
 }
 
 // flight controls
