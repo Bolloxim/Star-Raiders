@@ -1728,7 +1728,7 @@ function UpdatePercentile(rank)
 {
   var percentile = 100;
   // update percentiles
-  if (gameHitsPerRanks[rank+248]) percentile = 100 - (gameHitsPerRanks[rank+248] / gameTotalPlays * 100);
+  if (gameHitsPerRanks[rank+247]) percentile = 100 - (gameHitsPerRanks[rank+247] / gameTotalPlays * 100);
   return percentile;
 }
 
