@@ -1399,7 +1399,7 @@ function RenderRanks()
       if ((i*50+180) < (canvas.height-90))
       {
         context.font = '20pt Orbitron';
-        context.fillText('Rank: '+ rank(bestRanks[i].rank)+'  ('+bestRanks[i].percentile.toFixed(2)+'%)', canvas.width/2, 180+i*50);
+        context.fillText('Rank: '+ rank(bestRanks[i].rank)+'  -  Ranked in top '+bestRanks[i].percentile.toFixed(1)+'%', canvas.width/2, 180+i*50);
         context.font = '12pt Orbitron';
         context.fillText('Date: '+ bestRanks[i].date, canvas.width/2, 200+i*50);
       }
@@ -1719,7 +1719,7 @@ function RenderTitleScreen()
   context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
   context.textAlign = "center";
-  context.fillText('Last Score: '+ rank(lastScore.rank) +'  ('+lastScore.percentile.toFixed(2)+'%)', canvas.width/2, canvas.height- 40);
+  context.fillText('Last Score: '+ rank(lastScore.rank) +'  -  Ranked in top '+lastScore.percentile.toFixed(1)+'%', canvas.width/2, canvas.height- 40);
   context.font = '12pt Orbitron';
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
 }
