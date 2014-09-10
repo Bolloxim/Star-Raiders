@@ -123,7 +123,7 @@ FMSynth.prototype.init = function(noise)
   
     if (waveform<4)
     {
-        this.gainNode.gain.value = 0.5;
+        this.gainNode.gain.value = 0.25;
         this.node.connect(this.gainNode);
     }
     else
