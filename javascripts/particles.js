@@ -158,8 +158,8 @@ PlasmaEmitter.prototype.generate = function()
   this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
 
   this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
-  this.velsize = -0.01 - (Math.random());
-  this.size = 5.0 *this.iteration*0.1;
+  this.velsize = -0.01 - (Math.random()*0.2);
+  this.size = 3.0 *this.iteration*0.02;
   this.life = 3;
   this.color = 'rgb(0, 64, 200)';
   this.iteration++;

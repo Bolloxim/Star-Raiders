@@ -39,6 +39,7 @@ const destroyed  = 1;
 const energyLost = 2;
 const basesGone  = 3;
 const allDead    = 4;
+const playing    = 5;
 
 var backgroundColor;
 // variables
@@ -99,6 +100,8 @@ var shipDamage = {photons:false, engines:false, shields:false, computer:false, l
 // difficulty settings
 var maxAsteriods = 32;
 var maxNMEs = 8;
+var noContact = true;
+var noDeaths= true;
 
 // needs moving
 var targetComputer = false;
@@ -126,6 +129,16 @@ var bestRanks = [{rank:-1000, date:new Date(), percentile:100},{rank:-1000, date
 var lastScore = {rank:-1000, date:new Date(), percentile:100};
 
 var difficultyNames = ['Novice', 'Pilot', 'Warrior', 'Commander'];
+
+// endgame event
+var endGameTime;
+var endGameEvent;
+var endGameLastMessage;
+var endGameRank;
+
+// global ranking
+var gameTotalPlays=0;
+var gameHitsPerRanks = [];
 
 function UpdateAllTotals()
 {
@@ -217,14 +230,15 @@ function SetupNMEs(boardItem)
   nmes = [];
   currentBoardItem = boardItem;
   if (boardItem == null) return;
-  
+  noContact = true; 
+  noDeaths = true;
   for (var i=0; i<boardItem.numTargets; i++)
   {
      var nme = new NME();
      nme.randomize(boardItem.targets[i]);
      nmes.push(nme);
   }
-  
+  console.log(boardItem.numTargets);
   if (boardItem.type != base) SetRedAlert();
 }
 
@@ -264,6 +278,13 @@ function UpdateNMEs()
              EnableDocking(dock);
              break;
           }
+          case cruiser:
+            ZylonCruiserAI(nmes[i]);
+            break;
+          case basestar:
+            ZylonBaseStarAI(nmes[i]);
+            break;
+            
           default:
             ZylonFighterAI(nmes[i]);
             break;
@@ -272,20 +293,6 @@ function UpdateNMEs()
   }
 }
 
-
-// each iteration will change a property
-PlasmaEmitter.prototype.generate = function()
-{
-  
-  this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
-
-  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
-  this.velsize = -0.01 - (Math.random()*0.2);
-  this.size = 3.0 *this.iteration*0.02;
-  this.life = 3;
-  this.color = 'rgb(0, 64, 200)';
-  this.iteration++;
-}
 
 function nmeShoot(pos)
 {
@@ -301,15 +308,15 @@ function nmeShoot(pos)
     var depth = focalPoint*5 / ((t.z + 5*scale) +1);
     if (depth<0) depth *= -1;
 
-  
     var depthInv = focalPoint / ((t.z + focalDepth) +1);
     spawnX = (t.x*depth)/depthInv+centreX;
     spawnY = (t.y*depth)/depthInv+centreY;
     spawnZ = t.z;
 
     plasmaEmitter.create();
-     PlayDisruptor();
-
+    PlayDisruptor();
+    // escalate
+    noContact = false;
 }
 
 function ZylonFighterAI(nme)
@@ -343,11 +350,88 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
   nme.calcypr(); 
   
   // randomize fire
-  if ((Math.random() * 100) >99)
+  if (endGameEvent==playing && (Math.random() * 100) >99)
   {
     nmeShoot(nme.pos);
   }
 }
+
+function ZylonCruiserAI(nme)
+{
+   var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:100},{x:-20, y:30, z:-50},{x:0, y:0, z:70},{x:20, y:10, z:-50},{x:-30, y:10, z:40}];
+   var targ = shipOrientation.invtransform(targetLocations[nme.target].x,targetLocations[nme.target].y,targetLocations[nme.target].z);
+   var dir = nme.targetPoint(targ);
+   if  (dir.lengthSquared() > 400*400 && noContact==true) dir = dir.mul(-1);
+   // always swarm player
+  //   var dir = nme.deltaAhead(-100);
+   // we want to go that way
+   var dirn = new vector3(dir.x, dir.y, dir.z);
+   dirn.normalize();
+   var dx = nme.vel.x - dirn.x;
+   var dy = nme.vel.y - dirn.y;
+   var dz = nme.vel.z - dirn.z;
+   nme.vel.x+=dirn.x*0.1;   
+   nme.vel.y+=dirn.y*0.1;
+   nme.vel.z+=dirn.z*0.1;
+   var tmp = new vector3(  nme.vel.x,   nme.vel.y,   nme.vel.z);
+   tmp.normalize();
+    nme.vel.x = tmp.x;
+    nme.vel.y = tmp.y;
+    nme.vel.z = tmp.z;
+  
+  if (dir.lengthSquared()<25) 
+  {
+    nme.pass = (nme.pass+1) &63;
+    if (nme.pass == 0)
+        nme.target = (nme.target+1) % targetLocations.length;
+  }
+  nme.calcypr(); 
+  
+  // randomize fire
+  if (endGameEvent==playing && (Math.random() * 100) >97)
+  {
+    nmeShoot(nme.pos);
+  }
+}
+
+function ZylonBaseStarAI(nme)
+{
+   var targetLocations = [{x:30, y:0, z:-70},{x:0, y:-30, z:-80},{x:-30, y:00, z:-50},{x:0, y:30, z:-70},{x:40, y:40, z:70},{x:-40, y:40, z:60},{x:-40, y:-40, z:90},{x:40, y:-40, z:40}];
+   var targ = shipOrientation.invtransform(targetLocations[nme.target].x,targetLocations[nme.target].y,targetLocations[nme.target].z);
+   var dir = nme.targetPoint(targ);
+   if  (dir.lengthSquared() > 300*300 && noDeaths==true) dir=dir.mul(-1);
+   // always swarm player
+  //   var dir = nme.deltaAhead(-100);
+   // we want to go that way
+   var dirn = new vector3(dir.x, dir.y, dir.z);
+   dirn.normalize();
+   var dx = nme.vel.x - dirn.x;
+   var dy = nme.vel.y - dirn.y;
+   var dz = nme.vel.z - dirn.z;
+   nme.vel.x+=dirn.x*0.1;   
+   nme.vel.y+=dirn.y*0.1;
+   nme.vel.z+=dirn.z*0.1;
+   var tmp = new vector3(  nme.vel.x,   nme.vel.y,   nme.vel.z);
+   tmp.normalize();
+    nme.vel.x = tmp.x;
+    nme.vel.y = tmp.y;
+    nme.vel.z = tmp.z;
+  
+  if (dir.lengthSquared()<25) 
+  {
+    nme.pass = (nme.pass+1) &63;
+    if (nme.pass == 0)
+        nme.target = (nme.target+1) % targetLocations.length;
+  }
+  nme.calcypr(); 
+  
+  // randomize fire
+  if (endGameEvent==playing && (Math.random() * 100) >95)
+  {
+    nmeShoot(nme.pos);
+  }
+}
+
 
 function DestroyStarbase()
 {
@@ -382,6 +466,9 @@ function KillNmeType(shipType)
   statistics.killTypes[shipType]++;
   // update board item
   currentBoardItem.killTarget(shipType);
+  // escalate
+  noContact = false;
+  noDeaths = false;
 }
 
 // nme objects
@@ -465,8 +552,13 @@ NME.prototype.render = function()
           var depth = focalPoint*5 / camspace.z + 5*scale;
           var sx = camspace.x * depth + centreX;
           var sy = camspace.y * depth + centreY;
-          var sz = 1 * depth;
-
+          var sz = 0.5 * depth;
+          if (sz<=0) return;
+  
+          var fade = 1.0;
+          if (camspace.z>128)  fade = 1.0 - (camspace.z-128)/128;
+          if (fade<0) fade = 0;
+          context.globalAlpha = fade;
           if (camspace.z>0) RenderCruiser(sx, sy, sz, Math.atan2(camspace.y, camspace.z)+Math.PI*1.5);
           break;
        case basestar:
@@ -475,7 +567,14 @@ NME.prototype.render = function()
           var sx = camspace.x * depth + centreX;
           var sy = camspace.y * depth + centreY;
           var sz = 1 * depth;
-
+         
+          if (sz<=0) return;
+          var fade = 1.0;
+          if (camspace.z>128)  fade = 1.0 - (camspace.z-128)/128;
+          if (fade<0) fade = 0;
+          context.globalAlpha = fade;
+         
+         
           if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y*2)+Math.PI);
           break;
        default:
@@ -800,6 +899,8 @@ function init()
   //  DeleteCookie("lastScore");
   // DeleteCookie("bestRanks");
   LoadRanks();
+  // load stats from local store
+  LoadStats();
   // start game
 //  StartGame(novice);
   // init title
@@ -831,6 +932,9 @@ function TitleScreen()
   // set scroller
   initVelocity = -1.0;
   termVelocity = -10.0;
+  
+  // fetch ranks
+  CacheGlobalRankings();
 }
   
 function StartGame(difficulty)
@@ -838,6 +942,7 @@ function StartGame(difficulty)
   // remove titlescreen
   titleScreen = false;
   clearTitleClick = false;
+  endGameEvent = playing;
   
   // log
   Parse.Analytics.track('Started', {difficulty:difficultyNames[difficulty]});
@@ -918,7 +1023,7 @@ function mouseUp(event)
 function mouseClick()
 {
    buttonpressed = CheckButtons(mouseX, mouseY, true);
-   if (buttonpressed)
+   if (buttonpressed || endGameEvent!=playing)
    {
      return;
    }
@@ -971,8 +1076,10 @@ function resize()
   // reset buttons
   if (titleScreen == true)
     SetupTitleButtons();
-  else
+  else if (endGameEvent ==playing)
     SetupButtons();
+  else
+    SetupMainMenuButton();
 }
 
 function renderInformation()
@@ -1286,10 +1393,13 @@ function RenderRanks()
 
    for (var i=0; i<bestRanks.length; i++)
    {
+       // update the last score percentile
+      bestRanks[i].percentile = UpdatePercentile(bestRanks[i].rank);
+
       if ((i*50+180) < (canvas.height-90))
       {
         context.font = '20pt Orbitron';
-        context.fillText('Rank: '+ rank(bestRanks[i].rank), canvas.width/2, 180+i*50);
+        context.fillText('Rank: '+ rank(bestRanks[i].rank)+'  -  Ranked in top '+bestRanks[i].percentile.toFixed(1)+'%', canvas.width/2, 180+i*50);
         context.font = '12pt Orbitron';
         context.fillText('Date: '+ bestRanks[i].date, canvas.width/2, 200+i*50);
       }
@@ -1361,6 +1471,12 @@ function RenderInstructions()
   context.fillStyle = 'rgba(255,128,0,'+fade+')';
   context.fillText('Doug Neubauer, Atari, 1979', canvas.width/2, 200);
   context.fillText('Andi Smithers, 2014', canvas.width/2,300);
+ 
+  context.font = '14pt Orbitron';
+  context.fillStyle = 'rgba(0,128,0,'+fade+')';
+  context.fillText('Version 0.9 beta', canvas.width/2, 360);
+  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
   
   fade = 0;
   if (dt>20000) 
@@ -1463,6 +1579,12 @@ function RenderCredits()
   context.fillStyle = 'rgba(255,128,0,'+fade+')';
   context.fillText('Doug Neubauer, Atari, 1979', canvas.width/2, 200);
   context.fillText('Andi Smithers, 2014', canvas.width/2,300);
+
+  context.font = '14pt Orbitron';
+  context.fillStyle = 'rgba(0,128,0,'+fade+')';
+  context.fillText('Version 0.9 beta', canvas.width/2, 360);
+  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
   
   fade = 0;
   if (dt>20000) 
@@ -1567,6 +1689,7 @@ function RenderStats()
   RenderStatistics(totals, false, fade);
 }
 
+
 function RenderTitleScreen()
 {
   
@@ -1600,17 +1723,26 @@ function RenderTitleScreen()
   context.fillStyle = 'rgb(255,255,0)';
   context.fillText('STAR RAIDERS - 2014', canvas.width/2,100);
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
-  
 
+  // update the last score percentile
+  lastScore.percentile = UpdatePercentile(lastScore.rank);
+  
   context.textAlign = "center";
   context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
   context.textAlign = "center";
-  context.fillText('Last Score: '+ rank(lastScore.rank), canvas.width/2, canvas.height- 40);
+  context.fillText('Last Score: '+ rank(lastScore.rank) +'  -  Ranked in top '+lastScore.percentile.toFixed(1)+'%', canvas.width/2, canvas.height- 40);
   context.font = '12pt Orbitron';
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
 }
 
+function UpdatePercentile(rank)
+{
+  var percentile = 100;
+  // update percentiles
+  if (gameHitsPerRanks[rank+247]) percentile = 100 - (gameHitsPerRanks[rank+247] / gameTotalPlays * 100);
+  return percentile;
+}
 
 function ranksort(a, b)
 {
@@ -1618,9 +1750,9 @@ function ranksort(a, b)
 }
 
 function  AddNewRank(ranking, date)
-{
+{  
+   var percentile = UpdatePercentile(ranking);
   
-   var percentile = 100;
    lastScore.date = date;
    lastScore.rank = ranking;
    lastScore.percentile = percentile; // compute using database
@@ -1636,12 +1768,34 @@ function  AddNewRank(ranking, date)
    SaveRanks();
 }
 
+function LoadStats()
+{
+  var result = LoadCookie("statistics");
+  if (result) statistics = result;
+  var result = LoadCookie("totals");
+  if (result) totals = result;
+}
+
+function SaveStats()
+{
+  SaveCookie("statistics", statistics);
+  SaveCookie("totals", totals);
+}
+
 function LoadRanks()
 {
    var result = LoadCookie("lastScore");
-   if (result) lastScore = result;
+   if (result) 
+   {
+     lastScore = result;
+     lastScore.date = new Date(lastScore.date);
+   }
    var result = LoadCookie("bestRanks");
-   if (result) bestRanks = result;  
+   if (result)
+   { 
+     bestRanks = result;
+     for (var i=0; i<bestRanks.length;i++) bestRanks[i].date = new Date(bestRanks[i].date);
+   }
 }
 
 function SaveRanks()
@@ -1791,13 +1945,15 @@ function render()
   
   renderGameScreen();
 
-  renderOverlays();
-
-  renderInformation();
-  
+  if (endGameEvent == playing)
+  {
+    renderOverlays();
+    renderInformation();
+  }
   RenderButtons();
   
-  WeaponCollisions();
+  if (endGameEvent == playing)
+    WeaponCollisions();
   
   DrawRedAlert();
 
@@ -1826,19 +1982,30 @@ function update()
    if (pauseGame == true) return;
    if (titleScreen == true) return UpdateTitleScreen();
   
+   if (endGameEvent!=playing)
+   {
+        tX = cX;
+        tY = cY;
+   }
    moveStarfield();
   
    UpdateAsteriods();
 
-   UpdateBoard();
+   if (endGameEvent == playing)
+   {
+      UpdateBoard();
   
-   UpdateShipControls();
+      UpdateShipControls();
+   }
   
    UpdateNMEs();
   
    UpdateParticles();
   
-   energyManagement();
+  if (endGameEvent == playing)
+     energyManagement();
+  else  
+     EndGameEvent();
 }
 
 
@@ -2023,8 +2190,11 @@ function AbortMission(button)
 function AbortMissionConfirm(button)
 {
   PlayConfirm();
+  startText(" ", border.x, 150);
+  startText(" ", border.x, 150);
+  startText(" ", border.x, 150);
+  
   EndGame(aborted);
-  startText("Aborting Mission ", border.x, 150);
 }
 
 function AbortMissionCancel(button)
@@ -2036,6 +2206,9 @@ function AbortMissionCancel(button)
 
 function EndGame(endType)
 {
+   // not sure how we got back here if we're not playing
+   if (endGameEvent != playing) return;
+  
    // andi: needs the tickers sequence
    statistics.endgames[endType]++;
   
@@ -2051,6 +2224,7 @@ function EndGame(endType)
   
    // clear all buttons
    buttons = [];
+  
    // clear redalert
    redTime = 0;
   
@@ -2064,9 +2238,61 @@ function EndGame(endType)
    // save stats and rank to server
    SaveStatistics();
    
-   // 
+   // save stats to local storage
+   SaveStats();
   
-   TitleScreen();
+   // save new rank
+   UpdateRankings(ranking);
+  
+   // need to go back to title. 
+//   TitleScreen();
+   endGameTime = new Date().getTime();
+   endGameEvent = endType;
+   endGameLastMessage=-1;
+   endGameRank = rank(ranking);
+   SetupMainMenuButton();
+}
+
+
+function  SetupMainMenuButton()
+{
+   // main menu
+   buttons = [];
+   new Button(border.x, canvas.height/2, border.x, mapScale.y*0.6, "Return to Main Menu", TitleScreen, ' ');  
+}
+
+function EndGameEvent()
+{
+   if (endGameEvent == playing) return;
+  
+   var currentTime = new Date().getTime();
+   var dx = currentTime - endGameTime;
+   var messageNum = Math.floor(dx/2500)%4;
+   console.log(messageNum);
+   if (endGameLastMessage != messageNum)
+   {
+       var endMessages = [
+      "Star fleet to all units",
+      "Star Cruiser 7 aborted mission",                         // aborted
+      "Star Cruiser 7 destroyed by zlyon fire",                 // destroyed
+      "Star Cruiser 7 depleted energy, mission aborted",        // energylost
+      "Star Cruiser 7 all starbases lost, mission aborted",     // basesGone
+      "Star Cruiser 7 all enemy units destroyed",               // allDead
+      "Posthumous rank: ",
+      "Rank: "];
+     endGameLastMessage = messageNum;
+
+     if (messageNum == 0)
+     {
+       startText("",border.x, 150);
+       startText(endMessages[0], border.x, 150);
+     }
+     else if (messageNum == 1)
+       startText(endMessages[endGameEvent+1], border.x, 150);
+     else if (messageNum == 2)
+       startText(endMessages[endGameEvent==destroyed?6:7] + endGameRank,border.x, 150);
+
+   }
 }
 
 function DestroyShip()
@@ -2155,6 +2381,72 @@ function SaveStatistics()
   {
     console.log("uploaded statistics");
   });
+}
+
+function UpdateRankings(ranking)
+{
+  // range to the min/max
+  if (ranking < -248) ranking = -248;
+  else if (ranking >320) ranking = 320;
+  
+  var Ranks = Parse.Object.extend("Ranks");
+
+  var query = new Parse.Query(Ranks);
+  query.equalTo("rank", ranking);
+  query.first(
+    {
+        success: function(object) 
+        {
+            if (object)
+            {
+              object.increment("hits");
+              object.save();
+            }
+            else
+            {
+              var rankings = new Ranks();
+              rankings.set("rank", ranking);
+              rankings.set("hits", 0);
+              rankings.save();
+            }
+        },
+        error: function(error) 
+        {
+            console.log("Error: " + error.code + " " + error.message);
+        }
+    });
+  
+}
+
+function CacheGlobalRankings()
+{
+  var Ranks = Parse.Object.extend("Ranks");
+  var query = new Parse.Query(Ranks);
+
+  query.greaterThan("rank", -250);
+  query.ascending("rank");
+  query.limit(570);
+  query.find(
+  {
+    success: function(results) 
+    {
+       gameTotalPlays = 0;
+       for (var i=0; i<results.length; i++)
+       {
+          var index = results[i].get("rank");
+          var count = results[i].get("hits");
+         gameTotalPlays+=count;
+         gameHitsPerRanks[index+248] = gameTotalPlays;
+       }
+       console.log("results = "+ results.length);
+       console.log("numtotalplays = " + gameTotalPlays);
+    },
+    error: function(error) 
+    {
+      console.log("error fetching data : "+error.message);
+    }
+  });
+
 }
 
 // flight controls
@@ -2534,8 +2826,6 @@ function RenderStarDome()
     context.fillStyle = '#333333';
     context.fill();
 }
-
-
 
 
 // entry point

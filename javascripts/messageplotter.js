@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 // blinky cursor text scroller 
-var ranks = ["GARBAGE SCOW CAPTAIN",-100,"GALACTIC COOK",0,"ROOKIE",48,"NOVICE",80,"ENSIGN",112,"PILOT",144,"ACE",176,"LIEUTENANT",192,"WARRIOR",208,"CAPTAIN",224,"COMMANDER",240,"STAR COMMANDER",272];
+var ranks = ["GALACTIC COOK",0,"GARBAGE SCOW CAPTAIN",24,"ROOKIE",48,"NOVICE",80,"ENSIGN",112,"PILOT",144,"ACE",176,"LIEUTENANT",192,"WARRIOR",208,"CAPTAIN",224,"COMMANDER",240,"STAR COMMANDER",272];
 
 var msgs = [ 
   "star fleet to all units\nstar cruiser 7 destroyed by zlyon fire\nposthumous rank : ", 
@@ -111,8 +111,7 @@ function blinky(x, t)
 function rank(score)
 {
   if (score<=-1000) return "UNRANKED";
-  if (score<0) return msgs[0];
-  if (score<48) return msgs[2];
+  if (score<48) return ranks[(score&1)*2];
   
   var r = (score - 48) >>4;
   var quality = (((score-48) - (r<<4)) >>2) + 1;
@@ -122,10 +121,20 @@ function rank(score)
     r>>=1;
     quality = ( ((score-48) - (r<<5)) >>3) + 1;
   }
-  else r-=8;
-	if (r>8) r = 8;
+  else 
+  {
+    r-=5;
+    // special case for star-commander incase of huge scores
+	  if (r>=9)
+    { 
+      r = 9;
+      quality = ((score-272) >> 3) +1;
+      if (quality>4) quality = 4;
+    }
+  }
+  
 
-  return  ranks[2+r+r] + ' class ' + quality;
+  return  ranks[4+r+r] + ' class ' + quality;
   
 }
 
