@@ -120,10 +120,10 @@ FMSynth.prototype.init = function(noise)
   
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = 1;
-
   
     if (waveform<4)
     {
+        this.gainNode.gain.value = 0.5;
         this.node.connect(this.gainNode);
     }
     else
