@@ -703,10 +703,10 @@ function renderLongRangeScanner()
 
   // render Asteroids
   var s = (radius/canvas.width) * 1.3;
-  var Asteroids = getAsteroids();
+  var asteroids = getAsteroids();
 
   // I think a matrix is now going to be faster..    
-  for (var i=0; i<Asteroids.length; i++)
+  for (var i=0; i<asteroids.length; i++)
   {
       var x = modulo(localPosition.x - asteroids[i].x)-512;
       var y = modulo(localPosition.y - asteroids[i].y)-512;
