@@ -311,7 +311,7 @@ function nmeShoot(pos)
     var depthInv = focalPoint / ((t.z + focalDepth) +1);
     setSpawn((t.x*depth)/depthInv+centreX, (t.y*depth)/depthInv+centreY, t.z);
 
-    plasmaEmitter.create();
+    getPlasmaEmitter().create();
     PlayDisruptor();
     // escalate
     noContact = false;
@@ -439,8 +439,8 @@ function DestroyStarbase()
        // detroy base
        SpawnAsteriodsAt(nmes[0].pos);
        setSpawn(nmes[0].pos.x, nmes[0].pos.y, nmes[0].pos.z);
-       explodeEmitter.create();
-       dustEmitter.create();
+       getExplodeEmitter().create();
+       getDustEmitter().create();
        PlayExplosion();
     }
 }
@@ -2319,8 +2319,8 @@ function DestroyShip()
          // detroy base
    SpawnAsteriodsAt(localPosition);
    setSpawn(localPosition.x, localPosition.y, localPosition.z);
-   explodeEmitter.create();
-   dustEmitter.create();
+   getExplodeEmitter().create();
+   getDustEmitter().create();
    PlayExplosion();
 }
 
