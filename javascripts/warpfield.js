@@ -427,7 +427,7 @@ window.setTermVelocity = function(vel) {termVelocity = vel;}
 window.getTermVelocity = function() {return termVelocity;}
 window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
 window.getEnterWarp = function() { return enterWarp;}
-window.setTrackMouse = function(state) {trackMouse = state;}
+window.setTrackingMouse = function(state) {trackMouse = state;}
 window.setStarsColorAlias= function(color) {starsColorAlias=color;}
 window.setDensity = function(d) { density = d; }
 window.getCameraDepth = function() { return cameraDepth;}

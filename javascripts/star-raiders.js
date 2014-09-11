@@ -1920,9 +1920,7 @@ function ViewCredits()
 function UpdateTitleScreen()
 {
    localPosition.z= modulo2(localPosition.z-0.1, localSpaceCubed*0.25);
-   // cancel mouse tracking
-   tX = cX;
-   tY = cY;
+   setTrackingMouse(false);
    moveStarfield();
 
    UpdateAsteriods();
@@ -2003,11 +2001,8 @@ function update()
    if (pauseGame == true) return;
    if (titleScreen == true) return UpdateTitleScreen();
   
-   if (endGameEvent!=playing)
-   {
-        tX = cX;
-        tY = cY;
-   }
+   setTrackingMouse(endGameEvent==playing);
+  
    moveStarfield();
   
    UpdateAsteriods();
@@ -2750,7 +2745,7 @@ function EnteringWarp()
   if (triggerWarp == inHyperspace)
   {
     // waiting destination 
-    if (enterWarp == false)
+    if (getEnterWarp() == false)
     {
        PlayConfirm();
        PauseHyperspaceSound(2);
