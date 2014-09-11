@@ -194,6 +194,14 @@ function init()
   alpha = 6.0;
   enterWarp = false;
   velocity = initVelocity;
+
+  window.velocity = velocity;
+  window.initVelocity = initVelocity;
+  window.enterWarp = enterWarp;
+  window.cX = cX;
+  window.cY = cY;
+  window.tX = tX;
+  window.tY = tY;
 }
 
 function animate()
