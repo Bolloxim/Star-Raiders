@@ -526,7 +526,10 @@ window.FragmentAsteriod = FragmentAsteriod;
 window.renderShield = renderShield;
 window.SetupAsteriods = SetupAsteriods;
 
-window.shieldUp = shieldUp;
+window.setShieldUp = function(state) {shieldUp = state;}
+window.getShieldUp = function() {return shieldUp;}
+window.setSplutter = function(a, b) {splutterCount = a; splutterNoise =b;}
+
 window.asteriods = asteriods;
 
 })();

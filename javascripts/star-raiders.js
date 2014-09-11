@@ -219,7 +219,7 @@ function ClearGame()
    badDriving = 0;
    redAlertColor = 0;
   
-    shieldUp = false;
+   setShieldUp(false);
 }
 
 
@@ -309,9 +309,7 @@ function nmeShoot(pos)
     if (depth<0) depth *= -1;
 
     var depthInv = focalPoint / ((t.z + focalDepth) +1);
-    spawnX = (t.x*depth)/depthInv+centreX;
-    spawnY = (t.y*depth)/depthInv+centreY;
-    spawnZ = t.z;
+    setSpawn((t.x*depth)/depthInv+centreX, (t.y*depth)/depthInv+centreY, t.z);
 
     plasmaEmitter.create();
     PlayDisruptor();
@@ -440,9 +438,7 @@ function DestroyStarbase()
     {
        // detroy base
        SpawnAsteriodsAt(nmes[0].pos);
-       spawnX = nmes[0].pos.x;
-       spawnY = nmes[0].pos.y;
-       spawnZ = nmes[0].pos.z;
+       setSpawn(nmes[0].pos.x, nmes[0].pos.y, nmes[0].pos.z);
        explodeEmitter.create();
        dustEmitter.create();
        PlayExplosion();
@@ -2145,10 +2141,11 @@ function ToggleShields(button)
 {
   button.state^=1;
   
-  shieldUp=button.state;
-  splutterCount = 30;
-  splutterNoise = 60;
-  startText(shieldUp?"Shields Activated": "Shields Deactivated", border.x, 150);
+  setShieldUp(button.state);
+  setSplutter(30, 60);
+  
+  
+  startText(getShieldUp()?"Shields Activated": "Shields Deactivated", border.x, 150);
   PlayConfirm();
 }
 
@@ -2317,13 +2314,11 @@ function DestroyShip()
     // explode (asteriods)
     trackingComputer=false;
     targetComputer = false;
-    shieldUp = false;
+    setShieldUp(false);
   
          // detroy base
    SpawnAsteriodsAt(localPosition);
-   spawnX = localPosition.x;
-   spawnY = localPosition.y;
-   spawnZ = localPosition.z;
+   setSpawn(localPosition.x, localPosition.y, localPosition.z);
    explodeEmitter.create();
    dustEmitter.create();
    PlayExplosion();
@@ -2334,7 +2329,7 @@ function PowerDownShip()
     // explode (asteriods)
     trackingComputer=false;
     targetComputer = false;
-    shieldUp = false;
+    setShieldUp(false);
     setShipVelocity = 0;
 }
 
@@ -2712,7 +2707,7 @@ function energyManagement()
   // twin ions
   energy -= (shipVelocityEnergy*freqHz);
   // shields
-  if (shieldUp) energy -= 2*freqHz;
+  if (getShieldUp()) energy -= 2*freqHz;
   // lifesupport
   energy -= 0.25 * freqHz;
   // tracking computer

@@ -360,12 +360,12 @@ function init()
   cX=centreX;
   cY=centreY;
  
-  window.explodeEmitter = new ExplodeParticleEmitter();
-  window.torpedoEmitter = new PhotonTorpedoEmitter();
-  window.dustEmitter    = new DustParticleEmitter();
-  window.plasmaEmitter  = new PlasmaEmitter();
+  explodeEmitter = new ExplodeParticleEmitter();
+  torpedoEmitter = new PhotonTorpedoEmitter();
+  dustEmitter    = new DustParticleEmitter();
+  plasmaEmitter  = new PlasmaEmitter();
 
-  window.spawnList = spawnList;
+  spawnList = spawnList;
 }
 
 function initDemo()
@@ -489,6 +489,12 @@ window.PhotonTorpedoEmitter = PhotonTorpedoEmitter;
 window.PlasmaEmitter = PlasmaEmitter;
 window.ExplodeParticleEmitter = ExplodeParticleEmitter;
 window.DustParticleEmitter = DustParticleEmitter;
+
+window.getDustEmitter = function() { return dustEmitter;}
+window.getPhotonEmitter = function() { return photonEmitter;}
+window.getPlasmaEmitter = function() { return plasmaEmitter;}
+window.getExplodeEmitter = function() { return explodeEmitter; }
+window.setSpawn = function(x,y,z)  { spawnX = x; spawnY =y; spawnZ = z;}
 
 
 })();
