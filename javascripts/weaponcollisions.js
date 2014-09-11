@@ -120,13 +120,13 @@ function CollideAsteroids(sx, sy, photon)
       var dx = sx-x1;
       var dy = sy-y1;
       var dz = sz-500 - t.z;
-            
+/*            
       context.beginPath();
       context.arc(x1, y1, size, 0, Math.PI*2);
       context.strokeStyle = 'rgb(255,255,255)';
       context.stroke();
       context.fillText("dist="+Math.floor(dz), x1, y1-12);
-
+*/
       if (dx*dx+dy*dy < size*size && dz*dz < 4000)
       {
           var depthInv = focalPoint / ((t.z + focalDepth) +1);

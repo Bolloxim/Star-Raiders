@@ -88,6 +88,8 @@ function init()
   
   // set canvas to be window dimensions
   resize();
+  
+  canvas.addEventListener('mousemove', mouseMove);
 
   // create event listeners
   window.addEventListener('resize', resize);
@@ -200,6 +202,7 @@ function renderZylon(x1, y1, z1, rotation, elevation, parts)
 
   if (!autoRotate)
   {
+
      rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
      elevation = Math.atan2((y - mouseY) , canvas.height);
   }
