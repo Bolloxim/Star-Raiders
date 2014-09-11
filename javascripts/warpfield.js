@@ -423,6 +423,8 @@ window.viewingFront = viewingFront;
 
 window.setInitVelocity = function(vel) {initVelocity = vel;}
 window.getInitVelocity = function() {return initVelocity;}
+window.setTermVelocity = function(vel) {termVelocity = vel;}
+window.getTermVelocity = function() {return termVelocity;}
 window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
 window.getEnterWarp = function() { return enterWarp;}
 window.setTrackMouse = function(state) {trackMouse = state;}
@@ -433,6 +435,7 @@ window.setCameraDepth = function(depth) {cameraDepth = depth;}
 window.getWarpStartDepth = function() { return warpStartDepth;}
 window.setWarpStartDepth = function(depth) { warpStartDepth = depth;}
 window.setWarpTime = function(time) {warpTime = time;}
+
 
 
 })();
