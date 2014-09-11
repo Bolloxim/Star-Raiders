@@ -49,7 +49,7 @@ var asteroids = [];
 function SetupAsteroids(space)
 {
   localSpace = space;
-  clearAsteroids();
+  asteroids = [];
 
   for (var i=0; i<maxAsteroids; i++)
   {
