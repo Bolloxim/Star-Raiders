@@ -924,14 +924,11 @@ function TitleScreen()
   // override
   warpspread = 2;
   // have starfield not track mouse
-  trackMouse = false;
-  // centre tracking
-  tX = cX;
-  tY = cY;
+  setTrackMouse(false);
   
   // set scroller
-  initVelocity = -1.0;
-  termVelocity = -10.0;
+  setInitVelocity(-1.0);
+  setTermVelocity(-10.0);
   
   // fetch ranks
   CacheGlobalRankings();
@@ -1047,9 +1044,31 @@ function mouseClick()
 
 function resize()
 {
+   var maxWidth = window.innerWidth;
+   var maxHeight = window.innerHeight;
+   canvas.width = maxWidth;
+   canvas.height = maxHeight;
+ /* 
+   var width  = maxWidth;
+   var height = maxWidth * 9 / 22;
   
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  
+   canvas.style.display = 'block';
+   canvas.style.position = 'fixed';
+   canvas.style.left = '0px';
+   canvas.style.top  = (( maxHeight - height) / 2) + 'px';
+  
+  if (height > maxHeight) 
+  {
+    height = maxHeight;
+    width  = maxHeight * 22 / 9;
+    canvas.style.left = ((maxWidth - width) / 2) + 'px';
+    canvas.style.top  = '0px';
+  }
+  
+  canvas.width = width;
+  canvas.height = height;
+  */
     // compute centre of screen
   centreX = canvas.width/2;
   centreY = canvas.height/2;
@@ -1723,7 +1742,9 @@ function RenderTitleScreen()
   context.fillStyle = 'rgb(255,255,0)';
   context.fillText('STAR RAIDERS - 2014', canvas.width/2,100);
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
-
+  context.font = '20pt Orbitron';
+    context.fillStyle = 'rgb(255,255,255)';
+  context.fillText('FIXING FIREFOX JS modules! which is also now breaking chrome. normal service will resume tonight at somepoint', canvas.width/2, 24);
   // update the last score percentile
   lastScore.percentile = UpdatePercentile(lastScore.rank);
   
@@ -2598,8 +2619,8 @@ function TestMoveUnderMouse(mouseX, mouseY)
   statistics.distance+=Math.abs(speed);
   
   // changing
-  initVelocity = -setShipVelocity*0.05;
-  if (viewingAft()) initVelocity*=-1;
+  setInitVelocity(-setShipVelocity*0.05);
+  if (viewingAft()) setInitVelocity(getInitVelocity()*-1);
   
   panStarfield(angleX, angleY);
   
@@ -2714,12 +2735,12 @@ function EnteringWarp()
    {
       UpdateHyperspaceSound(shipVelocity);
       setShipVelocity = 99.99;
-      if (!enterWarp && shipVelocity >90)
+      if (!getEnterWarp() && shipVelocity >90)
       {
         triggerWarp = inHyperspace;
-        enterWarp = true;
-        warpStartDepth = cameraDepth;
-        warpTime = 0;
+        setEnterWarp(true);
+        setWarpStartDepth(getCameraDepth());
+        setWarpTime(0);
         
         // clear data
         asteriods = [];
