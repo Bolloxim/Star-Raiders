@@ -705,5 +705,6 @@ window.PlayExplosionThud = PlayExplosionThud;
 window.UpdateHyperspaceSound = UpdateHyperspaceSound;
 window.initAudio = initAudio;
 window.StopEngine = StopEngine;
+window.CancelHyperSound = CancelHyperSound;
 
 })();
