@@ -703,6 +703,6 @@ window.PlayDisruptor = PlayDisruptor;
 window.PlayExplosion = PlayExplosion;
 window.PlayExplosionThud = PlayExplosionThud;
 window.UpdateHyperspaceSound = UpdateHyperspaceSound;
-
+window.initAudio = initAudio;
 
 })();
