@@ -98,7 +98,7 @@ var trackingTarget = 0;
 var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
 
 // difficulty settings
-var maxAsteriods = 32;
+var maxAsteroids = 32;
 var maxNMEs = 8;
 var noContact = true;
 var noDeaths= true;
@@ -437,7 +437,7 @@ function DestroyStarbase()
     if (nmes[0].type == base) 
     {
        // detroy base
-       SpawnAsteriodsAt(nmes[0].pos);
+       SpawnAsteroidsAt(nmes[0].pos);
        setSpawn(nmes[0].pos.x, nmes[0].pos.y, nmes[0].pos.z);
        getExplodeEmitter().create();
        getDustEmitter().create();
@@ -701,16 +701,16 @@ function renderLongRangeScanner()
     context.stroke();
   }
 
-  // render asteriods
+  // render Asteroids
   var s = (radius/canvas.width) * 1.3;
-  var asteriods = getAsteriods();
+  var Asteroids = getAsteroids();
 
   // I think a matrix is now going to be faster..    
-  for (var i=0; i<asteriods.length; i++)
+  for (var i=0; i<Asteroids.length; i++)
   {
-      var x = modulo(localPosition.x - asteriods[i].x)-512;
-      var y = modulo(localPosition.y - asteriods[i].y)-512;
-      var z = modulo(localPosition.z - asteriods[i].z)-512;
+      var x = modulo(localPosition.x - asteroids[i].x)-512;
+      var y = modulo(localPosition.y - asteroids[i].y)-512;
+      var z = modulo(localPosition.z - asteroids[i].z)-512;
 
       var t = scannerView.transform(x,y,z);
       var depth = focalPoint*5 / ((t.z + 1400) +1);
@@ -915,7 +915,7 @@ function TitleScreen()
   // credit time
   titleStartTime = new Date().getTime();
   // populate local space
-  SetupAsteriods(localSpaceCubed*0.25);
+  SetupAsteroids(localSpaceCubed*0.25);
   SetupTitleButtons();
 
   // override
@@ -959,7 +959,7 @@ function StartGame(difficulty)
   BoardSetup(difficulty);
   
   // populate local space
-  SetupAsteriods(localSpaceCubed);
+  SetupAsteroids(localSpaceCubed);
  
   // populate shiplocation
   SetupNMEs(GetPieceAtShipLocation());
@@ -1394,7 +1394,7 @@ function renderGameScreen()
 {
  // RenderStarDome();
   renderStarfield();
-  RenderAsteriods();
+  RenderAsteroids();
   RenderNMEs();
   RenderParticles();
 
@@ -1563,7 +1563,7 @@ function RenderInstructions()
   context.fillStyle = 'rgba(128,255,0,'+fade+')';
   context.fillText('Destroy Fast moving patrols first', x, 180);
   context.fillText('Starbases when destroyed will spawn a new enemy patrol', x,240);
-  context.fillText('Destroying Asteriods is for fun only',x, 300);
+  context.fillText('Destroying Asteroids is for fun only',x, 300);
   context.fillText('Cancel Hyperwarps before 99 and you get a free boost(well almost free)',x, 360);
   context.fillText('Watch your Energy and dont forget to refuel', x,420);
   context.fillStyle = 'rgba(0,192,0,'+fade+')';
@@ -1711,7 +1711,7 @@ function RenderTitleScreen()
 {
   
   renderStarfield();
-  RenderAsteriods();
+  RenderAsteroids();
   RenderButtons();
   
   switch (attractMode)
@@ -1921,7 +1921,7 @@ function UpdateTitleScreen()
    setTrackingMouse(false);
    moveStarfield();
 
-   UpdateAsteriods();
+   UpdateAsteroids();
 }
 
 function renderOverlays()
@@ -2003,7 +2003,7 @@ function update()
   
    moveStarfield();
   
-   UpdateAsteriods();
+   UpdateAsteroids();
 
    if (endGameEvent == playing)
    {
@@ -2312,13 +2312,13 @@ function EndGameEvent()
 
 function DestroyShip()
 {
-    // explode (asteriods)
+    // explode (Asteroids)
     trackingComputer=false;
     targetComputer = false;
     setShieldUp(false);
   
          // detroy base
-   SpawnAsteriodsAt(localPosition);
+   SpawnAsteroidsAt(localPosition);
    setSpawn(localPosition.x, localPosition.y, localPosition.z);
    getExplodeEmitter().create();
    getDustEmitter().create();
@@ -2327,7 +2327,7 @@ function DestroyShip()
 
 function PowerDownShip()
 {
-    // explode (asteriods)
+    // explode (Asteroids)
     trackingComputer=false;
     targetComputer = false;
     setShieldUp(false);
@@ -2735,7 +2735,7 @@ function EnteringWarp()
         setWarpTime(0);
         
         // clear data
-        clearAsteriods();
+        clearAsteroids();
         nmes = []; 
       }
    }
@@ -2770,7 +2770,7 @@ function EnteringWarp()
        
        SetShipLocation(x, y);
        // Setup NME's
-       SetupAsteriods(localSpaceCubed);
+       SetupAsteroids(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
        warpLocked = false;
        energy-=warpEnergy;

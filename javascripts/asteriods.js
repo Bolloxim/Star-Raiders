@@ -31,7 +31,7 @@ THE SOFTWARE.
 // constants
 const focalDepth = 80;
 const focalPoint = 256;
-const maxAsteriods = 32;
+const maxAsteroids = 32;
 
 
 // variables
@@ -42,41 +42,43 @@ var canvas;
 var context;
 var localSpace = 0;
 
-// asteriods 
-var asteriods = [];
+// Asteroids 
+var Asteroids = [];
 
-function SetupAsteriods(space)
+
+function SetupAsteroids(space)
 {
   localSpace = space;
-  asteriods = [];
-  for (var i=0; i<maxAsteriods; i++)
+  clearAsteroids();
+
+  for (var i=0; i<maxAsteroids; i++)
   {
-     asteriods.push(new Asteriod(space))
+     asteroids.push(new Asteroid(space))
   }
 }
 
-function SpawnAsteriodsAt(loc)
+function SpawnAsteroidsAt(loc)
 {
   for (var i=0; i<8; i++)
   {
-    var roid = new Asteriod(localSpace);
+    var roid = new Asteroid(localSpace);
     roid.x = loc.x;
     roid.y = loc.y;
     roid.z = loc.z;
     roid.force.x = Math.random()*2-1;
     roid.force.y = Math.random()*2-1;
     roid.force.z = Math.random()*2-1;
-    asteriods.push(roid);
+    asteroids.push(roid);
   }
 }
 
-function RenderAsteriods()
+function RenderAsteroids()
 {
   context.globalCompositeOperation='source-over';
 
-  for (var i=0; i<asteriods.length;i++)
+  for (var i=0; i<asteroids.length;i++)
   {
-    asteriods[i].render();
+    asteroids[i].render();
   }
 }
 
@@ -85,21 +87,21 @@ function CompareRoids(a,b)
   return b.z - a.z;
 }
 
-function UpdateAsteriods()
+function UpdateAsteroids()
 {
-  for (var i=0; i<asteriods.length;i++)
+  for (var i=0; i<asteroids.length;i++)
   {
-    asteriods[i].update();
+    asteroids[i].update();
   }
 
  // should really broadphase but 32x32 checks is not awful
  /* no collisons
-  for (var i=0; i<asteriods.length;i++)
+  for (var i=0; i<Asteroids.length;i++)
   {
-    var src = asteriods[i];
-    for (var j=i+1; j<asteriods.length;j++)
+    var src = asteroids[i];
+    for (var j=i+1; j<Asteroids.length;j++)
     {
-      var dst = asteriods[j];
+      var dst = asteroids[j];
       var dx = dst.x-src.x;
       var dy = dst.y-src.y;
       var dz = dst.z-src.z;
@@ -115,17 +117,17 @@ function UpdateAsteriods()
   }
   */
   // make sure roids sort amongst selfs
-  asteriods.sort(CompareRoids);
+  asteroids.sort(CompareRoids);
 }
 
-function FragmentAsteriod(roid)
+function FragmentAsteroid(roid)
 {
   if (roid.fragment == 2) return;
-  chunk = new Asteriod();
+  chunk = new Asteroid();
   chunk.clone(roid);
   chunk.flatten((roid.fragment<<1));
   roid.flatten((roid.fragment<<1)+1);
-  asteriods.push(chunk);
+  asteroids.push(chunk);
   
   // speed
   roid.angVel.p*=Math.PI*Math.random();
@@ -136,12 +138,12 @@ function FragmentAsteriod(roid)
   chunk.angVel.r*=-Math.PI*Math.random();
 }
 
-function Asteriod()
+function Asteroid()
 {
   this.init();
 }
 
-Asteriod.prototype.init = function()
+Asteroid.prototype.init = function()
 {
   this.fragment = 0;
   this.shieldsHit = false;
@@ -168,7 +170,7 @@ Asteriod.prototype.init = function()
 
 }
 
-Asteriod.prototype.clone = function(roid)
+Asteroid.prototype.clone = function(roid)
 {   
   this.x = roid.x;
   this.y = roid.y;
@@ -184,7 +186,7 @@ Asteriod.prototype.clone = function(roid)
   }
 }
 
-Asteriod.prototype.flatten = function(side)
+Asteroid.prototype.flatten = function(side)
 {
   this.fragment = (side>>1)+1;
 
@@ -197,7 +199,7 @@ Asteriod.prototype.flatten = function(side)
   }
 }
 
-Asteriod.prototype.update = function()
+Asteroid.prototype.update = function()
 {
   var matrixY = new matrix3x3();
   var matrixP = new matrix3x3();
@@ -223,7 +225,7 @@ Asteriod.prototype.update = function()
   }
 }
 
-Asteriod.prototype.render = function()
+Asteroid.prototype.render = function()
 {
    var scale = 512/canvas.height;
 
@@ -354,7 +356,7 @@ function init()
   buildVerts();
   
   // build asteroidds
-  SetupAsteriods();
+  SetupAsteroids();
 }
 
 // rendering functions
@@ -520,19 +522,18 @@ function renderShield()
 init();
 
 window.shieldFlash = shieldFlash;
-window.RenderAsteriods = RenderAsteriods;
-window.UpdateAsteriods = UpdateAsteriods;
-window.FragmentAsteriod = FragmentAsteriod;
+window.RenderAsteroids = RenderAsteroids;
+window.UpdateAsteroids = UpdateAsteroids;
+window.FragmentAsteroid = FragmentAsteroid;
 window.renderShield = renderShield;
-window.SetupAsteriods = SetupAsteriods;
-window.SpawnAsteriodsAt = SpawnAsteriodsAt;
+window.SetupAsteroids = SetupAsteroids;
+window.SpawnAsteroidsAt = SpawnAsteroidsAt;
 
-window.clearAsteroids = function() { asteriods = []; }
-window.getAsteroids = function() {return asteriods;}
+window.clearAsteroids = function() { asteroids = []; }
+window.getAsteroids = function() { return asteroids; }
 window.setShieldUp = function(state) {shieldUp = state;}
 window.getShieldUp = function() {return shieldUp;}
 window.setSplutter = function(a, b) {splutterCount = a; splutterNoise =b;}
 
-window.asteriods = asteriods;
 
 })();

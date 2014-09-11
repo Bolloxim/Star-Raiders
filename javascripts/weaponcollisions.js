@@ -40,16 +40,16 @@ function FirePhotons()
 
 function CheckShields()
 {
-  var asteriods = getAsteriods();
+  var asteroids = getAsteroids();
 
-  var i = asteriods.length;
+  var i = asteroids.length;
   while (i)
   {
       --i;
-    if (asteriods[i].shieldsHit) 
+    if (asteroids[i].shieldsHit) 
     {
       // spawn splash
-      var roid = asteriods[i];
+      var roid = asteroids[i];
       var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
       var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
       var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
@@ -75,7 +75,7 @@ function CheckShields()
 
       ShieldHit(spx, spy, 100/(1<<roid.fragment));
       // delete roid
-      asteriods.splice(i,1);
+      Asteroids.splice(i,1);
     }
   } 
 }
@@ -97,15 +97,15 @@ function ShieldHit(x, y, damage)
   }
 }
 
-function CollideAsteriods(sx, sy, photon)
+function CollideAsteroids(sx, sy, photon)
 {
    var sz = photon.z;
    var scale =512/canvas.height;
-   var asteriods = getAsteriods();
+   var Asteroids = getAsteroids();
 
-  for (var j = 0; j<asteriods.length; j++)
+  for (var j = 0; j<Asteroids.length; j++)
   {
-      var roid = asteriods[j];
+      var roid = asteroids[j];
       var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
       var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
       var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
@@ -136,14 +136,14 @@ function CollideAsteriods(sx, sy, photon)
           getDustEmitter().create();
 
           // fragment rock
-          if (asteriods[j].fragment==2)
+          if (asteroids[j].fragment==2)
           {
-            asteriods[j].init();    // destroy
+            asteroids[j].init();    // destroy
             statistics.roidsHit++;
           }
           else
           {
-            FragmentAsteriod(asteriods[j]);
+            FragmentAsteroid(asteroids[j]);
             statistics.roidsFragmented++;
           }
           PlayExplosionThud();
@@ -295,7 +295,7 @@ function WeaponCollisions()
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
  */     
-          if (CollideAsteriods(sx, sy, pos))
+          if (CollideAsteroids(sx, sy, pos))
           {
             // destroy photon
             spawnList[i].life = 0;
@@ -328,7 +328,7 @@ function WeaponCollisions()
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
 */      
-          if (CollideAsteriods(sx, sy, pos))
+          if (CollideAsteroids(sx, sy, pos))
           {
             // destroy plasma
             spawnList[i].life = 0;
