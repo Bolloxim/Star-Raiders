@@ -23,6 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
+// module
+(function()
+{
+
 // conceptualized and written by andi smithers
 // constants
 const focalDepth = 80;
@@ -351,6 +355,8 @@ function init()
   
   // build asteroidds
   SetupAsteriods();
+
+  window.shieldUp = shieldUp;
 }
 
 // rendering functions
@@ -515,3 +521,11 @@ function renderShield()
 // entry point
 init();
 
+window.shieldFlash = shieldFlash;
+window.RenderAsteriods = RenderAsteriods;
+window.UpdateAsteriods = UpdateAsteriods;
+window.FragmentAsteriod = FragmentAsteriod;
+window.renderShield = renderShield;
+
+
+})();

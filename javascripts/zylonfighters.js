@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 
+// module
+(function()
+{
+
 // constant options
 const focalDepth = 1400;
 const focalPoint = 256;
@@ -399,3 +403,8 @@ function animate()
 init();
 //initDemo();
 //animate();
+
+window.renderZylon = renderZylon;
+
+})();
+

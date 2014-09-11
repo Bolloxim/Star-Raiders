@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 
+// module
+(function()
+{
+
 
 // globals
 var canvas, context, alpha;
@@ -401,4 +405,8 @@ function swapView()
 // entry point
 init();
 
+window.renderStarfield = renderStarfield;
+window.moveStarfield = moveStarfield;
+window.panStarfield = panStarfield
 
+})();
