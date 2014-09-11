@@ -190,15 +190,15 @@ function init()
   canvas.addEventListener('click', mouseClick);
   window.addEventListener('resize', resize);
 
-  // initialze variables  
-  window.AudioContext = window.AudioContext||window.webkitAudioContext;
-  audioContext = new AudioContext();
-  
   initAudio();
 }
 
 function initAudio()
 {
+  // initialze variables  
+  window.AudioContext = window.AudioContext||window.webkitAudioContext;
+  audioContext = new AudioContext();
+  
   createWhiteNoiseBuffer();
   createPinkNoiseBuffer();
   createBrownNoiseBuffer();
