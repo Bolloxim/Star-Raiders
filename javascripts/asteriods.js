@@ -526,6 +526,6 @@ window.RenderAsteriods = RenderAsteriods;
 window.UpdateAsteriods = UpdateAsteriods;
 window.FragmentAsteriod = FragmentAsteriod;
 window.renderShield = renderShield;
-
+window.SetupAsteriods = SetupAsteriods;
 
 })();
