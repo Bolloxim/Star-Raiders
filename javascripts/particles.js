@@ -485,5 +485,10 @@ init();
 
 window.RenderParticles = RenderParticles;
 window.UpdateParticles = UpdateParticles;
+window.PhotonTorpedoEmitter = PhotonTorpedoEmitter;
+window.PlasmaEmitter = PlasmaEmitter;
+window.ExplodeParticleEmitter = ExplodeParticleEmitter;
+window.DustParticleEmitter = DustParticleEmitter;
+
 
 })();
