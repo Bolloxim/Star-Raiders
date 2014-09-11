@@ -364,6 +364,8 @@ function init()
   window.torpedoEmitter = new PhotonTorpedoEmitter();
   window.dustEmitter    = new DustParticleEmitter();
   window.plasmaEmitter  = new PlasmaEmitter();
+
+  window.spawnList = spawnList;
 }
 
 function initDemo()
