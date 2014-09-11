@@ -437,6 +437,7 @@ window.setWarpStartDepth = function(depth) { warpStartDepth = depth;}
 window.setWarpTime = function(time) {warpTime = time;}
 window.getWarpTime = function() {return warpTime;}
 window.setWarpSpread = function(spread) {warpspread = spread;}
+window.getWarpCentre = function() { return {x:cX, y:cY}; }
 
 
 })();

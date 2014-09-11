@@ -457,7 +457,10 @@ function update()
 
 function UpdateParticles()
 {
-
+  warpCentre = getWarpCentre();
+  cX = warpCentre.x;
+  cY = warpCentre.y;
+  
   var i = spawnList.length;
   while (i)
   {
