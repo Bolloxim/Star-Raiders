@@ -407,6 +407,12 @@ init();
 
 window.renderStarfield = renderStarfield;
 window.moveStarfield = moveStarfield;
-window.panStarfield = panStarfield
+window.panStarfield = panStarfield;
+window.swapView = swapView;
+window.viewIs = viewIs;
+window.viewingAft = viewingAft;
+window.viewFront = viewFront;
+window.viewAft = viewAft;
+window.viewingFront = viewingFront;
 
 })();
