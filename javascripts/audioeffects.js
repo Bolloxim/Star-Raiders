@@ -23,9 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
+// module
+(function()
+{
+
 // conceptualized and written by andi smithers
 
 // constant options
+
 const focalDepth = 80;
 const focalPoint = 256;
 
@@ -684,3 +689,20 @@ createBrownNoiseBuffer = function(bufferSize)
 //init();
 //SetupButtons();
 //animate();
+
+// export
+window.PlayConfirm = PlayConfirm;
+window.PlayExit = PlayExit;
+window.PlayShield = PlayShield;
+window.PlayEngine = PlayEngine;
+window.PlayPhoton = PlayPhoton;
+window.InitEngine = InitEngine;
+window.PlayRedAlert = PlayRedAlert;
+window.PlayBeginHyperspace = PlayBeginHyperspace;
+window.PlayDisruptor = PlayDisruptor;
+window.PlayExplosion = PlayExplosion;
+window.PlayExplosionThud = PlayExplosionThud;
+window.UpdateHyperspaceSound = UpdateHyperspaceSound;
+
+
+})();

@@ -23,6 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
+// module
+(function()
+{
+
 // conceptualized and written by andi smithers
 // constant options
 const focalDepth = 80;
@@ -356,10 +360,10 @@ function init()
   cX=centreX;
   cY=centreY;
  
-  explodeEmitter = new ExplodeParticleEmitter();
-  torpedoEmitter = new PhotonTorpedoEmitter();
-  dustEmitter    = new DustParticleEmitter();
-  plasmaEmitter    = new PlasmaEmitter();
+  window.explodeEmitter = new ExplodeParticleEmitter();
+  window.torpedoEmitter = new PhotonTorpedoEmitter();
+  window.dustEmitter    = new DustParticleEmitter();
+  window.plasmaEmitter  = new PlasmaEmitter();
 }
 
 function initDemo()
@@ -476,3 +480,8 @@ function animate()
 init();
 //initDemo();
 //animate();
+
+window.RenderParticles = RenderParticles;
+window.UpdateParticles = UpdateParticles;
+
+})();
