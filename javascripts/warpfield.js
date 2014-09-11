@@ -435,7 +435,7 @@ window.setCameraDepth = function(depth) {cameraDepth = depth;}
 window.getWarpStartDepth = function() { return warpStartDepth;}
 window.setWarpStartDepth = function(depth) { warpStartDepth = depth;}
 window.setWarpTime = function(time) {warpTime = time;}
-
+window.setWarpSpread = function(spread) {warpspread = spread;}
 
 
 })();
