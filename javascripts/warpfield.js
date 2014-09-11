@@ -422,14 +422,17 @@ window.viewingFront = viewingFront;
 
 
 window.setInitVelocity = function(vel) {initVelocity = vel;}
-window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
 window.getInitVelocity = function() {return initVelocity;}
+window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
+window.getEnterWarp = function() { return enterWarp;}
 window.setTrackMouse = function(state) {trackMouse = state;}
 window.setStarsColorAlias= function(color) {starsColorAlias=color;}
 window.setDensity = function(d) { density = d; }
 window.getCameraDepth = function() { return cameraDepth;}
 window.setCameraDepth = function(depth) {cameraDepth = depth;}
 window.getWarpStartDepth = function() { return warpStartDepth;}
+window.setWarpStartDepth = function(depth) { warpStartDepth = depth;}
+window.setWarpTime = function(time) {warpTime = time;}
 
 
 })();
