@@ -971,9 +971,9 @@ function StartGame(difficulty)
   gameStart = d.getTime();
   
   // override
-  warpspread = 2;
+  setWarpspread(2);
   // track mouse
-  trackMouse = true;
+  setTrackingMouse(true);
   // init engine sounds
   InitEngine();
 }
@@ -2782,7 +2782,7 @@ function EnteringWarp()
     }
     else
     {
-      UpdateHyperspaceSound(shipVelocity+warpTime*0.5);
+      UpdateHyperspaceSound(shipVelocity+getWarpTime()*0.5);
     }
   }
   if (triggerWarp == cancelHyperspace)
