@@ -25,25 +25,30 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 
+var cX, cY, tX, tY, density;
+var cameraDepth=0;
+var enterWarp, warpStartDepth, warpTime, velocity;
+var warpspread = 3;
+var viewIs = viewFront;
+var starsColorAlias = 'black';
+var initVelocity = -1.0;
+var termVelocity = -10.0;
+
 // module
 (function()
 {
 
 // globals
 var canvas, context, alpha;
-var cX, cY, tX, tY, mouseX, mouseY, density;
+var mouseX, mouseY;
 var stars = [];
-var cameraDepth=0;
-var enterWarp, warpStartDepth, warpTime, velocity;
-var warpspread = 3;
+
 
 // define to 0 to brute force move all stars
 const cameraTrick = 1;
 
 // options
 const starCount = 1024;
-var initVelocity = -1.0;
-var termVelocity = -10.0;
 const topleft = 0;
 const trackMouse = 1;
 const focalPoint = 256;
@@ -52,8 +57,7 @@ const tailLength = 20;
 
 const viewFront = 0;
 const viewAft = 1;
-var   viewIs = viewFront;
-var   starsColorAlias = 'black';
+
 
 // depth modulo fucntion. custom
 function modulo(a)
@@ -193,18 +197,6 @@ function init()
   alpha = 6.0;
   enterWarp = false;
   velocity = initVelocity;
-
-  window.velocity = velocity;
-  window.initVelocity = initVelocity;
-  window.enterWarp = enterWarp;
-  window.cX = cX;
-  window.cY = cY;
-  window.tX = tX;
-  window.tY = tY;
-  window.starsColorAlias = starsColorAlias;
-  window.density = density;
-  window.cameraDepth = cameraDepth;
-  window.warpStartDepth = warpStartDepth;
 }
 
 function animate()
