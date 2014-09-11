@@ -525,6 +525,7 @@ window.UpdateAsteriods = UpdateAsteriods;
 window.FragmentAsteriod = FragmentAsteriod;
 window.renderShield = renderShield;
 window.SetupAsteriods = SetupAsteriods;
+window.SpawnAsteriodsAt = SpawnAsteriodsAt;
 
 window.setShieldUp = function(state) {shieldUp = state;}
 window.getShieldUp = function() {return shieldUp;}
