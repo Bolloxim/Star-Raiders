@@ -43,7 +43,7 @@ var context;
 var localSpace = 0;
 
 // Asteroids 
-var Asteroids = [];
+var asteroids = [];
 
 
 function SetupAsteroids(space)
