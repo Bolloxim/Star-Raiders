@@ -496,5 +496,6 @@ window.getPlasmaEmitter = function() { return plasmaEmitter;}
 window.getExplodeEmitter = function() { return explodeEmitter; }
 window.setSpawn = function(x,y,z)  { spawnX = x; spawnY =y; spawnZ = z;}
 
+window.spawnList = spawnList;
 
 })();
