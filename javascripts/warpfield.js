@@ -202,6 +202,10 @@ function init()
   window.cY = cY;
   window.tX = tX;
   window.tY = tY;
+  window.starsColorAlias = starsColorAlias;
+  window.density = density;
+  window.cameraDepth = cameraDepth;
+  window.warpStartDepth = warpStartDepth;
 }
 
 function animate()
