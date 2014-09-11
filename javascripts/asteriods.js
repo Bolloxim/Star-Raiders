@@ -357,6 +357,7 @@ function init()
   SetupAsteriods();
 
   window.shieldUp = shieldUp;
+  window.asteriods = asteriods;
 }
 
 // rendering functions
