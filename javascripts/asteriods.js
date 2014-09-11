@@ -527,6 +527,8 @@ window.renderShield = renderShield;
 window.SetupAsteriods = SetupAsteriods;
 window.SpawnAsteriodsAt = SpawnAsteriodsAt;
 
+window.clearAsteroids = function() { asteriods = []; }
+window.getAsteroids = function() {return asteriods;}
 window.setShieldUp = function(state) {shieldUp = state;}
 window.getShieldUp = function() {return shieldUp;}
 window.setSplutter = function(a, b) {splutterCount = a; splutterNoise =b;}

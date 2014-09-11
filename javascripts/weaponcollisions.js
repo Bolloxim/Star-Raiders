@@ -40,6 +40,8 @@ function FirePhotons()
 
 function CheckShields()
 {
+  var asteriods = getAsteriods();
+
   var i = asteriods.length;
   while (i)
   {
@@ -99,6 +101,7 @@ function CollideAsteriods(sx, sy, photon)
 {
    var sz = photon.z;
    var scale =512/canvas.height;
+   var asteriods = getAsteriods();
 
   for (var j = 0; j<asteriods.length; j++)
   {

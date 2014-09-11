@@ -703,6 +703,7 @@ function renderLongRangeScanner()
 
   // render asteriods
   var s = (radius/canvas.width) * 1.3;
+  var asteriods = getAsteriods();
 
   // I think a matrix is now going to be faster..    
   for (var i=0; i<asteriods.length; i++)
@@ -2734,7 +2735,7 @@ function EnteringWarp()
         setWarpTime(0);
         
         // clear data
-        asteriods = [];
+        clearAsteriods();
         nmes = []; 
       }
    }
