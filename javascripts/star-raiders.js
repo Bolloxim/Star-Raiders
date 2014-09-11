@@ -922,9 +922,10 @@ function TitleScreen()
   SetupTitleButtons();
 
   // override
-  warpspread = 2;
+  setWarpSpread(2);
+  
   // have starfield not track mouse
-  setTrackMouse(false);
+  setTrackingMouse(false);
   
   // set scroller
   setInitVelocity(-1.0);
