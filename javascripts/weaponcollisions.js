@@ -75,7 +75,7 @@ function CheckShields()
 
       ShieldHit(spx, spy, 100/(1<<roid.fragment));
       // delete roid
-      Asteroids.splice(i,1);
+      asteroids.splice(i,1);
     }
   } 
 }
@@ -101,9 +101,9 @@ function CollideAsteroids(sx, sy, photon)
 {
    var sz = photon.z;
    var scale =512/canvas.height;
-   var Asteroids = getAsteroids();
+   var asteroids = getAsteroids();
 
-  for (var j = 0; j<Asteroids.length; j++)
+  for (var j = 0; j<asteroids.length; j++)
   {
       var roid = asteroids[j];
       var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
