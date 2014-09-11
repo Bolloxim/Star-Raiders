@@ -47,6 +47,8 @@ var frameCount=0;
 var spawnList = [];
 var explodeEmitter;
 var torpedoEmiiter;
+var dustEmitter;
+var plasmaEmitter;
 
 function ExplodeParticleEmitter()
 {
@@ -491,7 +493,7 @@ window.ExplodeParticleEmitter = ExplodeParticleEmitter;
 window.DustParticleEmitter = DustParticleEmitter;
 
 window.getDustEmitter = function() { return dustEmitter;}
-window.getPhotonEmitter = function() { return photonEmitter;}
+window.getTorpedoEmitter = function() { return torpedoEmitter;}
 window.getPlasmaEmitter = function() { return plasmaEmitter;}
 window.getExplodeEmitter = function() { return explodeEmitter; }
 window.setSpawn = function(x,y,z)  { spawnX = x; spawnY =y; spawnZ = z;}
