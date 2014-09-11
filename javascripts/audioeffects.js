@@ -706,5 +706,6 @@ window.UpdateHyperspaceSound = UpdateHyperspaceSound;
 window.initAudio = initAudio;
 window.StopEngine = StopEngine;
 window.CancelHyperSound = CancelHyperSound;
+window.PauseHyperspaceSound = PauseHyperspaceSound;
 
 })();
