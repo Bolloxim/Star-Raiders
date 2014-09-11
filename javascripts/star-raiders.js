@@ -971,7 +971,7 @@ function StartGame(difficulty)
   gameStart = d.getTime();
   
   // override
-  setWarpspread(2);
+  setWarpSpread(2);
   // track mouse
   setTrackingMouse(true);
   // init engine sounds
