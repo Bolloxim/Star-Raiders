@@ -323,6 +323,12 @@ function mousemove(event)
       tY = canvas.height - tY;
     }
   }
+  else
+  {
+    // not tracking mouse so set to middle
+    tX = cX;
+    tY = cY;
+  }
 }
 
 function mouseclick()
@@ -418,7 +424,7 @@ window.viewingFront = viewingFront;
 window.setInitVelocity = function(vel) {initVelocity = vel;}
 window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
 window.getInitVelocity = function() {return initVelocity;}
-window.SetTracking = function(state) {trackMouse = state;}
+window.setTrackMouse = function(state) {trackMouse = state;}
 window.setStarsColorAlias= function(color) {starsColorAlias=color;}
 window.setDensity = function(d) { density = d; }
 window.getCameraDepth = function() { return cameraDepth;}
