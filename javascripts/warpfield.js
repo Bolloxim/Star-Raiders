@@ -29,7 +29,6 @@ THE SOFTWARE.
 (function()
 {
 
-
 // globals
 var canvas, context, alpha;
 var cX, cY, tX, tY, mouseX, mouseY, density;
