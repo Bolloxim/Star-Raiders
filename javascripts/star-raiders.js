@@ -224,7 +224,6 @@ function ClearGame()
 }
 
 
-
 function SetupNMEs(boardItem)
 {
   // clear list
@@ -347,10 +346,12 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  
+  nme.energy++;
+  var shotEnergy = 60 - 5*gameDifficulty;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >99)
+  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >99)
   {
+    nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -385,10 +386,12 @@ function ZylonCruiserAI(nme)
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  
+    nme.energy++;
+  var shotEnergy = 60 - 5*gameDifficulty;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >97)
+  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >97)
   {
+    nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -423,10 +426,12 @@ function ZylonBaseStarAI(nme)
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  
+  nme.energy++;
+  var shotEnergy = 40 - 5*gameDifficulty;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >95)
+  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >95)
   {
+    nme.energy -= shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -480,6 +485,7 @@ function NME()
   this.hitpoints = 0;
   this.target = 0;
   this.pass = 0;
+  this.energy = 0;
   
   this.theta = 0;
   this.phi = 0;
@@ -572,7 +578,7 @@ NME.prototype.render = function()
           context.globalAlpha = fade;
          
          
-          if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y*2)+Math.PI);
+          if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y)+Math.PI);
           break;
        default:
           renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
