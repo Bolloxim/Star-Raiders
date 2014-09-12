@@ -1742,7 +1742,7 @@ function RenderTitleScreen()
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
   context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,255)';
-  context.fillText('FIXING FIREFOX JS modules! which is also now breaking chrome. normal service will resume tonight at somepoint', canvas.width/2, 24);
+  context.fillText('FireFox is kind of running. Performance on OSX sucks bad. Chrome and Safari should be running fine. Please comment with bugs!', canvas.width/2, 24);
   // update the last score percentile
   lastScore.percentile = UpdatePercentile(lastScore.rank);
   
@@ -2071,7 +2071,7 @@ function SetupButtons()
   new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields, 'S');
   new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp, 'C');
   new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking", ToggleTrackingComp, 'T');
-  new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", swapView, 'A');
+  new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", ToggleView, 'A');
   new Button(bx, b.y*1.2, bw, ms.y*0.6, "Pause Game", TogglePauseGame, 'P');
   new Button(bx, b.y*0.2, bw, ms.y*0.6, "Abort Mission", AbortMission, 'Q');  
 
@@ -2178,6 +2178,12 @@ function ToggleTrackingComp(button)
        PlayConfirm();
 }
 
+function ToggleView(button)
+{
+   button.state^=1;
+   swapView();  
+}
+
 function TogglePauseGame(button)
 {
   PlayConfirm();
@@ -2186,6 +2192,8 @@ function TogglePauseGame(button)
   startText(pauseGame ? "Paused Game":"Resume Game", border.x, 150);
 
 }
+
+
 
 function AbortMission(button)
 {

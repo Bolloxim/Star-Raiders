@@ -41,6 +41,10 @@ const pilot = 1;
 const warrior = 2;
 const commander = 3;
 
+const DeadState = 0;
+const AliveState = 1;
+const UnknownState = 2;
+
 var gameDifficulty;
 
 // creates a piece
@@ -65,7 +69,7 @@ BoardPiece.prototype.init = function(fx, fy, type)
   this.lastknown = {x:fx, y:fy};
 
   this.location = {x:fx, y:fy};
-  this.status = 2;
+  this.status   = UnknownState;
   
   this.moveRate = type==3 ? 8 : type;
   this.nextMove = this.moveRate;
@@ -101,7 +105,7 @@ BoardPiece.prototype.killTarget = function(shipType)
     this.numTargets--;
     if (this.numTargets==0)
     {
-      this.status = 0; // bye bye
+      this.status = DeadState; // bye bye
       startText("Sector clear", border.x, 150); 
       UpdateBaseAttack(lastCycle);
     }
@@ -140,12 +144,12 @@ BoardPiece.prototype.render = function(x, y, radius)
    var dy2 = pos2.y-y;
    var distance22 = dx2*dx2+dy2*dy2;
   
-    if (distance22<leadRad2 && this.status>0) // update lastkno
+    if (distance22<leadRad2 && this.status!=DeadState) // update lastkno
     {
       fade = ((distance22 - trailRad2) / (leadRad2-trailRad2))+1.0;
       this.drawitem(pos2, fade);  
     }  
-    else if (this.status == 1)
+    else if (this.status == AliveState)
     {
       this.drawitem(pos2, fade);  
     }
@@ -156,7 +160,7 @@ BoardPiece.prototype.render = function(x, y, radius)
 // update to known location
 BoardPiece.prototype.updateKnowns = function()
 {
-   if(this.status==2) this.status=1;
+   if(this.status==UnknownState) this.status=AliveState;
   
    this.lastknown.x = this.location.x;
    this.lastknown.y = this.location.y;
@@ -170,7 +174,7 @@ BoardPiece.prototype.move = function(gameCycle)
    this.updateKnowns();
 
    // dont need to do anything for dead pieces (status 2 was bring the piece back alive)
-   if (this.status == 0) return;
+   if (this.status == DeadState) return;
   
    // scale game cycle time (radar beats every 10s)
    aiCycle = Math.floor(gameCycle/cycleScalar);
@@ -207,7 +211,7 @@ BoardPiece.prototype.move = function(gameCycle)
      
      this.location.x = x;
      this.location.y = y;
-     this.status = 2;
+     this.status = UnknownState;
 
      // lets check again see if ships arrived
      if (shipLocation.x == this.location.x && shipLocation.y == this.location.y)
@@ -233,7 +237,7 @@ BoardPiece.prototype.drawitem = function( pos, fading)
    light = Math.floor(Math.max(Math.min(light, 255), 0));
   
   font = fontsize + (((fading-1.5)*40));
-  if (this.status < 2 || fading <=1.5) font = fontsize;
+  if (this.status != UnknownState || fading <=1.5) font = fontsize;
   font*=0.75;
   context.globalAlpha = fading>1 ? 1.0: fading;
   context.font = font + 'pt Calibri';
@@ -306,7 +310,7 @@ function CountHostiles(loc)
       for (var j=-1; j<2; j++)
         {
           var p = GetBoardPiece(loc.x+i, loc.y+j, 0);
-          if (p>=0 && boardPieces[p].status && boardPieces[p].type!=base) count++;
+          if (p>=0 && boardPieces[p].status!=DeadState && boardPieces[p].type!=base) count++;
         }
     }
   
@@ -335,9 +339,9 @@ function BoardSetup(difficulty)
       {
         x = Math.floor(Math.random() * (galaxyMapSize.x-edge*2))+edge;
         y = Math.floor(Math.random() * (galaxyMapSize.y-edge*2))+edge;
-        
+        var isShip = (shipLocation.x == x) && (shipLocation.y == y);
         var p = GetBoardPiece(x, y);
-      } while(p>=0);
+      } while(p>=0 || isShip);
 
       boardPieces.push(new BoardPiece(x, y, i));
     }
@@ -356,14 +360,14 @@ function GetBoardPiece(x, y, useKnown)
   {
       for (var i=0; i<boardPieces.length; i++)
       {
-        if (boardPieces[i].lastknown.x == xi && boardPieces[i].lastknown.y==yi) return i;
+        if (boardPieces[i].lastknown.x == xi && boardPieces[i].lastknown.y==yi && boardPieces[i].status!=DeadState) return i;
       }      
   }
   else
   {
       for (var i=0; i<boardPieces.length; i++)
       {
-        if (boardPieces[i].location.x == xi && boardPieces[i].location.y==yi) return i;
+        if (boardPieces[i].location.x == xi && boardPieces[i].location.y==yi && boardPieces[i].status!=DeadState) return i;
       }      
   }
   return -1;
@@ -372,7 +376,7 @@ function GetBoardPiece(x, y, useKnown)
 function isAlive(index)
 {
   if (index==-1) return false;
-  return boardPieces[index].status != 0;
+  return boardPieces[index].status != DeadState;
 }
 
 function GetBoardPieceScreen(sx, sy, lastKnown)
@@ -480,7 +484,7 @@ function isAnyAlive()
 {
   for (var b=0; b<boardPieces.length; b++)
   {
-    if (boardPieces[b].type!=typeBase && boardPieces[b].status!=0) return true;
+    if (boardPieces[b].type!=typeBase && boardPieces[b].status!=DeadState) return true;
   }
   return false;
 } 
@@ -489,7 +493,7 @@ function UpdateBaseAttack(gameCycle)
 {
     // check starbase health and trigger destruction 
    var base = boardPieces[targetBase];
-   if (base.status == 0)
+   if (base.status == DeadState)
    {
       // opps we killed it, how 'strategic' cpu needs new target
       targetBase++;
@@ -506,7 +510,7 @@ function UpdateBaseAttack(gameCycle)
      if (base.nextMove<=gameCycle)
      { 
        targetBase++;
-       base.status = 0;
+       base.status = DeadState;
        startText("Starbase destroyed", border.x, 150);
        var patrol = new BoardPiece(base.location.x, base.location.y, typePatrol)
        boardPieces.push(patrol);
