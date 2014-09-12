@@ -143,6 +143,7 @@ var gameHitsPerRanks = [];
 function UpdateAllTotals()
 {
    // update end game data
+   statistics.energy=statistics.refuel;
    statistics.energy+=9999-energy;
    statistics.kills=kills;
    
@@ -604,7 +605,7 @@ function EnableDocking(dock)
    if (docking && dockTimer<(new Date()).getTime())
    {
       // refuel
-      statistics.refuel = 9999-energy;
+      statistics.refuel += 9999-energy;
       energy = 9999;
       dockTimer+=100000;
       startText("transfer completed", border.x, 150);
