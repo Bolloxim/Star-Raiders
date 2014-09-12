@@ -163,10 +163,10 @@ PlasmaEmitter.prototype.generate = function()
   
   this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
 
-  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
+  this.vel = {x:0, y:0, z:2+(this.iteration*0.0005)}
   this.velsize = -0.01 - (Math.random()*0.2);
   this.size = 3.0 *this.iteration*0.02;
-  this.life = 3;
+  this.life = 4;
   this.color = 'rgb(0, 64, 200)';
   this.iteration++;
 }
@@ -460,7 +460,7 @@ function UpdateParticles()
   warpCentre = getWarpCentre();
   cX = warpCentre.x;
   cY = warpCentre.y;
-  
+
   var i = spawnList.length;
   while (i)
   {
