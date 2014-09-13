@@ -266,7 +266,7 @@ function CollideShip(sx, sy, depth)
    var area = (canvas.width/2) * (canvas.width/2) + (canvas.height/2) * (canvas.height/2);
    console.log("x: "+x+", y: "+y+", z: " + depth);
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
-   if (Math.abs(depth)<1 && x*x+y*y < area)
+   if (Math.abs(depth)<0.5 && x*x+y*y < area)
    {
        
        ShieldHit(sx, sy, 100);
@@ -337,7 +337,7 @@ function WeaponCollisions()
             // destroy plasma
             spawnList[i].life = 0;
           }
-          else if (CollideShip(sx, sy, depth))
+          else if (CollideShip(sx, sy, pos.z))
           {
             // destroy plasma
             spawnList[i].life = 0; 
