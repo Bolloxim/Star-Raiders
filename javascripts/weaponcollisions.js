@@ -268,7 +268,9 @@ function CollideShip(sx, sy, plasma)
    if (Math.abs(plasma.z)<3 && x*x+y*y < area)
    {
        ShieldHit(sx, sy, 100);
+       return true;
    }
+   return false;
 }
 
 function WeaponCollisions()
