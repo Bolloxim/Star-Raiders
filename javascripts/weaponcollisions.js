@@ -264,10 +264,11 @@ function CollideShip(sx, sy, depth)
    var x = sx - centreX;
    var y = sy - centreY;
    var area = (canvas.width/2) * (canvas.width/2) + (canvas.height/2) * (canvas.height/2);
+   console.log("x: "+x+", y: "+y+", z: " + depth);
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
-   if (Math.abs(depth)<0.1 && x*x+y*y < area)
+   if (Math.abs(depth)<0.4 && x*x+y*y < area)
    {
-       console.log("x: "+x+", y: "+y+", z: " + depth);
+       
        ShieldHit(sx, sy, 100);
        return true;
    }
