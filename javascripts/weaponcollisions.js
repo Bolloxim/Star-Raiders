@@ -267,6 +267,7 @@ function CollideShip(sx, sy, plasma)
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
    if (Math.abs(plasma.z)<1 && x*x+y*y < area)
    {
+       console.log("x: "+x+", y: "+y+", z: " +plasma.z);
        ShieldHit(sx, sy, 100);
        return true;
    }
