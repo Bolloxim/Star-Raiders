@@ -1498,7 +1498,7 @@ function RenderInstructions()
  
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.9 beta', canvas.width/2, 360);
+  context.fillText('Version 0.92 beta', canvas.width/2, 360);
   context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
   context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
   
