@@ -1344,6 +1344,31 @@ function renderTargetingComputer()
           context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
         
       }
+  
+  if (trackingComputer)
+  {
+     var aim = getWarpCentre();  
+    
+    var x = aim.x;
+    var y = aim.y;
+    var w = canvas.width/64;
+    var h = canvas.height/64;
+
+      context.beginPath();
+      context.moveTo(x, y+h);
+      context.lineTo(x+w, y);
+      context.lineTo(x, y-h);
+      context.lineTo(x-w, y);
+      context.closePath();
+    
+      context.lineWidth = 7;
+      context.strokeStyle = 'rgba(255,255,0,0.2)';
+      context.stroke();
+      context.lineWidth = 3;
+      context.strokeStyle = 'rgba(255,255,0,0.8)';
+      context.stroke();
+  
+  }
 }
 
 function renderStarDate()
