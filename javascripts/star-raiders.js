@@ -2017,6 +2017,8 @@ function update()
       UpdateBoard();
   
       UpdateShipControls();
+
+      TrackTargets();
    }
   
    UpdateNMEs();
@@ -2855,6 +2857,34 @@ function RenderStarDome()
     context.fill();
 }
 
+function ClosestTarget
+{
+  var distance = 10000000;
+  var select = -1;
+
+  for (var i=0; i<nmes.length; i++)
+  {
+    if (nmes[i].hitpoints>0)
+    {
+      var dist2 = nmes[i].targetPoint(0,0,0).lengthSquared();
+      if (dist2<distance) {distance = dist2; select = i;}
+    }
+  }
+  return select;
+}
+
+function TrackTargets
+{
+  if (!trackingComputer) return;
+  
+  if (trackingTarget<0 || trackingTarget>=nmes.length || nmes[trackingTarget].hitpoints<=0)
+  {
+    var t= ClosestTarget();
+    if (t>=0) trackingTarget = t;
+    else trackingTarget = 0;
+  }
+
+}
 
 // entry point
 init();
