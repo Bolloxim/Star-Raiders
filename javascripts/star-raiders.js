@@ -2789,6 +2789,7 @@ function EnteringWarp()
        // Setup NME's
        SetupAsteroids(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
+       if (trackingComputer) trackingTarget = ClosestTarget();
        warpLocked = false;
        energy-=warpEnergy;
 
@@ -2857,7 +2858,7 @@ function RenderStarDome()
     context.fill();
 }
 
-function ClosestTarget
+function ClosestTarget()
 {
   var distance = 10000000;
   var select = -1;
@@ -2866,14 +2867,14 @@ function ClosestTarget
   {
     if (nmes[i].hitpoints>0)
     {
-      var dist2 = nmes[i].targetPoint(0,0,0).lengthSquared();
+      var dist2 = nmes[i].targetPoint({x:0, y:0, z:0}).lengthSquared();
       if (dist2<distance) {distance = dist2; select = i;}
     }
   }
   return select;
 }
 
-function TrackTargets
+function TrackTargets()
 {
   if (!trackingComputer) return;
   
