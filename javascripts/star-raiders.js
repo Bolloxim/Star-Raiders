@@ -921,6 +921,10 @@ function TitleScreen()
   titleScreen = true;
   // credit time
   titleStartTime = new Date().getTime();
+  
+  // clear text
+  clearText();
+
   // populate local space
   SetupAsteroids(localSpaceCubed*0.25);
   SetupTitleButtons();
