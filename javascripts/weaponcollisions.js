@@ -266,7 +266,7 @@ function CollideShip(sx, sy, pos)
    var area = (canvas.width/1.5) * (canvas.width/1.5) + (canvas.height/1.5) * (canvas.height/1.5);
  //  console.log("x: "+x+", y: "+y+", z: " + depth);
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
-   if (pos.z>-0.5 && pos.z<0.5 && x*x+y*y < area)
+   if (pos.z>-1 && pos.z<1 && x*x+y*y < area)
    {
 
       setSpawn(pos.x, pos.y, pos.z*2);
