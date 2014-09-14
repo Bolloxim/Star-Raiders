@@ -259,16 +259,18 @@ function CollidePlasma(sx, sy, photon)
     }
 }
 
-function CollideShip(sx, sy, depth)
+function CollideShip(sx, sy, pos)
 {
    var x = sx - centreX;
    var y = sy - centreY;
    var area = (canvas.width/1.5) * (canvas.width/1.5) + (canvas.height/1.5) * (canvas.height/1.5);
  //  console.log("x: "+x+", y: "+y+", z: " + depth);
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
-   if (depth>-0.5 && depth<0.5 && x*x+y*y < area)
+   if (pos.z>-0.5 && pos.z<0.5 && x*x+y*y < area)
    {
-       
+
+      setSpawn(pos.x, pos.y, pos.z*2);
+            getDustEmitter().create();   
        ShieldHit(sx, sy, 100);
        return true;
    }
@@ -320,7 +322,7 @@ function WeaponCollisions()
           var pos = spawnList[i].particles[63].pos;
 
           var depth = focalPoint / (pos.z + focalDepth );
-          if (depth<=0) depth*=-1;
+//          if (depth<=0) depth*=-1;
     
           var sx = pos.x * depth + spawnList[i].particles[63].sx;// + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy;// + cY-centreY;
