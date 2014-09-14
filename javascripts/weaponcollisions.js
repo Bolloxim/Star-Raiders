@@ -339,7 +339,7 @@ function WeaponCollisions()
             // destroy plasma
             spawnList[i].life = 0;
           }
-          else if (CollideShip(sx, sy, pos.z))
+          else if (CollideShip(sx, sy, pos))
           {
             // destroy plasma
             spawnList[i].life = 0; 
