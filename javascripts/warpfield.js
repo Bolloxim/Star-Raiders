@@ -438,6 +438,7 @@ window.setWarpTime = function(time) {warpTime = time;}
 window.getWarpTime = function() {return warpTime;}
 window.setWarpSpread = function(spread) {warpspread = spread;}
 window.getWarpCentre = function() { return {x:cX, y:cY}; }
+window.setWarpCentre = function(newCentre) { cX = newCentre.x; cY = newCentre.y; }
 
 
 })();
