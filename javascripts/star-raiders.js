@@ -139,6 +139,8 @@ var endGameRank;
 // global ranking
 var gameTotalPlays=0;
 var gameHitsPerRanks = [];
+// warp tunnel navigation at higher levels
+var warpDeltaDistance = 0;
 
 function UpdateAllTotals()
 {
@@ -1122,7 +1124,7 @@ function renderInformation()
       break;
   }
   
-
+  RenderWarpPoint();
   renderStarDate();
   renderVelocity();
   renderEnergy();
@@ -1349,7 +1351,7 @@ function renderTargetingComputer()
         
       }
   
-  if (trackingComputer)
+  if (trackingComputer && triggerWarp==normalSpace)
   {
      var aim = getWarpCentre();  
     
@@ -2160,6 +2162,7 @@ function ToggleWarp(button)
   {
     triggerWarp = enterHyperspace;
     PlayBeginHyperspace();
+    warpDeltaDistance = 0;
   }
   
   if (warpLocked && triggerWarp==enterHyperspace)
@@ -2767,12 +2770,65 @@ function energyManagement()
   if (energy < 0 ) EndGame(energyLost);
 }
 
+function RenderWarpPoint()
+{
+    if (triggerWarp==normalSpace) return;
+  
+    var warp = getWarpCentre();
+    
+    var x = warp.x;
+    var y = warp.y;
+    var w = canvas.width/64;
+    var h = canvas.height/64;
+  
+    if (w<h) w = h;
+    else h = w;
+
+    context.beginPath();
+    context.moveTo(x+w/4, y-h);
+    context.lineTo(x+w/4, y-h/4);
+    context.lineTo(x+w, y-h/4);
+
+    context.moveTo(x-w/4, y-h);
+    context.lineTo(x-w/4, y-h/4);
+    context.lineTo(x-w, y-h/4);
+
+    context.moveTo(x+w/4, y+h);
+    context.lineTo(x+w/4, y+h/4);
+    context.lineTo(x+w, y+h/4);
+
+    context.moveTo(x-w/4, y+h);
+    context.lineTo(x-w/4, y+h/4);
+    context.lineTo(x-w, y+h/4);
+
+    context.lineWidth = 7;
+    context.strokeStyle = 'rgba(128,255,255,0.2)';
+    context.stroke();
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgba(128,255,255,0.8)';
+    context.stroke();
+}
+
 function EnteringWarp()
 {
    if (triggerWarp==enterHyperspace)
    {
       UpdateHyperspaceSound(shipVelocity);
       setShipVelocity = 99.99;
+      if (gameDifficulty>novice)
+      {
+         var warp = getWarpCentre();
+         dx = warp.x - centreX;
+         dy = warp.y - centreY;
+         warpDeltaDistance += (dx*dx+dy*dy)*shipVelocity*shipVelocity;
+      }
+      else
+      {
+        setTrackingMouse(false);
+        setWarpCentre({x:centreX, y:centreY});
+      }
+      
+     
       if (!getEnterWarp() && shipVelocity >90)
       {
         triggerWarp = inHyperspace;
@@ -2800,13 +2856,23 @@ function EnteringWarp()
        GetControl("Hyperspace").state = 0;
       
        // setwarpLocation
-       var badDriver = 1;
+       var dif = Math.sqrt(warpDeltaDistance) / (Math.sqrt(centreX*centreX+centreY*centreY)*50*getWarpTime());
+       if (gameDifficulty == novice) badDriving = 0;
+       else badDriving = dif * (gameDifficulty+7) * 0.1;
+       // factor displacement over distance
+       badDriving *= Math.round(Math.abs(warpLocation.x-shipLocation.x) + Math.abs(warpLocation.y-shipLocation.y));
+       badDriving -= badDriving*0.5;
+       console.log("baddriving = " + badDriving);
+       // now randomize in the cone
        var x = warpLocation.x + Math.random()*badDriving;
        var y = warpLocation.y + Math.random()*badDriving;
-       if (warpLocked== false)
+      
+       if (warpLocked==false)
        {
-           x = Math.random()*badDriving*2 - 1;
-           y = Math.random()*badDriving*2 - 1;
+           badDriving = dif*5;
+           x = shipLocation.x + Math.random()*badDriving;
+           y = shipLocation.y + Math.random()*badDriving;
+           warpEnergy = 100;
        }
        
        // update stats - sectors covered, jumped and energy
@@ -2821,6 +2887,7 @@ function EnteringWarp()
        if (trackingComputer) trackingTarget = ClosestTarget();
        warpLocked = false;
        energy-=warpEnergy;
+       setTrackingMouse(true);
 
     }
     else
@@ -2830,6 +2897,7 @@ function EnteringWarp()
   }
   if (triggerWarp == cancelHyperspace)
   {
+     setTrackingMouse(true);
      triggerWarp = normalSpace;
      var slider = GetControl("throttle");
      SetThrottle(slider);
