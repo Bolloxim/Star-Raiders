@@ -1529,9 +1529,9 @@ function RenderInstructions()
  
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.92 beta', canvas.width/2, 360);
-  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
+  context.fillText('Version 0.93 beta', canvas.width/2, 360);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
+
   
   fade = 0;
   if (dt>20000) 
@@ -1637,9 +1637,8 @@ function RenderCredits()
 
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.9 beta', canvas.width/2, 360);
-  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
+  context.fillText('Version 0.93 beta', canvas.width/2, 360);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
   
   fade = 0;
   if (dt>20000) 
@@ -2811,6 +2810,24 @@ function RenderWarpPoint()
 
 function EnteringWarp()
 {
+   if (triggerWarp!=normalSpace)
+   {
+        var x = centreX;
+        var y = centreY;
+        setTrackingMouse(false);    
+         var warptime = shipVelocity;
+        if (gameDifficulty>pilot && shipVelocity>12)
+        {
+            var warp = getWarpCentre();
+            var factor = (gameDifficulty-1)*10*warptime*0.01;
+            x = warp.x+Math.random()*factor - (factor*0.5);
+            y = warp.y+Math.random()*factor - (factor*0.5);
+            setTrackingMouse(true);
+        }
+
+        setWarpCentre({x:x, y:y});     
+   }
+  
    if (triggerWarp==enterHyperspace)
    {
       UpdateHyperspaceSound(shipVelocity);
@@ -2821,13 +2838,7 @@ function EnteringWarp()
          dx = warp.x - centreX;
          dy = warp.y - centreY;
          warpDeltaDistance += (dx*dx+dy*dy)*shipVelocity*shipVelocity;
-      }
-      else
-      {
-        setTrackingMouse(false);
-        setWarpCentre({x:centreX, y:centreY});
-      }
-      
+      }      
      
       if (!getEnterWarp() && shipVelocity >90)
       {
