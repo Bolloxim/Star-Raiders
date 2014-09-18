@@ -636,7 +636,6 @@ createWhiteNoiseBuffer = function(bufferSize)
   whiteNoiseBuffer = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
   var dataChannel = whiteNoiseBuffer.getChannelData(0);
   
-  console.log(dataChannel.length);
   for (var i=0; i<dataChannel.length; i++)
   {
      dataChannel[i] = Math.random()*2-1;
