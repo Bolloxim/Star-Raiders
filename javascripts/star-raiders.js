@@ -348,10 +348,11 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  nme.energy++;
-  var shotEnergy = 60 - 5*gameDifficulty;
+  var shotEnergy = 5 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy, nme.energy+freqHz);
+  var canFire = Math.random() > 0.99;
   // randomize fire
-  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >99)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
     nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
@@ -388,10 +389,12 @@ function ZylonCruiserAI(nme)
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-    nme.energy++;
-  var shotEnergy = 60 - 5*gameDifficulty;
+  
+  var shotEnergy = 4 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy*2, nme.energy+freqHz);
+  var canFire = Math.random() > 0.97;
   // randomize fire
-  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >97)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
     nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
@@ -428,10 +431,11 @@ function ZylonBaseStarAI(nme)
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  nme.energy++;
-  var shotEnergy = 40 - 5*gameDifficulty;
+  var shotEnergy = 5 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy*4, nme.energy+freqHz);
+  var canFire = Math.random() > 0.95;
   // randomize fire
-  if (endGameEvent==playing && nme.energy>shotEnergy && (Math.random() * 100) >95)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
     nme.energy -= shotEnergy;
     nmeShoot(nme.pos);
