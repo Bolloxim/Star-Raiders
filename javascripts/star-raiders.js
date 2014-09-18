@@ -2397,7 +2397,7 @@ function CalculateScore(finishType)
   if (finishType != allDead) mindex++;
   
   var M = Mtable[mindex];
-  M += 6*statistic.kills;
+  M += 6*statistics.kills;
   M -= Math.floor(statistics.energy/100);
   M -= statistics.killTypes[base] * 3;
   M -= statistics.bases * 18;
