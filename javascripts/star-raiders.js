@@ -240,7 +240,7 @@ function SetupNMEs(boardItem)
      nme.randomize(boardItem.targets[i]);
      nmes.push(nme);
   }
-  console.log(boardItem.numTargets);
+ 
   if (boardItem.type != base) SetRedAlert();
 }
 
@@ -1008,7 +1008,6 @@ function mouseMove(event)
 
 function mouseDown(event)
 {
-  console.log("mousedown" + event.which);
   if (clearTitleClick==false) return;
   if (CheckButtons(mouseX, mouseY, false) == true) return;
   
@@ -2078,7 +2077,6 @@ function animate()
 function processKeydown(event)
 {
     var key = String.fromCharCode(event.keyCode);
-    console.log("key = " + key);
     if (CheckShortcuts(key)==false)
     {
         // throttle
@@ -2120,7 +2118,7 @@ function SetupButtons()
 
 function SwitchToLongRange(button)
 {
-  console.log("switching to long range");
+  //console.log("switching to long range");
   if (overlayMode == eLongRange)
   {
     overlayMode = targetComputer?eTargetComputer:eNone;
@@ -2136,7 +2134,7 @@ function SwitchToLongRange(button)
 
 function SwitchToGalaxyChart(button)
 {
-   console.log("switching to galatic range");
+   //console.log("switching to galatic range");
    if (overlayMode == eGalacticScanner)
    {
      overlayMode = targetComputer?eTargetComputer:eNone;
@@ -2295,7 +2293,7 @@ function EndGame(endType)
    UpdateAllTotals();
   
    // calculate the player rank
-   var ranking = CalculateScore();
+   var ranking = CalculateScore(endType);
    AddNewRank(ranking, new Date());
   
    // save stats and rank to server
@@ -2331,7 +2329,7 @@ function EndGameEvent()
    var currentTime = new Date().getTime();
    var dx = currentTime - endGameTime;
    var messageNum = Math.floor(dx/2500)%4;
-   console.log(messageNum);
+   
    if (endGameLastMessage != messageNum)
    {
        var endMessages = [
@@ -2382,7 +2380,7 @@ function PowerDownShip()
     setShipVelocity = 0;
 }
 
-function CalculateScore(endType)
+function CalculateScore(finishType)
 {
   var Mtable = 
     [ 80, 60, 40,
@@ -2391,11 +2389,11 @@ function CalculateScore(endType)
       111, 100, 90];
   // compute M
   var mindex = gameDifficulty*3;
-  if (endType == destroyed) mindex++;
-  if (endType != allDead) mindex++;
+  if (finishType == destroyed) mindex++;
+  if (finishType != allDead) mindex++;
   
   var M = Mtable[mindex];
-  M += 6*kills;
+  M += 6*statistic.kills;
   M -= Math.floor(statistics.energy/100);
   M -= statistics.killTypes[base] * 3;
   M -= statistics.bases * 18;
@@ -2499,8 +2497,7 @@ function CacheGlobalRankings()
          gameTotalPlays+=count;
          gameHitsPerRanks[index+248] = gameTotalPlays;
        }
-       console.log("results = "+ results.length);
-       console.log("numtotalplays = " + gameTotalPlays);
+       console.log("rankdata = " + gameTotalPlays + ", " + results.length);
     },
     error: function(error) 
     {
@@ -2873,7 +2870,7 @@ function EnteringWarp()
        // factor displacement over distance
        badDriving *= Math.round(Math.abs(warpLocation.x-shipLocation.x) + Math.abs(warpLocation.y-shipLocation.y));
        badDriving -= badDriving*0.5;
-       console.log("baddriving = " + badDriving);
+       //console.log("baddriving = " + badDriving);
        // now randomize in the cone
        var x = warpLocation.x + Math.random()*badDriving;
        var y = warpLocation.y + Math.random()*badDriving;
