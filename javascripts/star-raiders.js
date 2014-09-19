@@ -1481,8 +1481,18 @@ function RenderStatistics(stat, lastgame, fade)
   context.lineWidth = 1;
   context.font = '20pt Orbitron';
   context.strokeStyle = 'rgba(0,255,0,'+fade+')';
-  context.textAlign = 'left';
-  context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
+  if (lastgame)
+  {
+     context.textAlign = 'left';
+     context.strokeText('Last Game Stats', x, y);    
+  }
+  else
+  {
+    context.textAlign = 'right';
+    context.strokeText('All time stats', x+1200, y);      
+  }
+//  context.textAlign = 'left';
+//  context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
   var precision = lastgame ?2 : 0;
   y+=20;
   context.fillStyle = 'rgba(255,0,0,'+fade+')';
@@ -1499,7 +1509,7 @@ function RenderStatistics(stat, lastgame, fade)
   RenderColumnStat('Accuracy: ', stat.accuracy.toFixed(2), x, y+=yinc, w);
   RenderColumnStat('Shots Fired: ', stat.shots, x, y+=yinc, w);
   y = columnY;
-  x+=400;
+  x+=410;
   RenderColumnStat('Meteors Fragmented: ', stat.roidsFragmented, x, y+=yinc, w);
   RenderColumnStat('Meteors Destroyed: ', stat.roidsHit, x, y+=yinc, w);  
   RenderColumnStat('Shields Hit: ', stat.shieldsHit, x, y+=yinc, w);
@@ -1510,7 +1520,7 @@ function RenderStatistics(stat, lastgame, fade)
   RenderColumnStat('Cruisers killed: ', stat.killTypes[2], x, y+=yinc, w);
   RenderColumnStat('Basestars killed: ', stat.killTypes[3], x, y+=yinc, w);
   y = columnY;
-  x+=400;
+  x+=410;
   RenderColumnStat('Energy Used: ', stat.energy.toFixed(precision), x, y+=yinc, w);
   RenderColumnStat('Refueled: ', stat.refuel.toFixed(precision), x, y+=yinc, w);
   RenderColumnStat('Starbases lost: ', stat.bases, x, y+=yinc, w);
