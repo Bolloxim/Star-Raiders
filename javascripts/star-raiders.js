@@ -1464,9 +1464,18 @@ function RenderRanks()
    }
 }
 
+function RenderColumnStat(name, value, x, y, w)
+{
+    context.textAlign = 'right';
+    context.fillText(value, x+w, y);  
+  
+    context.textAlign = 'left';
+    context.fillText(name, x, y);  
+}
+
 function RenderStatistics(stat, lastgame, fade)
 {
-  var x = canvas.width/2 - 500;
+  var x = canvas.width/2 - 600;
   var y = 150;
   var yinc = 20;
   context.lineWidth = 1;
@@ -1474,37 +1483,43 @@ function RenderStatistics(stat, lastgame, fade)
   context.strokeStyle = 'rgba(0,255,0,'+fade+')';
   context.textAlign = 'left';
   context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
+  var precision = lastgame ?2 : 0;
   y+=20;
   context.fillStyle = 'rgba(255,0,0,'+fade+')';
-  context.font = '14pt Orbitron';
-  context.fillText('You Won : '+ stat.endgames[allDead], x, y+=yinc);
-  context.fillText('You were destroyed: '+ stat.endgames[destroyed], x, y+=yinc);
-  context.fillText('You run out of energy: '+ stat.endgames[energyLost], x, y+=yinc);
-  context.fillText('All your bases gone: '+ stat.endgames[basesGone], x, y+=yinc);
-  context.fillText('Manually Aborted: '+ stat.endgames[aborted], x, y+=yinc);
-  context.fillText('Difficulty: '+ stat.difficulty, x, y+=yinc);
-  context.fillText('Played: '+ stat.played, x, y+=yinc);
-
-  context.fillText('Meteors Fragmented: '+ stat.roidsFragmented, x, y+=yinc);
-  context.fillText('Meteors Destroyed: '+ stat.roidsHit, x, y+=yinc);  
-  context.fillText('Refueled: '+ stat.refuel.toFixed(2), x, y+=yinc);
-  context.fillText('Shots Fired: '+ stat.shots, x, y+=yinc);
-  context.fillText('Shields Hit: '+ stat.shieldsHit, x, y+=yinc);
-  context.fillText('Ships Hit: '+ stat.shipsHit, x, y+=yinc);
-  context.fillText('Shots Hit: '+ stat.deflects, x, y+=yinc);
-  context.fillText('Accuracy: '+ stat.accuracy.toFixed(2), x, y+=yinc);
-  context.fillText('Starbases lost: '+ stat.bases, x, y+=yinc);
-  context.fillText('Starbases killed: '+ stat.killTypes[0], x, y+=yinc);
-  context.fillText('Fighters killed: '+ stat.killTypes[1], x, y+=yinc);
-  context.fillText('Cruisers killed: '+ stat.killTypes[2], x, y+=yinc);
-  context.fillText('Basestars killed: '+ stat.killTypes[3], x, y+=yinc);
-  context.fillText('Times jumped: '+ stat.jumped, x, y+=yinc);
-  context.fillText('Energy jumped: '+ stat.jumpedEnergy.toFixed(2), x, y+=yinc);
-  context.fillText('Sectors jumped: '+ stat.travelled, x, y+=yinc);
-  context.fillText('Jumps cancelled: '+ stat.jumpCancelled, x, y+=yinc);
-  context.fillText('Damaged Systems: '+ stat.damaged, x, y+=yinc);
-  context.fillText('Metrons Travelled: '+ stat.distance.toFixed(2), x, y+=yinc);
-  context.fillText('Energy Used: '+ stat.energy.toFixed(2), x, y+=yinc);
+  context.font = '16pt Orbitron';
+  var w = 380;
+  var columnY = y;
+  RenderColumnStat('You Won :', stat.endgames[allDead], x, y+=yinc, w);
+  RenderColumnStat('You were destroyed: ', stat.endgames[destroyed], x, y+=yinc, w);
+  RenderColumnStat('You run out of energy: ', stat.endgames[energyLost], x, y+=yinc, w);
+  RenderColumnStat('All your bases gone: ', stat.endgames[basesGone], x, y+=yinc, w);
+  RenderColumnStat('Manually Aborted: ', stat.endgames[aborted], x, y+=yinc, w);
+  RenderColumnStat('Difficulty: ', stat.difficulty, x, y+=yinc, w);
+  RenderColumnStat('Played: ', stat.played, x, y+=yinc, w);
+  RenderColumnStat('Accuracy: ', stat.accuracy.toFixed(2), x, y+=yinc, w);
+  RenderColumnStat('Shots Fired: ', stat.shots, x, y+=yinc, w);
+  y = columnY;
+  x+=400;
+  RenderColumnStat('Meteors Fragmented: ', stat.roidsFragmented, x, y+=yinc, w);
+  RenderColumnStat('Meteors Destroyed: ', stat.roidsHit, x, y+=yinc, w);  
+  RenderColumnStat('Shields Hit: ', stat.shieldsHit, x, y+=yinc, w);
+  RenderColumnStat('Ships Hit: ', stat.shipsHit, x, y+=yinc, w);
+  RenderColumnStat('Shots Hit: ', stat.deflects, x, y+=yinc, w);
+  RenderColumnStat('Starbases killed: ', stat.killTypes[0], x, y+=yinc, w);
+  RenderColumnStat('Fighters killed: ', stat.killTypes[1], x, y+=yinc, w);
+  RenderColumnStat('Cruisers killed: ', stat.killTypes[2], x, y+=yinc, w);
+  RenderColumnStat('Basestars killed: ', stat.killTypes[3], x, y+=yinc, w);
+  y = columnY;
+  x+=400;
+  RenderColumnStat('Energy Used: ', stat.energy.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Refueled: ', stat.refuel.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Starbases lost: ', stat.bases, x, y+=yinc, w);
+  RenderColumnStat('Times jumped: ', stat.jumped, x, y+=yinc, w);
+  RenderColumnStat('Energy jumped: ', stat.jumpedEnergy.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Sectors jumped: ', stat.travelled, x, y+=yinc, w);
+  RenderColumnStat('Jumps cancelled: ', stat.jumpCancelled, x, y+=yinc, w);
+  RenderColumnStat('Damaged Systems: ', stat.damaged, x, y+=yinc, w);
+  RenderColumnStat('Metrons Travelled: ', stat.distance.toFixed(precision), x, y+=yinc, w);
 }
 
 function RenderInstructions()
