@@ -2193,6 +2193,7 @@ ProfileItem.prototype.add = function(time)
    this.total+=time;
 }
 
+ProfileItem.pro
 var profileItems = {};
 function profile(func)
 {
@@ -2209,7 +2210,7 @@ function profileDump()
   var time = (new Date).getTime();
   if (time-lastProfileTime > 5000)
   {
-     console.log(profileItems);
+     profileDisplay();
      lastProfileTime = time;
   }
 
@@ -2217,7 +2218,13 @@ function profileDump()
 
 function profileDisplay()
 {
-  
+   var keys = [];
+   for(var obj in profileItems)
+   {      
+      keys.push(obj);
+      var item = profileItems[obj];
+      console.log(item.name +":", (item.total / item.calls).toFixed(3) + "ms");
+   }
 }
 
 function ProfileUpdate()
