@@ -33,6 +33,10 @@ const eLongRange = 2;
 const eTargetComputer = 3;
 const shieldRange = 5;
 
+// special browser profile option
+const displayProfile = true;
+var profiling = false;
+
 // end game scenerios
 const aborted    = 0;
 const destroyed  = 1;
@@ -1431,6 +1435,17 @@ function renderEnergy()
   context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-15);
 }
 
+function ProfileRenderGameScreen()
+{
+ // RenderStarDome();
+  profile(renderStarfield);
+  profile(RenderAsteroids);
+  profile(RenderNMEs);
+  profile(RenderParticles);
+
+  profile(renderShield);
+}
+
 function renderGameScreen()
 {
  // RenderStarDome();
@@ -1771,6 +1786,31 @@ function RenderStats()
   RenderStatistics(totals, false, fade);
 }
 
+function ProfileRenderTitleScreen()
+{
+  
+  profile(renderStarfield);
+  profile(RenderAsteroids);
+  profile(RenderButtons);
+  
+  switch (attractMode)
+  {
+    case 0:
+      profile(RenderInstructions);
+      break;
+    case 1:
+      profile(RenderStats);
+      break;
+    case 2:
+      profile(RenderRanks);
+      break;
+    case 3:
+      profile(RenderCredits);
+      break;
+  }
+  
+  profile(RenderMainTitle);
+}
 
 function RenderTitleScreen()
 {
@@ -1795,6 +1835,11 @@ function RenderTitleScreen()
       break;
   }
   
+  RenderMainTitle();
+}
+
+function RenderMainTitle()
+{
   context.font = '61pt Orbitron';
   context.lineWidth = 8;
   context.textAlign = "center";
@@ -1807,7 +1852,7 @@ function RenderTitleScreen()
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
   context.font = '20pt Orbitron';
     context.fillStyle = 'rgb(255,255,255)';
-  context.fillText('FireFox is kind of running. Performance on OSX sucks bad. Chrome and Safari should be running fine. Please comment with bugs!', canvas.width/2, 24);
+  //context.fillText('FireFox is kind of running. Performance on OSX sucks bad. Chrome and Safari should be running fine. Please comment with bugs!', canvas.width/2, 24);
   // update the last score percentile
   lastScore.percentile = UpdatePercentile(lastScore.rank);
   
@@ -1926,6 +1971,15 @@ function SetupTitleButtons()
   new Button(bx, b.y*4.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
   new Button(bx, b.y*5.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
   new Button(bx, b.y*6.2, bw, ms.y*0.7, "Credits", ViewCredits, '7');
+  
+  new Button(5, 5, bw/2, ms.y/2, "profile", ProfileToggle, 'p');
+  GetControl('profile').state = profiling;
+}
+
+function ProfileToggle(button)
+{
+   button.state^=1;
+   profiling = button.state;
 }
 
 function StartNovice()
@@ -1980,6 +2034,15 @@ function ViewCredits()
 }
 
 
+function ProfileUpdateTitleScreen()
+{
+   localPosition.z= modulo2(localPosition.z-0.1, localSpaceCubed*0.25);
+   setTrackingMouse(false);
+   profile(moveStarfield);
+
+   profile(UpdateAsteroids);
+}
+
 function UpdateTitleScreen()
 {
    localPosition.z= modulo2(localPosition.z-0.1, localSpaceCubed*0.25);
@@ -2016,6 +2079,31 @@ function renderOverlays()
 }
 
 // rendering functions
+function ProfileRender()
+{
+  document.getElementById("star-raiders").style.background = backgroundColor;  
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (titleScreen == true) return profile(RenderTitleScreen);
+  
+  profile(ProfileRenderGameScreen);
+
+  if (endGameEvent == playing)
+  {
+    profile(renderOverlays);
+    profile(renderInformation);
+  }
+  
+  profile(RenderButtons);
+  
+  if (endGameEvent == playing)
+    profile(WeaponCollisions);
+  
+  profile(DrawRedAlert);
+
+  profile(displayText);
+}
 
 function render()
 {
@@ -2061,6 +2149,7 @@ function updateclocks()
 
 function update()
 {
+  
    if (pauseGame == true) return;
    if (titleScreen == true) return UpdateTitleScreen();
   
@@ -2089,15 +2178,99 @@ function update()
      EndGameEvent();
 }
 
+function ProfileItem(name)
+{
+    this.name = name;
+    this.last = 0;
+    this.calls =0;
+    this.total =0;
+}
+
+ProfileItem.prototype.add = function(time)
+{
+   this.last = time;
+   this.calls++;
+   this.total+=time;
+}
+
+var profileItems = {};
+function profile(func)
+{
+  var st = performance.now();// (new Date()).getTime();
+  func();
+  var en = performance.now();//(new Date()).getTime();
+  if (profileItems[func.name]===undefined) profileItems[func.name] = new ProfileItem(func.name);
+  profileItems[func.name].add((en-st));
+}
+
+var lastProfileTime = 0;
+function profileDump()
+{
+  var time = (new Date).getTime();
+  if (time-lastProfileTime > 5000)
+  {
+     console.log(profileItems);
+     lastProfileTime = time;
+  }
+
+}
+
+function profileDisplay()
+{
+  
+}
+
+function ProfileUpdate()
+{
+   if (pauseGame == true) return;
+   if (titleScreen == true) return profile(ProfileUpdateTitleScreen);
+  
+   setTrackingMouse(endGameEvent==playing);
+   
+   profile(moveStarfield);
+  
+   profile(UpdateAsteroids);
+
+   if (endGameEvent == playing)
+   {
+      profile(UpdateBoard);
+  
+      profile(UpdateShipControls);
+
+      profile(TrackTargets);
+   }
+  
+   profile(UpdateNMEs);
+  
+   profile(UpdateParticles);
+  
+  if (endGameEvent == playing)
+     profile(energyManagement);
+  else  
+     profile(EndGameEvent);
+}
 
 function animate()
 {
   // compute frequency
   updateclocks();
-  // movement update
-  update();
-  // render update
-  render();
+  
+  if (profiling)
+  {
+    // movement update
+    profile(ProfileUpdate);
+    // render update
+    profile(ProfileRender);
+    // periodically upload stats
+    profileDump();
+  }
+  else
+  {
+    // movement update
+    update();
+    // render update
+    render();
+  }
   // trigger next frame
   requestAnimationFrame(animate);
 }
