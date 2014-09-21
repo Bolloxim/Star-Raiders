@@ -171,8 +171,9 @@ FMSynth.prototype.play = function(note, delay, duration)
 
 FMSynth.prototype.stop = function(delay)
 {
+  var time = delay || 0;
   var playNode = this.node;
-  playNode.stop(audioContext.currentTime+delay);
+  playNode.stop(audioContext.currentTime+time);
 }
 // initialization
 
@@ -593,7 +594,7 @@ function StopEngine()
 {
     if (hyperSound)
     {
-        hyperSound.stop();
+        hyperSound.stop(0);
         hyperSound = null;
     }
 }
