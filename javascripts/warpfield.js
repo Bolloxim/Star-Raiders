@@ -112,11 +112,12 @@ Star.prototype.draw = function()
   var sz = 5 * depth;
   
   // fill a rect
+  context.fillStyle = 'white';
   context.beginPath();
   context.rect(x, y, sz, sz);
   context.fill();
   // use border edge for twinkle effect 
-  context.stroke();
+  //context.stroke();
 };
 
 Star.prototype.warpline = function() 
@@ -142,6 +143,7 @@ Star.prototype.warpline = function()
   var left = this.x<0? sz : 0;
   var alpha = (sz/5.0+0.1) * 0.7;
   // fill a ray
+  context.fillStyle = termVelocity<0?'rgba(64,128,192,'+alpha+')':'rgba(192,64,32,'+ alpha+')';
   context.beginPath();
   context.moveTo(wx, wy);
   context.lineTo(x+sz, y+top);
@@ -150,7 +152,6 @@ Star.prototype.warpline = function()
   context.lineTo(x+left, y+sz);
   context.lineTo(x+left, y);
   context.closePath();
-  context.fillStyle = termVelocity<0?'rgba(64,128,192,'+alpha+')':'rgba(192,64,32,'+ alpha+')';
   context.fill();
   // use border edge for twinkle effect 
  // context.lineWidth = 0;
@@ -293,7 +294,6 @@ function renderStarfield()
 {
   context.globalCompositeOperation='source-over';
   // testing
-  context.fillStyle = 'white';
   context.lineWidth = 1;
   context.strokeStyle = starsColorAlias;
   
