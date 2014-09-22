@@ -113,12 +113,9 @@ Star.prototype.draw = function()
   
   // fill a rect
   context.beginPath();
-  context.rect(x, y, sz,sz);
-  context.fillStyle = 'white';
+  context.rect(x, y, sz, sz);
   context.fill();
   // use border edge for twinkle effect 
-  context.lineWidth = 1;
-  context.strokeStyle = starsColorAlias;
   context.stroke();
 };
 
@@ -295,6 +292,11 @@ function render()
 function renderStarfield()
 {
   context.globalCompositeOperation='source-over';
+  // testing
+  context.fillStyle = 'white';
+  context.lineWidth = 1;
+  context.strokeStyle = starsColorAlias;
+  
   // draw all stars
   for (i = 0; i < stars.length; i++) 
   {
