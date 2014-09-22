@@ -117,7 +117,7 @@ Star.prototype.draw = function()
   context.rect(x, y, sz, sz);
   context.fill();
   // use border edge for twinkle effect 
-  //context.stroke();
+  context.stroke();
 };
 
 Star.prototype.warpline = function() 
