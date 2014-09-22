@@ -2184,6 +2184,8 @@ function ProfileItem(name)
     this.last = 0;
     this.calls =0;
     this.total =0;
+    this.maxtime = 0;
+    this.mintime = 0;
 }
 
 ProfileItem.prototype.add = function(time)
@@ -2191,6 +2193,8 @@ ProfileItem.prototype.add = function(time)
    this.last = time;
    this.calls++;
    this.total+=time;
+   this.mintime = Math.min(time, this.mintime);
+   this.maxtime = Math.max(time, this.maxtime);
 }
 
 ProfileItem.pro
@@ -2210,21 +2214,40 @@ function profileDump()
   var time = (new Date).getTime();
   if (time-lastProfileTime > 5000)
   {
-     profileDisplay();
+     console.log(profileItems);
      lastProfileTime = time;
   }
-
+profileDisplay();
 }
 
 function profileDisplay()
 {
    var keys = [];
+   x = 250;
+   y = 50;
+   w = 250;
+  
+   context.font = '12pt Orbitron';
+   context.fillStyle = '#0000ff';
+  
    for(var obj in profileItems)
    {      
       keys.push(obj);
       var item = profileItems[obj];
-      console.log(item.name +":", (item.total / item.calls).toFixed(3) + "ms");
+      // remove coded profile name
+      var name = item.name.replace("profile","");
+      name = name.replace("Profile","");
+      // log line
+      profileColumnStat(name, item.maxtime, item.total/item.calls, item.calls, x, y, w);
+      y+=30;
    }
+}
+
+function profileColumnStat(name, maxVal, avgVal, count, x, y, w)
+{
+    context.textAlign = 'left';
+    context.fillText(name, x, y);  
+    context.fillText("avg: "+avgVal.toFixed(2) + "ms | peek: " + maxVal.toFixed(2)+"ms", x+w, y);
 }
 
 function ProfileUpdate()

@@ -117,7 +117,7 @@ Star.prototype.draw = function()
   context.fillStyle = 'white';
   context.fill();
   // use border edge for twinkle effect 
-  context.lineWidth = 0;
+  context.lineWidth = 1;
   context.strokeStyle = starsColorAlias;
   context.stroke();
 };
