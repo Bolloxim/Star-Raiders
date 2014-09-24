@@ -96,7 +96,7 @@ function ShieldHit(x, y, damage)
      PlayShield();
 
      // randomize damage / destruction
-     var system = Math.random() * 6;
+     var system = Math.floor(Math.random() * 6);
      systemsDamage[system] += gameDifficulty;
   }
 }
