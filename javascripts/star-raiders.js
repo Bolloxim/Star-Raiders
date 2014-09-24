@@ -99,7 +99,11 @@ var redAlertColor = 0;
 // tracking computer
 var trackingTarget = 0;
 // ship damage
-var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
+var shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+var systemsDamage  = [0,0,0,0,0,0];
+// if systems damage goes over 6 it is damaged, over 12 it is destroyed
+const isDamaged = 6;
+const isDestroyed = 12;
 
 // difficulty settings
 var maxAsteroids = 32;
@@ -202,7 +206,8 @@ function ClearGame()
 {
   // clear stats
   statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
-  shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
+  shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+  systemsDamage  = [0,0,0,0,0,0];
   
   // clear ship details
   shipLocation = {x:0, y:0};
@@ -1136,6 +1141,7 @@ function renderInformation()
   renderVelocity();
   renderEnergy();
   renderKills();
+  renderDamage();
 }
 
 function renderGalaxyInformation()
@@ -1433,6 +1439,29 @@ function renderEnergy()
   leadingzero = energy<100 ? '00':'';
   leadingzero = energy<1000 ? '0':'';
   context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-15);
+}
+
+function renderDamage()
+{
+  context.font = '30pt Orbitron';
+  context.fillStyle = 'rgb(0,0,255)';
+  context.textAlign = "right";
+  context.fillText('DC:', canvas.width/9, canvas.height-15);
+  var dam = "PESCLR";
+  
+  for (var i=0; i<6; i++)
+  {
+    context.lineWidth = 3;
+    damage = systemsDamage[i];
+    if (damage<isDamaged)
+      context.strokeStyle = 'rgb(0,255,255)';
+    else if (damage<isDestroyed)
+      context.strokeStyle = 'rgb(255,255,0)';
+    else
+      context.strokeStyle = 'rgb(255,0,0)';
+    context.textAlign = "left";
+    context.strokeText(dam[i], canvas.width/9 + i*40, canvas.height-15); 
+  }
 }
 
 function ProfileRenderGameScreen()

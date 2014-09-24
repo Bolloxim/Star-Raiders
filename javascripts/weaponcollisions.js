@@ -94,6 +94,10 @@ function ShieldHit(x, y, damage)
      statistics.shieldsHit++;
      shieldFlash(x, y);
      PlayShield();
+
+     // randomize damage / destruction
+     var system = Math.random() * 6;
+     systemsDamage[system] += gameDifficulty;
   }
 }
 
