@@ -1462,6 +1462,22 @@ function renderDamage()
     context.textAlign = "left";
     context.strokeText(dam[i], canvas.width/9 + i*40, canvas.height-15); 
   }
+
+  var i=0;
+  for (var o in shipDamage)
+  {
+     var damage = systemsDamage[i];
+     if (shipDamage[o]!=damage)
+     {
+        if (damage>=isDamaged)
+        {
+           if (shipDamage[o]<isDamaged) startText(o + " is damaged", border.x, 150);
+           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) startText(o + " now destroyed", border.x, 150);
+        }
+        shipDamage[o] = systemsDamage[i];
+     }
+     i++;
+  }
 }
 
 function ProfileRenderGameScreen()
