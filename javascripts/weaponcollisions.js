@@ -31,7 +31,9 @@ function FirePhotons()
    setSpawn(centreX + shipFireX*canvas.width/32,
             centreY + canvas.height/16, -100);
    getTorpedoEmitter().create();
-   if (shipDamage.photons==false) shipFireX*=-1;
+
+   if (shipDamage.photons == isDestroyed) return;
+   if (shipDamage.photons <  isDamaged) shipFireX*=-1;
    energy-=10;
    PlayPhoton();
    // increment shots

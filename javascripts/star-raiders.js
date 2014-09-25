@@ -1464,6 +1464,7 @@ function renderDamage()
   }
 
   var i=0;
+  var message = ["Photons are", "Engines are", "Shields are", "Computer is", "Long Range Scanner is", "Sub-space Radio is"];
   for (var o in shipDamage)
   {
      var damage = systemsDamage[i];
@@ -1471,8 +1472,8 @@ function renderDamage()
      {
         if (damage>=isDamaged)
         {
-           if (shipDamage[o]<isDamaged) startText(o + " is damaged", border.x, 150);
-           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) startText(o + " now destroyed", border.x, 150);
+           if (shipDamage[o]<isDamaged) startText(message[i] + " damaged", border.x, 150);
+           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) startText(message[i] + " now destroyed", border.x, 150);
         }
         shipDamage[o] = systemsDamage[i];
      }
