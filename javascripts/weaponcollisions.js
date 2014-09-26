@@ -32,7 +32,7 @@ function FirePhotons()
             centreY + canvas.height/16, -100);
    getTorpedoEmitter().create();
 
-   if (shipDamage.photons == isDestroyed) return;
+   if (shipDamage.photons >= isDestroyed) return;
    if (shipDamage.photons <  isDamaged) shipFireX*=-1;
    energy-=10;
    PlayPhoton();

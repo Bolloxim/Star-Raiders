@@ -104,6 +104,7 @@ var systemsDamage  = [0,0,0,0,0,0];
 // if systems damage goes over 6 it is damaged, over 12 it is destroyed
 const isDamaged = 6;
 const isDestroyed = 12;
+var radioDamageTime = 0;
 
 // difficulty settings
 var maxAsteroids = 32;
@@ -150,7 +151,7 @@ var gameHitsPerRanks = [];
 // warp tunnel navigation at higher levels
 var warpDeltaDistance = 0;
 
-function UpdateAllTotals()
+function UpdateRunningStatistics()
 {
    // update end game data
    statistics.energy=statistics.refuel;
@@ -160,6 +161,11 @@ function UpdateAllTotals()
    var gameTime = currentTime - gameStart;
    var decimalTime = gameTime / 60000;
    statistics.timePlayed = decimalTime;
+}
+
+function UpdateAllTotals()
+{
+   UpdateRunningStatistics();
   
    if (statistics.shots == 0)
      statistics.accuracy = 0;
@@ -629,8 +635,19 @@ function EnableDocking(dock)
       statistics.refuel += 9999-energy;
       energy = 9999;
       dockTimer+=100000;
+      FixDamagedSystems();
       startText("transfer completed", border.x, 150);
    }
+}
+
+function FixDamagedSystems()
+{
+  var d = 0;
+  for (var i=0; i<6; i++) d = Math.max(d, systemsDamage[i]);
+  if (d>=isDamaged) startText("Systems Repaired", border.x, 150);
+  // clear systems
+  shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+  systemsDamage  = [0,0,0,0,0,0];
 }
 
 function SetRedAlert()
@@ -796,6 +813,9 @@ function renderGalacticScanner()
   // check if scanner is suppose to be on
   if (mapOffScreen) return;
   
+  // damaged turn whole scanner off
+  if (shipDamage.subspaceradio>=isDamaged && Math.random()>0.98) return;
+  
   var offX = mapCentreX;
   var offY = mapCentreY;
   var scaleX = mapScale.x;
@@ -811,8 +831,11 @@ function renderGalacticScanner()
   
   for (var i=0; i<=galaxyMapSize.x; i++)
   {
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.95) 
+    {
     context.moveTo(scaleX*i+border.x+offX, border.y+offY);
     context.lineTo(scaleX*i+border.x+offX, scaleY*(galaxyMapSize.y)+offY+border.y);
+    }
   }
   context.strokeStyle = '#c0c0c0';
   context.lineWidth = 4;
@@ -822,8 +845,11 @@ function renderGalacticScanner()
 
   for (var j=0; j<=galaxyMapSize.y; j++)
   {
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.95) 
+    {
     context.moveTo(border.x+offX, scaleY*(j)+offY+border.y);
     context.lineTo(scaleX*(galaxyMapSize.x)+offX+border.x, scaleY*(j)+offY+border.y);
+    }
   }
   
   context.strokeStyle = '#c0c0c0';
@@ -832,10 +858,10 @@ function renderGalacticScanner()
  
 
   // ping every 5 seconds
-  var d = new Date();
-  var currentTime = d.getTime();
+  var currentTime = (new Date()).getTime();
   var distance = ((currentTime - gameStart)%10000)/10000;
   pingRadius = distance * canvas.width/2;
+  if (shipDamage.subspaceradio>=isDamaged) pingRadius = 0;
 
   context.globalCompositeOperation='source-over';
   var shipX = shipPing.x * scaleX + border.x+offX;
@@ -844,7 +870,10 @@ function renderGalacticScanner()
   for (var b=0; b<boardPieces.length; b++)
   {
     // fade in and out board pieces as the ping passes over them
-    boardPieces[b].render(shipX, shipY, pingRadius);
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.9) 
+    {
+      boardPieces[b].render(shipX, shipY, pingRadius);
+    }
   }
 
   context.globalCompositeOperation='lighter';
@@ -1142,6 +1171,7 @@ function renderInformation()
   renderEnergy();
   renderKills();
   renderDamage();
+  GuestimateScore();
 }
 
 function renderGalaxyInformation()
@@ -1159,7 +1189,7 @@ function renderGalaxyInformation()
   
    // render timer
     var piece = boardPieces[targetBase];
-    if (piece.nextMove!=0)
+    if (piece.nextMove!=0 && shipDamage.subspaceradio<isDamaged)
     {
       var x = piece.location.x*scaleX+border.x+mapCentreX;
       var y = piece.location.y*scaleY+border.y+mapCentreY;
@@ -1272,6 +1302,9 @@ function renderTargetingComputer()
 {
     if (!targetComputer) return;
 
+    // flicker
+    if (shipDamage.computer>=isDestroyed && Math.random()>0.9) return;
+  
     var x = centreX;
     var y = centreY;
     var w = canvas.width/16;
@@ -1308,12 +1341,16 @@ function renderTargetingComputer()
         context.fill();
         context.rect(x1+xw*0.25, y1+yh*0.25, xw*0.5, yh*0.5);     
         context.moveTo(x1, y1+yh*0.5);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.25, y1+yh*0.5);
         context.moveTo(x1+xw*0.75, y1+yh*0.5);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw, y1+yh*0.5);
         context.moveTo(x1+xw*0.5, y1);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.5, y1+yh*0.25);
         context.moveTo(x1+xw*0.5, y1+yh*0.75);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.5, y1+yh);
         context.lineWidth = 4;
         context.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -1324,7 +1361,11 @@ function renderTargetingComputer()
         var gradonTheta = 0;
         var gradonPhi = 0;
         
-        if (trackingTarget>=0 && trackingTarget < nmes.length && nmes[trackingTarget].hitpoints)
+        var displayTarget = true;
+        if (shipDamage.computer>=isDamaged) displayTarget = Math.random()<0.95;
+        if (shipDamage.computer>=isDestroyed) displayTarget = Math.random()<0.05;
+        
+        if (trackingTarget>=0 && trackingTarget < nmes.length && nmes[trackingTarget].hitpoints && displayTarget)
         {
              var x = modulo2(localPosition.x - nmes[trackingTarget].pos.x, localSpaceCubed)-localSpaceCubed*0.5;
              var y = modulo2(localPosition.y - nmes[trackingTarget].pos.y, localSpaceCubed)-localSpaceCubed*0.5;
@@ -1357,10 +1398,19 @@ function renderTargetingComputer()
           context.textAlign = "left";
         
           context.fillText('T:'+trackingTarget, x1, canvas.height-15);
-          
-          context.fillText('R:'+leadPadding(distance,3, true), x1+xw*0.5, canvas.height-15);   
-          context.fillText('Φ:'+leadPadding(gradonPhi,2, true), x1, y1-15);
-          context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
+          if (shipDamage.computer<isDamaged || Math.random()<0.2)
+          {
+            context.fillText('R:'+leadPadding(distance,3, true), x1+xw*0.5, canvas.height-15);   
+            context.fillText('Φ:'+leadPadding(gradonPhi,2, true), x1, y1-15);
+            context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
+          }
+          else
+          {
+            var msgs = ["", "PcLdLtr", "NaN", "Inf"];
+            context.fillText('R:'+msgs[Math.floor(Math.random()*2)], x1+xw*0.5, canvas.height-15);   
+            context.fillText('Φ:'+msgs[Math.floor(Math.random()*2)*2], x1, y1-15);
+            context.fillText('θ:'+msgs[Math.floor(Math.random()*2)*3], x1+xw*0.5, y1-15);                
+          }
         
       }
   
@@ -1441,14 +1491,28 @@ function renderEnergy()
   context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-15);
 }
 
+function GuestimateScore()
+{ 
+  UpdateRunningStatistics()
+  var ranking = CalculateScore(allDead);
+  context.font = '20pt Orbitron';
+
+  context.textAlign = 'center';
+  context.lineWidth = 1;
+  context.fillStyle = 'rgba(128,0,240,0.8)';
+  context.fillText('On track for: '+ rank(ranking), canvas.width/2, 25);
+}
+
 function renderDamage()
 {
-  context.font = '30pt Orbitron';
+  context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
   context.textAlign = "right";
   context.fillText('DC:', canvas.width/9, canvas.height-15);
   var dam = "PESCLR";
-  
+    
+  context.font = '30pt Orbitron';
+  context.textAlign = "left";
   for (var i=0; i<6; i++)
   {
     context.lineWidth = 3;
@@ -1459,7 +1523,7 @@ function renderDamage()
       context.strokeStyle = 'rgb(255,255,0)';
     else
       context.strokeStyle = 'rgb(255,0,0)';
-    context.textAlign = "left";
+
     context.strokeText(dam[i], canvas.width/9 + i*40, canvas.height-15); 
   }
 
@@ -1472,8 +1536,17 @@ function renderDamage()
      {
         if (damage>=isDamaged)
         {
-           if (shipDamage[o]<isDamaged) startText(message[i] + " damaged", border.x, 150);
-           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) startText(message[i] + " now destroyed", border.x, 150);
+           if (shipDamage[o]<isDamaged) 
+           {
+             startText(message[i] + " damaged", border.x, 150);
+             if (i==1) SetThrottle(GetControl('throttle'));
+             if (i==5) radioDamageTime = (new Date()).getTime();
+           }
+           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) 
+           {
+             startText(message[i] + " now destroyed", border.x, 150);
+             if (i==1) SetThrottle(GetControl('throttle'));
+           }
         }
         shipDamage[o] = systemsDamage[i];
      }
@@ -1938,7 +2011,9 @@ function  AddNewRank(ranking, date)
    bestRanks.sort(ranksort);
    // pops the 11th off
    bestRanks.pop();
-
+  
+   // update totals 
+   totals.rank+=ranking;
    // update local db
    SaveRanks();
 }
@@ -2124,6 +2199,18 @@ function renderOverlays()
   
 }
 
+function renderSubspaceMessages()
+{
+  // only
+  if (shipDamage.subspaceradio>=isDamaged && endGameEvent==playing)
+  {
+     // flicker 
+     if (shipDamage.subspaceradio>=isDestroyed || Math.random()>0.9) return;
+  }
+
+  displayText();
+}
+
 // rendering functions
 function ProfileRender()
 {
@@ -2148,8 +2235,9 @@ function ProfileRender()
   
   profile(DrawRedAlert);
 
-  profile(displayText);
+  profile(renderSubspaceMessages);
 }
+
 
 function render()
 {
@@ -2173,7 +2261,7 @@ function render()
   
   DrawRedAlert();
 
-  displayText();
+  renderSubspaceMessages();
 }
 
 // per frame tick functions
@@ -2678,7 +2766,6 @@ function CalculateScore(finishType)
   M -= Math.floor(statistics.timePlayed);  // time is decimalized
   
   statistics.rank = M;
-  totals.rank+=statistics.rank;
   
   return M;
 }
@@ -3021,8 +3108,11 @@ function SetThrottle(slider)
   if (triggerWarp==normalSpace)
   {
     throttle = Math.round(slider.value);
+    // engines damaged or destroyed 1/2 or 1/4 speed
     setShipVelocity = throttleTable[throttle];
     shipVelocityEnergy = throttleEnergy[throttle];
+    if (shipDamage.engines>=isDamaged) setShipVelocity*=0.5;
+    if (shipDamage.engines>=isDestroyed) setShipVelocity*=0.5;
   }
 }
 
