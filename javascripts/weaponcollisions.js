@@ -27,12 +27,15 @@ THE SOFTWARE.
 var shipFireX = 1;
 function FirePhotons()
 {
+   // destroyed so dont fire
+   if (shipDamage.photons >= isDestroyed) return;
+
    // alternate fire
    setSpawn(centreX + shipFireX*canvas.width/32,
             centreY + canvas.height/16, -100);
    getTorpedoEmitter().create();
 
-   if (shipDamage.photons >= isDestroyed) return;
+   // damaged so dont strobe
    if (shipDamage.photons <  isDamaged) shipFireX*=-1;
    energy-=10;
    PlayPhoton();

@@ -534,6 +534,7 @@ window.getAsteroids = function() { return asteroids; }
 window.setShieldUp = function(state) {shieldUp = state;}
 window.getShieldUp = function() {return shieldUp;}
 window.setSplutter = function(a, b) {splutterCount = a; splutterNoise =b;}
+window.shieldVunerable = function() { return (!shieldUp) || (splutterNoise&splutterCount);}
 
 
 })();
