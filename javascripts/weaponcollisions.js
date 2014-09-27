@@ -88,7 +88,7 @@ function CheckShields()
 function ShieldHit(x, y, damage)
 {
   energy-=damage;
-  if (getShieldUp()==false || energy<=0) // dead
+  if (shieldVunerable()==false || energy<=0) // dead
   {
      // gameover
     PlayExplosion();

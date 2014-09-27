@@ -1546,6 +1546,7 @@ function renderDamage()
            {
              startText(message[i] + " now destroyed", border.x, 150);
              if (i==1) SetThrottle(GetControl('throttle'));
+             if (i==2) setShieldUp(false);
            }
         }
         shipDamage[o] = systemsDamage[i];
@@ -2546,7 +2547,8 @@ function ToggleShields(button)
 {
   button.state^=1;
   
-  setShieldUp(button.state);
+  var on = shipDamage.shields>=isDestroyed ? false : button.state;
+  setShieldUp(on);
   setSplutter(30, 60);
   
   
@@ -3121,7 +3123,7 @@ function energyManagement()
   // twin ions
   energy -= (shipVelocityEnergy*freqHz);
   // shields
-  if (getShieldUp()) energy -= 2*freqHz;
+  if (getShieldUp() && !shieldVunerable()) energy -= 2*freqHz;
   // lifesupport
   energy -= 0.25 * freqHz;
   // tracking computer
@@ -3130,6 +3132,9 @@ function energyManagement()
   // check damage
   CheckShields();
   
+  //
+  if (shipDamage.shields>=isDamaged && Math.random()>0.98) setSplutter(30, 60);
+
   // end game
   if (energy < 0 ) EndGame(energyLost);
 }
