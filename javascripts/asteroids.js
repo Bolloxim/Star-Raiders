@@ -41,6 +41,7 @@ var splutterNoise=60;
 var canvas;
 var context;
 var localSpace = 0;
+var splutter = 0;
 
 // Asteroids 
 var asteroids = [];
@@ -444,7 +445,7 @@ function renderShield()
    spinY+=spindy*0.1;
    
    if (splutterCount) splutterCount--;
-   var splutter = splutterNoise&splutterCount;
+   splutter = splutterNoise&splutterCount;
    var shieldFlashCol = 0;
    var shadeAlpha = 0.1;
    if (shieldFlashTimer)
@@ -534,7 +535,7 @@ window.getAsteroids = function() { return asteroids; }
 window.setShieldUp = function(state) {shieldUp = state;}
 window.getShieldUp = function() {return shieldUp;}
 window.setSplutter = function(a, b) {splutterCount = a; splutterNoise =b;}
-window.shieldVunerable = function() { return (!shieldUp) || (splutterNoise&splutterCount);}
+window.shieldVunerable = function() { return (shieldUp & !splutter);}
 
 
 })();
