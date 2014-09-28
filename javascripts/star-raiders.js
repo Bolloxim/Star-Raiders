@@ -713,6 +713,8 @@ function renderLongRangeScanner()
   }
   // check if scanner is suppose to be on
   if (lrsOffScreen) return;
+ 
+  if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.95) return;
   
   // ok lets draw
   context.beginPath();
@@ -750,12 +752,16 @@ function renderLongRangeScanner()
       var x = modulo(localPosition.x - asteroids[i].x)-512;
       var y = modulo(localPosition.y - asteroids[i].y)-512;
       var z = modulo(localPosition.z - asteroids[i].z)-512;
-
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.5) x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.50) y*=-2;
       var t = scannerView.transform(x,y,z);
+    
       var depth = focalPoint*5 / ((t.z + 1400) +1);
       var sz = 5 * depth;
       // draw a blob
       var grey =  Math.floor(depth*400-200);
+    
+    
       context.beginPath();
       context.rect(t.x*depth*s+lrsCentreX-sz*0.5, t.y*depth*s+lrsCentreY-sz*0.5, sz, sz);
       context.fillStyle = 'rgba('+grey+','+grey+','+grey+',1)';
@@ -770,12 +776,18 @@ function renderLongRangeScanner()
       var x = modulo(localPosition.x - nmes[i].pos.x)-512;
       var y = modulo(localPosition.y - nmes[i].pos.y)-512;
       var z = modulo(localPosition.z - nmes[i].pos.z)-512;
+  
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.8) x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.80) y*=-2;
+
       var t = scannerView.transform(x,y,z);
     
       var depth = focalPoint*5 / ((t.z + 1400) +1);
       var sz = 8 * depth;
       // draw a blob
       var red =  Math.floor(depth*400-200);
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.95) t.x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.50) t.y*=-1;
       context.beginPath();
 //      context.rect(t.x*depth*s+centreX-sz*0.5, t.y*depth*s+centreY-sz*0.5, sz, sz);
       context.arc(t.x*depth*s+lrsCentreX, t.y*depth*s+lrsCentreY, sz, 0, Math.PI*2.0);
