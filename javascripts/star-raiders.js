@@ -34,7 +34,7 @@ const eTargetComputer = 3;
 const shieldRange = 5;
 
 // special browser profile option
-const displayProfile = true;
+const displayProfile = false;
 var profiling = false;
 
 // end game scenerios
@@ -2112,9 +2112,11 @@ function SetupTitleButtons()
   new Button(bx, b.y*4.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
   new Button(bx, b.y*5.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
   new Button(bx, b.y*6.2, bw, ms.y*0.7, "Credits", ViewCredits, '7');
-  
-  new Button(5, 5, bw/2, ms.y/2, "profile", ProfileToggle, 'p');
-  GetControl('profile').state = profiling;
+  if (displayProfile==true)
+  {
+    new Button(5, 5, bw/2, ms.y/2, "profile", ProfileToggle, 'p');
+    GetControl('profile').state = profiling;
+  }
 }
 
 function ProfileToggle(button)
