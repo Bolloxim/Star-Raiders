@@ -23,6 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
+// module
+(function()
+{
+
 // conceptualized and written by andi smithers
 // constant options
 const focalDepth = 80;
@@ -43,6 +47,8 @@ var frameCount=0;
 var spawnList = [];
 var explodeEmitter;
 var torpedoEmiiter;
+var dustEmitter;
+var plasmaEmitter;
 
 function ExplodeParticleEmitter()
 {
@@ -157,10 +163,10 @@ PlasmaEmitter.prototype.generate = function()
   
   this.pos ={x:(spawnX-centreX), y:(spawnY-centreY), z:spawnZ};
 
-  this.vel = {x:0, y:0, z:4+(this.iteration*0.001)}
+  this.vel = {x:0, y:0, z:2+(this.iteration*0.0005)}
   this.velsize = -0.01 - (Math.random()*0.2);
   this.size = 3.0 *this.iteration*0.02;
-  this.life = 3;
+  this.life = 4;
   this.color = 'rgb(0, 64, 200)';
   this.iteration++;
 }
@@ -359,7 +365,9 @@ function init()
   explodeEmitter = new ExplodeParticleEmitter();
   torpedoEmitter = new PhotonTorpedoEmitter();
   dustEmitter    = new DustParticleEmitter();
-  plasmaEmitter    = new PlasmaEmitter();
+  plasmaEmitter  = new PlasmaEmitter();
+
+  spawnList = spawnList;
 }
 
 function initDemo()
@@ -449,6 +457,9 @@ function update()
 
 function UpdateParticles()
 {
+  warpCentre = getWarpCentre();
+  cX = warpCentre.x;
+  cY = warpCentre.y;
 
   var i = spawnList.length;
   while (i)
@@ -476,3 +487,20 @@ function animate()
 init();
 //initDemo();
 //animate();
+
+window.RenderParticles = RenderParticles;
+window.UpdateParticles = UpdateParticles;
+window.PhotonTorpedoEmitter = PhotonTorpedoEmitter;
+window.PlasmaEmitter = PlasmaEmitter;
+window.ExplodeParticleEmitter = ExplodeParticleEmitter;
+window.DustParticleEmitter = DustParticleEmitter;
+
+window.getDustEmitter = function() { return dustEmitter;}
+window.getTorpedoEmitter = function() { return torpedoEmitter;}
+window.getPlasmaEmitter = function() { return plasmaEmitter;}
+window.getExplodeEmitter = function() { return explodeEmitter; }
+window.setSpawn = function(x,y,z)  { spawnX = x; spawnY =y; spawnZ = z;}
+
+window.spawnList = spawnList;
+
+})();

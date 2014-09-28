@@ -75,7 +75,7 @@ function init()
   BoardSetup();
   
   // populate local space
-  SetupAsteriods();
+  SetupAsteroids();
   
   SetupNMEs();
   

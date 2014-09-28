@@ -23,9 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
+// module
+(function()
+{
+
 // conceptualized and written by andi smithers
 
 // constant options
+
 const focalDepth = 80;
 const focalPoint = 256;
 
@@ -120,10 +125,10 @@ FMSynth.prototype.init = function(noise)
   
     this.gainNode = audioContext.createGain();
     this.gainNode.gain.value = 1;
-
   
     if (waveform<4)
     {
+        this.gainNode.gain.value = 0.25;
         this.node.connect(this.gainNode);
     }
     else
@@ -166,8 +171,9 @@ FMSynth.prototype.play = function(note, delay, duration)
 
 FMSynth.prototype.stop = function(delay)
 {
+  var time = delay || 0;
   var playNode = this.node;
-  playNode.stop(audioContext.currentTime+delay);
+  playNode.stop(audioContext.currentTime+time);
 }
 // initialization
 
@@ -185,15 +191,15 @@ function init()
   canvas.addEventListener('click', mouseClick);
   window.addEventListener('resize', resize);
 
-  // initialze variables  
-  window.AudioContext = window.AudioContext||window.webkitAudioContext;
-  audioContext = new AudioContext();
-  
   initAudio();
 }
 
 function initAudio()
 {
+  // initialze variables  
+  window.AudioContext = window.AudioContext||window.webkitAudioContext;
+  audioContext = new AudioContext();
+  
   createWhiteNoiseBuffer();
   createPinkNoiseBuffer();
   createBrownNoiseBuffer();
@@ -588,7 +594,7 @@ function StopEngine()
 {
     if (hyperSound)
     {
-        hyperSound.stop();
+        hyperSound.stop(0);
         hyperSound = null;
     }
 }
@@ -631,7 +637,6 @@ createWhiteNoiseBuffer = function(bufferSize)
   whiteNoiseBuffer = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
   var dataChannel = whiteNoiseBuffer.getChannelData(0);
   
-  console.log(dataChannel.length);
   for (var i=0; i<dataChannel.length; i++)
   {
      dataChannel[i] = Math.random()*2-1;
@@ -684,3 +689,23 @@ createBrownNoiseBuffer = function(bufferSize)
 //init();
 //SetupButtons();
 //animate();
+
+// export
+window.PlayConfirm = PlayConfirm;
+window.PlayExit = PlayExit;
+window.PlayShield = PlayShield;
+window.PlayEngine = PlayEngine;
+window.PlayPhoton = PlayPhoton;
+window.InitEngine = InitEngine;
+window.PlayRedAlert = PlayRedAlert;
+window.PlayBeginHyperspace = PlayBeginHyperspace;
+window.PlayDisruptor = PlayDisruptor;
+window.PlayExplosion = PlayExplosion;
+window.PlayExplosionThud = PlayExplosionThud;
+window.UpdateHyperspaceSound = UpdateHyperspaceSound;
+window.initAudio = initAudio;
+window.StopEngine = StopEngine;
+window.CancelHyperSound = CancelHyperSound;
+window.PauseHyperspaceSound = PauseHyperspaceSound;
+
+})();

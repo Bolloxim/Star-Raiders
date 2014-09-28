@@ -25,6 +25,9 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 
+// module
+(function()
+{
 
 // globals
 var canvas, context, alpha;
@@ -42,7 +45,7 @@ const starCount = 1024;
 var initVelocity = -1.0;
 var termVelocity = -10.0;
 const topleft = 0;
-const trackMouse = 1;
+var trackMouse = 1;
 const focalPoint = 256;
 const sparcity = 2.0;
 const tailLength = 20;
@@ -109,13 +112,11 @@ Star.prototype.draw = function()
   var sz = 5 * depth;
   
   // fill a rect
-  context.beginPath();
-  context.rect(x, y, sz,sz);
   context.fillStyle = 'white';
+  context.beginPath();
+  context.rect(x, y, sz, sz);
   context.fill();
   // use border edge for twinkle effect 
-  context.lineWidth = 0;
-  context.strokeStyle = starsColorAlias;
   context.stroke();
 };
 
@@ -142,6 +143,7 @@ Star.prototype.warpline = function()
   var left = this.x<0? sz : 0;
   var alpha = (sz/5.0+0.1) * 0.7;
   // fill a ray
+  context.fillStyle = termVelocity<0?'rgba(64,128,192,'+alpha+')':'rgba(192,64,32,'+ alpha+')';
   context.beginPath();
   context.moveTo(wx, wy);
   context.lineTo(x+sz, y+top);
@@ -150,7 +152,6 @@ Star.prototype.warpline = function()
   context.lineTo(x+left, y+sz);
   context.lineTo(x+left, y);
   context.closePath();
-  context.fillStyle = termVelocity<0?'rgba(64,128,192,'+alpha+')':'rgba(192,64,32,'+ alpha+')';
   context.fill();
   // use border edge for twinkle effect 
  // context.lineWidth = 0;
@@ -292,6 +293,10 @@ function render()
 function renderStarfield()
 {
   context.globalCompositeOperation='source-over';
+  // testing
+  context.lineWidth = 1;
+  context.strokeStyle = starsColorAlias;
+  
   // draw all stars
   for (i = 0; i < stars.length; i++) 
   {
@@ -319,6 +324,12 @@ function mousemove(event)
       tX = canvas.width - tX;
       tY = canvas.height - tY;
     }
+  }
+  else
+  {
+    // not tracking mouse so set to middle
+    tX = cX;
+    tY = cY;
   }
 }
 
@@ -401,4 +412,35 @@ function swapView()
 // entry point
 init();
 
+window.renderStarfield = renderStarfield;
+window.moveStarfield = moveStarfield;
+window.panStarfield = panStarfield;
+window.swapView = swapView;
+window.viewIs = viewIs;
+window.viewingAft = viewingAft;
+window.viewFront = viewFront;
+window.viewAft = viewAft;
+window.viewingFront = viewingFront;
 
+
+window.setInitVelocity = function(vel) {initVelocity = vel;}
+window.getInitVelocity = function() {return initVelocity;}
+window.setTermVelocity = function(vel) {termVelocity = vel;}
+window.getTermVelocity = function() {return termVelocity;}
+window.setEnterWarp = function(enterstate) {enterWarp = enterstate;}
+window.getEnterWarp = function() { return enterWarp;}
+window.setTrackingMouse = function(state) {trackMouse = state;}
+window.setStarsColorAlias= function(color) {starsColorAlias=color;}
+window.setDensity = function(d) { density = d; }
+window.getCameraDepth = function() { return cameraDepth;}
+window.setCameraDepth = function(depth) {cameraDepth = depth;}
+window.getWarpStartDepth = function() { return warpStartDepth;}
+window.setWarpStartDepth = function(depth) { warpStartDepth = depth;}
+window.setWarpTime = function(time) {warpTime = time;}
+window.getWarpTime = function() {return warpTime;}
+window.setWarpSpread = function(spread) {warpspread = spread;}
+window.getWarpCentre = function() { return {x:cX, y:cY}; }
+window.setWarpCentre = function(newCentre) { cX = newCentre.x; cY = newCentre.y; }
+
+
+})();

@@ -151,6 +151,14 @@ function randomText()
 
 }
 
+function clearText()
+{
+  messageList = [];
+  currentMessage = 0;
+  repeatTime = 0;
+  startDisplayTime = (new Date()).getTime();
+}
+
 function startText(string, x, y)
 {
   if (messageList[currentMessage]==null)

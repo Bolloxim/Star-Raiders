@@ -23,8 +23,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *****************************************************************************/
 
-// conceptualized and written by andi smithers
+// module
+(function()
+{
 
+// conceptualized and written by andi smithers
 // constant options
 const focalDepth = 80;
 const focalPoint = 256;
@@ -307,5 +310,9 @@ function animate()
 
 
 // entry point
-init();
+//init();
 //animate();
+
+window.RenderBasestar =RenderBasestar;
+
+})();

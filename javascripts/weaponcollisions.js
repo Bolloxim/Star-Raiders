@@ -27,11 +27,16 @@ THE SOFTWARE.
 var shipFireX = 1;
 function FirePhotons()
 {
+   // destroyed so dont fire
+   if (shipDamage.photons >= isDestroyed) return;
+
    // alternate fire
-   spawnX = centreX + shipFireX*canvas.width/32;
-   spawnY = centreY + canvas.height/16;
-   torpedoEmitter.create();
-   if (shipDamage.photons==false) shipFireX*=-1;
+   setSpawn(centreX + shipFireX*canvas.width/32,
+            centreY + canvas.height/16, -100);
+   getTorpedoEmitter().create();
+
+   // damaged so dont strobe
+   if (shipDamage.photons <  isDamaged) shipFireX*=-1;
    energy-=10;
    PlayPhoton();
    // increment shots
@@ -40,14 +45,16 @@ function FirePhotons()
 
 function CheckShields()
 {
-  var i = asteriods.length;
+  var asteroids = getAsteroids();
+
+  var i = asteroids.length;
   while (i)
   {
       --i;
-    if (asteriods[i].shieldsHit) 
+    if (asteroids[i].shieldsHit) 
     {
       // spawn splash
-      var roid = asteriods[i];
+      var roid = asteroids[i];
       var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
       var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
       var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
@@ -58,20 +65,22 @@ function CheckShields()
       var depthInv = focalPoint / (t.z + focalDepth);
       if (depth>0)
       {
-      spawnX = (t.x*depth)/depthInv;
-      spawnY = (t.y*depth)/depthInv;
+        spx = (t.x*depth)/depthInv;
+        spy = (t.y*depth)/depthInv;
       }
       else
-        {
-          spawnX = t.x;
-          spawnY = t.y;
-        }
-      spawmZ = 0;
-      dustEmitter.create();
+      {
+        spx = t.x;
+        spy = t.y;
+      }
 
-      ShieldHit(spawnX, spawnY, 100/(1<<roid.fragment));
+      setSpawn(spx, spy, 0);
+
+      getDustEmitter().create();
+
+      ShieldHit(spx, spy, 100/(1<<roid.fragment));
       // delete roid
-      asteriods.splice(i,1);
+      asteroids.splice(i,1);
     }
   } 
 }
@@ -79,7 +88,7 @@ function CheckShields()
 function ShieldHit(x, y, damage)
 {
   energy-=damage;
-  if (shieldUp==false || energy<=0) // dead
+  if (shieldVunerable()==false || energy<=0) // dead
   {
      // gameover
     PlayExplosion();
@@ -90,17 +99,22 @@ function ShieldHit(x, y, damage)
      statistics.shieldsHit++;
      shieldFlash(x, y);
      PlayShield();
+
+     // randomize damage / destruction
+     var system = Math.floor(Math.random() * 6);
+     systemsDamage[system] += gameDifficulty;
   }
 }
 
-function CollideAsteriods(sx, sy, photon)
+function CollideAsteroids(sx, sy, photon)
 {
    var sz = photon.z;
    var scale =512/canvas.height;
+   var asteroids = getAsteroids();
 
-  for (var j = 0; j<asteriods.length; j++)
+  for (var j = 0; j<asteroids.length; j++)
   {
-      var roid = asteriods[j];
+      var roid = asteroids[j];
       var x = modulo2(localPosition.x - roid.x, localSpaceCubed)-localSpaceCubed*0.5;
       var y = modulo2(localPosition.y - roid.y, localSpaceCubed)-localSpaceCubed*0.5;
       var z = modulo2(localPosition.z - roid.z, localSpaceCubed)-localSpaceCubed*0.5;
@@ -125,22 +139,20 @@ function CollideAsteriods(sx, sy, photon)
       if (dx*dx+dy*dy < size*size && dz*dz < 4000)
       {
           var depthInv = focalPoint / ((t.z + focalDepth) +1);
-          spawnX = (t.x*depth)/depthInv;
-          spawnY = (t.y*depth)/depthInv;
-          spawnZ = t.z*4;
           // create particle
+          setSpawn((t.x*depth)/depthInv, (t.y*depth)/depthInv, t.z*4 );
 
-          dustEmitter.create();
+          getDustEmitter().create();
 
           // fragment rock
-          if (asteriods[j].fragment==2)
+          if (asteroids[j].fragment==2)
           {
-            asteriods[j].init();    // destroy
+            asteroids[j].init();    // destroy
             statistics.roidsHit++;
           }
           else
           {
-            FragmentAsteriod(asteriods[j]);
+            FragmentAsteroid(asteroids[j]);
             statistics.roidsFragmented++;
           }
           PlayExplosionThud();
@@ -195,21 +207,22 @@ function CollideNMEs(sx, sy, photon)
               }
               // create particle
               var depthInv = focalPoint / ((t.z + focalDepth) +1);
-              spawnX = (t.x*depth)/depthInv;
-              spawnY = (t.y*depth)/depthInv;
-              spawnZ=t.z;
+              var spx = (t.x*depth)/depthInv;
+              var spy = (t.y*depth)/depthInv;
+              var spz = t.z;
               statistics.shipsHit++;
               if (nme.hitpoints != 0)
               {
-                 spawnZ*=8.0;
-                 dustEmitter.create();
+                 setSpawn(spx, spy, spz*8);
+                 getDustEmitter().create();
                  PlayExplosionThud();
                  
               }
               else
               {
-                 explodeEmitter.create();
-                 dustEmitter.create();
+                 setSpawn(spx, spy, spz);
+                 getExplodeEmitter().create();
+                 getDustEmitter().create();
                  KillNmeType(nme.type);
                  PlayExplosion();
               }
@@ -244,11 +257,9 @@ function CollidePlasma(sx, sy, photon)
             if (dx*dx+dy*dy<size*size)
             {
                spawnList[i].life = 0;
-               spawnX = pos.x;
-               spawnY = pos.y;
-               spawnZ = pos.z*2;
+               setSpawn(pos.x, pos.y, pos.z*2);
 
-               dustEmitter.create();                
+               getDustEmitter().create();                
                PlayExplosionThud();
                statistics.deflects++;
                return true;      
@@ -257,16 +268,22 @@ function CollidePlasma(sx, sy, photon)
     }
 }
 
-function CollideShip(sx, sy, plasma)
+function CollideShip(sx, sy, pos)
 {
    var x = sx - centreX;
    var y = sy - centreY;
-   var area = (canvas.width/2) * (canvas.width/2) + (canvas.height/2) * (canvas.height/2);
+   var area = (canvas.width/1.5) * (canvas.width/1.5) + (canvas.height/1.5) * (canvas.height/1.5);
+ //  console.log("x: "+x+", y: "+y+", z: " + depth);
 //    if (Math.abs(plasma.z)<3) console.log("fire x="+x+" y= "+y);
-   if (Math.abs(plasma.z)<3 && x*x+y*y < area)
+   if (pos.z>-1 && pos.z<1 && x*x+y*y < area)
    {
+
+      setSpawn(pos.x, pos.y, pos.z*2);
+            getDustEmitter().create();   
        ShieldHit(sx, sy, 100);
+       return true;
    }
+   return false;
 }
 
 function WeaponCollisions()
@@ -293,7 +310,7 @@ function WeaponCollisions()
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
  */     
-          if (CollideAsteriods(sx, sy, pos))
+          if (CollideAsteroids(sx, sy, pos))
           {
             // destroy photon
             spawnList[i].life = 0;
@@ -314,7 +331,7 @@ function WeaponCollisions()
           var pos = spawnList[i].particles[63].pos;
 
           var depth = focalPoint / (pos.z + focalDepth );
-          if (depth<=0) depth*=-1;
+//          if (depth<=0) depth*=-1;
     
           var sx = pos.x * depth + spawnList[i].particles[63].sx;// + cX-centreX;
           var sy = pos.y * depth + spawnList[i].particles[63].sy;// + cY-centreY;
@@ -326,7 +343,7 @@ function WeaponCollisions()
           context.strokeStyle = 'rgb(255,255,255)';
           context.stroke();
 */      
-          if (CollideAsteriods(sx, sy, pos))
+          if (CollideAsteroids(sx, sy, pos))
           {
             // destroy plasma
             spawnList[i].life = 0;

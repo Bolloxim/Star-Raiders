@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 // conceptualized and written by andi smithers
 
+// module
+(function()
+{
+
 // constant options
 const focalDepth = 1400;
 const focalPoint = 256;
@@ -84,6 +88,8 @@ function init()
   
   // set canvas to be window dimensions
   resize();
+  
+  canvas.addEventListener('mousemove', mouseMove);
 
   // create event listeners
   window.addEventListener('resize', resize);
@@ -196,6 +202,7 @@ function renderZylon(x1, y1, z1, rotation, elevation, parts)
 
   if (!autoRotate)
   {
+
      rotation = Math.atan2((x - mouseX) , canvas.width/2) + (Math.PI*0.5);
      elevation = Math.atan2((y - mouseY) , canvas.height);
   }
@@ -399,3 +406,8 @@ function animate()
 init();
 //initDemo();
 //animate();
+
+window.renderZylon = renderZylon;
+
+})();
+

@@ -33,6 +33,10 @@ const eLongRange = 2;
 const eTargetComputer = 3;
 const shieldRange = 5;
 
+// special browser profile option
+const displayProfile = true;
+var profiling = false;
+
 // end game scenerios
 const aborted    = 0;
 const destroyed  = 1;
@@ -95,10 +99,15 @@ var redAlertColor = 0;
 // tracking computer
 var trackingTarget = 0;
 // ship damage
-var shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
+var shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+var systemsDamage  = [0,0,0,0,0,0];
+// if systems damage goes over 6 it is damaged, over 12 it is destroyed
+const isDamaged = 6;
+const isDestroyed = 12;
+var radioDamageTime = 0;
 
 // difficulty settings
-var maxAsteriods = 32;
+var maxAsteroids = 32;
 var maxNMEs = 8;
 var noContact = true;
 var noDeaths= true;
@@ -139,16 +148,24 @@ var endGameRank;
 // global ranking
 var gameTotalPlays=0;
 var gameHitsPerRanks = [];
+// warp tunnel navigation at higher levels
+var warpDeltaDistance = 0;
 
-function UpdateAllTotals()
+function UpdateRunningStatistics()
 {
    // update end game data
+   statistics.energy=statistics.refuel;
    statistics.energy+=9999-energy;
    statistics.kills=kills;
    
    var gameTime = currentTime - gameStart;
    var decimalTime = gameTime / 60000;
    statistics.timePlayed = decimalTime;
+}
+
+function UpdateAllTotals()
+{
+   UpdateRunningStatistics();
   
    if (statistics.shots == 0)
      statistics.accuracy = 0;
@@ -195,7 +212,8 @@ function ClearGame()
 {
   // clear stats
   statistics = {kills:0, difficulty:0, played:0, roidsFragmented:0, roidsHit:0, refuel:0, shieldsHit:0, bases:0, shipsHit:0, killTypes:[0,0,0,0], damaged:0, shots:0, deflects:0, jumped:0, jumpedEnergy:0, travelled:0, jumpCancelled:0, timePlayed:0, accuracy:0, energy:0, distance:0, endgames:[0,0,0,0,0]};
-  shipDamage = {photons:false, engines:false, shields:false, computer:false, longrangescanner:false, subspaceradio:false};
+  shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+  systemsDamage  = [0,0,0,0,0,0];
   
   // clear ship details
   shipLocation = {x:0, y:0};
@@ -219,9 +237,8 @@ function ClearGame()
    badDriving = 0;
    redAlertColor = 0;
   
-    shieldUp = false;
+   setShieldUp(false);
 }
-
 
 
 function SetupNMEs(boardItem)
@@ -238,7 +255,7 @@ function SetupNMEs(boardItem)
      nme.randomize(boardItem.targets[i]);
      nmes.push(nme);
   }
-  console.log(boardItem.numTargets);
+ 
   if (boardItem.type != base) SetRedAlert();
 }
 
@@ -309,11 +326,9 @@ function nmeShoot(pos)
     if (depth<0) depth *= -1;
 
     var depthInv = focalPoint / ((t.z + focalDepth) +1);
-    spawnX = (t.x*depth)/depthInv+centreX;
-    spawnY = (t.y*depth)/depthInv+centreY;
-    spawnZ = t.z;
+    setSpawn((t.x*depth)/depthInv+centreX, (t.y*depth)/depthInv+centreY, t.z);
 
-    plasmaEmitter.create();
+    getPlasmaEmitter().create();
     PlayDisruptor();
     // escalate
     noContact = false;
@@ -348,10 +363,13 @@ var targetLocations = [{x:0, y:0, z:-70},{x:10, y:-10, z:-100},{x:-20, y:30, z:-
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  
+  var shotEnergy = 5 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy, nme.energy+freqHz);
+  var canFire = Math.random() > 0.99;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >99)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
+    nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -387,9 +405,13 @@ function ZylonCruiserAI(nme)
   }
   nme.calcypr(); 
   
+  var shotEnergy = 4 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy*2, nme.energy+freqHz);
+  var canFire = Math.random() > 0.97;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >97)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
+    nme.energy-=shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -424,10 +446,13 @@ function ZylonBaseStarAI(nme)
         nme.target = (nme.target+1) % targetLocations.length;
   }
   nme.calcypr(); 
-  
+  var shotEnergy = 5 - (0.5 * gameDifficulty);
+  nme.energy = Math.min(shotEnergy*4, nme.energy+freqHz);
+  var canFire = Math.random() > 0.95;
   // randomize fire
-  if (endGameEvent==playing && (Math.random() * 100) >95)
+  if (endGameEvent==playing && nme.energy>=shotEnergy && canFire)
   {
+    nme.energy -= shotEnergy;
     nmeShoot(nme.pos);
   }
 }
@@ -439,12 +464,10 @@ function DestroyStarbase()
     if (nmes[0].type == base) 
     {
        // detroy base
-       SpawnAsteriodsAt(nmes[0].pos);
-       spawnX = nmes[0].pos.x;
-       spawnY = nmes[0].pos.y;
-       spawnZ = nmes[0].pos.z;
-       explodeEmitter.create();
-       dustEmitter.create();
+       SpawnAsteroidsAt(nmes[0].pos);
+       setSpawn(nmes[0].pos.x, nmes[0].pos.y, nmes[0].pos.z);
+       getExplodeEmitter().create();
+       getDustEmitter().create();
        PlayExplosion();
     }
 }
@@ -483,6 +506,7 @@ function NME()
   this.hitpoints = 0;
   this.target = 0;
   this.pass = 0;
+  this.energy = 0;
   
   this.theta = 0;
   this.phi = 0;
@@ -575,7 +599,7 @@ NME.prototype.render = function()
           context.globalAlpha = fade;
          
          
-          if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y*2)+Math.PI);
+          if (camspace.z>0) RenderBasestar(sx, sy, sz, Math.atan2(camspace.z, camspace.y)+Math.PI);
           break;
        default:
           renderZylon(camspace.x, camspace.y, camspace.z, 0, 0);
@@ -608,11 +632,22 @@ function EnableDocking(dock)
    if (docking && dockTimer<(new Date()).getTime())
    {
       // refuel
-      statistics.refuel = 9999-energy;
+      statistics.refuel += 9999-energy;
       energy = 9999;
       dockTimer+=100000;
+      FixDamagedSystems();
       startText("transfer completed", border.x, 150);
    }
+}
+
+function FixDamagedSystems()
+{
+  var d = 0;
+  for (var i=0; i<6; i++) d = Math.max(d, systemsDamage[i]);
+  if (d>=isDamaged) startText("Systems Repaired", border.x, 150);
+  // clear systems
+  shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
+  systemsDamage  = [0,0,0,0,0,0];
 }
 
 function SetRedAlert()
@@ -678,6 +713,8 @@ function renderLongRangeScanner()
   }
   // check if scanner is suppose to be on
   if (lrsOffScreen) return;
+ 
+  if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.95) return;
   
   // ok lets draw
   context.beginPath();
@@ -705,21 +742,26 @@ function renderLongRangeScanner()
     context.stroke();
   }
 
-  // render asteriods
+  // render Asteroids
   var s = (radius/canvas.width) * 1.3;
+  var asteroids = getAsteroids();
 
   // I think a matrix is now going to be faster..    
-  for (var i=0; i<asteriods.length; i++)
+  for (var i=0; i<asteroids.length; i++)
   {
-      var x = modulo(localPosition.x - asteriods[i].x)-512;
-      var y = modulo(localPosition.y - asteriods[i].y)-512;
-      var z = modulo(localPosition.z - asteriods[i].z)-512;
-
+      var x = modulo(localPosition.x - asteroids[i].x)-512;
+      var y = modulo(localPosition.y - asteroids[i].y)-512;
+      var z = modulo(localPosition.z - asteroids[i].z)-512;
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.5) x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.50) y*=-2;
       var t = scannerView.transform(x,y,z);
+    
       var depth = focalPoint*5 / ((t.z + 1400) +1);
       var sz = 5 * depth;
       // draw a blob
       var grey =  Math.floor(depth*400-200);
+    
+    
       context.beginPath();
       context.rect(t.x*depth*s+lrsCentreX-sz*0.5, t.y*depth*s+lrsCentreY-sz*0.5, sz, sz);
       context.fillStyle = 'rgba('+grey+','+grey+','+grey+',1)';
@@ -734,12 +776,18 @@ function renderLongRangeScanner()
       var x = modulo(localPosition.x - nmes[i].pos.x)-512;
       var y = modulo(localPosition.y - nmes[i].pos.y)-512;
       var z = modulo(localPosition.z - nmes[i].pos.z)-512;
+  
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.8) x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.80) y*=-2;
+
       var t = scannerView.transform(x,y,z);
     
       var depth = focalPoint*5 / ((t.z + 1400) +1);
       var sz = 8 * depth;
       // draw a blob
       var red =  Math.floor(depth*400-200);
+      if (shipDamage.longrangescanner>=isDamaged && Math.random()>0.95) t.x*=-1;
+      if (shipDamage.longrangescanner>=isDestroyed && Math.random()>0.50) t.y*=-1;
       context.beginPath();
 //      context.rect(t.x*depth*s+centreX-sz*0.5, t.y*depth*s+centreY-sz*0.5, sz, sz);
       context.arc(t.x*depth*s+lrsCentreX, t.y*depth*s+lrsCentreY, sz, 0, Math.PI*2.0);
@@ -777,6 +825,9 @@ function renderGalacticScanner()
   // check if scanner is suppose to be on
   if (mapOffScreen) return;
   
+  // damaged turn whole scanner off
+  if (shipDamage.subspaceradio>=isDamaged && Math.random()>0.98) return;
+  
   var offX = mapCentreX;
   var offY = mapCentreY;
   var scaleX = mapScale.x;
@@ -792,8 +843,11 @@ function renderGalacticScanner()
   
   for (var i=0; i<=galaxyMapSize.x; i++)
   {
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.95) 
+    {
     context.moveTo(scaleX*i+border.x+offX, border.y+offY);
     context.lineTo(scaleX*i+border.x+offX, scaleY*(galaxyMapSize.y)+offY+border.y);
+    }
   }
   context.strokeStyle = '#c0c0c0';
   context.lineWidth = 4;
@@ -803,8 +857,11 @@ function renderGalacticScanner()
 
   for (var j=0; j<=galaxyMapSize.y; j++)
   {
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.95) 
+    {
     context.moveTo(border.x+offX, scaleY*(j)+offY+border.y);
     context.lineTo(scaleX*(galaxyMapSize.x)+offX+border.x, scaleY*(j)+offY+border.y);
+    }
   }
   
   context.strokeStyle = '#c0c0c0';
@@ -813,10 +870,10 @@ function renderGalacticScanner()
  
 
   // ping every 5 seconds
-  var d = new Date();
-  var currentTime = d.getTime();
+  var currentTime = (new Date()).getTime();
   var distance = ((currentTime - gameStart)%10000)/10000;
   pingRadius = distance * canvas.width/2;
+  if (shipDamage.subspaceradio>=isDamaged) pingRadius = 0;
 
   context.globalCompositeOperation='source-over';
   var shipX = shipPing.x * scaleX + border.x+offX;
@@ -825,7 +882,10 @@ function renderGalacticScanner()
   for (var b=0; b<boardPieces.length; b++)
   {
     // fade in and out board pieces as the ping passes over them
-    boardPieces[b].render(shipX, shipY, pingRadius);
+    if (shipDamage.subspaceradio<isDamaged || Math.random()<0.9) 
+    {
+      boardPieces[b].render(shipX, shipY, pingRadius);
+    }
   }
 
   context.globalCompositeOperation='lighter';
@@ -917,21 +977,23 @@ function TitleScreen()
   titleScreen = true;
   // credit time
   titleStartTime = new Date().getTime();
+  
+  // clear text
+  clearText();
+
   // populate local space
-  SetupAsteriods(localSpaceCubed*0.25);
+  SetupAsteroids(localSpaceCubed*0.25);
   SetupTitleButtons();
 
   // override
-  warpspread = 2;
+  setWarpSpread(2);
+  
   // have starfield not track mouse
-  trackMouse = false;
-  // centre tracking
-  tX = cX;
-  tY = cY;
+  setTrackingMouse(false);
   
   // set scroller
-  initVelocity = -1.0;
-  termVelocity = -10.0;
+  setInitVelocity(-1.0);
+  setTermVelocity(-10.0);
   
   // fetch ranks
   CacheGlobalRankings();
@@ -964,7 +1026,7 @@ function StartGame(difficulty)
   BoardSetup(difficulty);
   
   // populate local space
-  SetupAsteriods(localSpaceCubed);
+  SetupAsteroids(localSpaceCubed);
  
   // populate shiplocation
   SetupNMEs(GetPieceAtShipLocation());
@@ -973,9 +1035,9 @@ function StartGame(difficulty)
   gameStart = d.getTime();
   
   // override
-  warpspread = 2;
+  setWarpSpread(2);
   // track mouse
-  trackMouse = true;
+  setTrackingMouse(true);
   // init engine sounds
   InitEngine();
 }
@@ -1000,7 +1062,6 @@ function mouseMove(event)
 
 function mouseDown(event)
 {
-  console.log("mousedown" + event.which);
   if (clearTitleClick==false) return;
   if (CheckButtons(mouseX, mouseY, false) == true) return;
   
@@ -1047,9 +1108,31 @@ function mouseClick()
 
 function resize()
 {
+   var maxWidth = window.innerWidth;
+   var maxHeight = window.innerHeight;
+   canvas.width = maxWidth;
+   canvas.height = maxHeight;
+ /* 
+   var width  = maxWidth;
+   var height = maxWidth * 9 / 22;
   
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  
+   canvas.style.display = 'block';
+   canvas.style.position = 'fixed';
+   canvas.style.left = '0px';
+   canvas.style.top  = (( maxHeight - height) / 2) + 'px';
+  
+  if (height > maxHeight) 
+  {
+    height = maxHeight;
+    width  = maxHeight * 22 / 9;
+    canvas.style.left = ((maxWidth - width) / 2) + 'px';
+    canvas.style.top  = '0px';
+  }
+  
+  canvas.width = width;
+  canvas.height = height;
+  */
     // compute centre of screen
   centreX = canvas.width/2;
   centreY = canvas.height/2;
@@ -1094,11 +1177,13 @@ function renderInformation()
       break;
   }
   
-
+  RenderWarpPoint();
   renderStarDate();
   renderVelocity();
   renderEnergy();
   renderKills();
+  renderDamage();
+  GuestimateScore();
 }
 
 function renderGalaxyInformation()
@@ -1116,7 +1201,7 @@ function renderGalaxyInformation()
   
    // render timer
     var piece = boardPieces[targetBase];
-    if (piece.nextMove!=0)
+    if (piece.nextMove!=0 && shipDamage.subspaceradio<isDamaged)
     {
       var x = piece.location.x*scaleX+border.x+mapCentreX;
       var y = piece.location.y*scaleY+border.y+mapCentreY;
@@ -1229,6 +1314,9 @@ function renderTargetingComputer()
 {
     if (!targetComputer) return;
 
+    // flicker
+    if (shipDamage.computer>=isDestroyed && Math.random()>0.9) return;
+  
     var x = centreX;
     var y = centreY;
     var w = canvas.width/16;
@@ -1265,12 +1353,16 @@ function renderTargetingComputer()
         context.fill();
         context.rect(x1+xw*0.25, y1+yh*0.25, xw*0.5, yh*0.5);     
         context.moveTo(x1, y1+yh*0.5);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.25, y1+yh*0.5);
         context.moveTo(x1+xw*0.75, y1+yh*0.5);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw, y1+yh*0.5);
         context.moveTo(x1+xw*0.5, y1);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.5, y1+yh*0.25);
         context.moveTo(x1+xw*0.5, y1+yh*0.75);
+        if (shipDamage.computer<isDestroyed || Math.random()<0.9)
         context.lineTo(x1+xw*0.5, y1+yh);
         context.lineWidth = 4;
         context.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -1281,7 +1373,11 @@ function renderTargetingComputer()
         var gradonTheta = 0;
         var gradonPhi = 0;
         
-        if (trackingTarget>=0 && trackingTarget < nmes.length && nmes[trackingTarget].hitpoints)
+        var displayTarget = true;
+        if (shipDamage.computer>=isDamaged) displayTarget = Math.random()<0.95;
+        if (shipDamage.computer>=isDestroyed) displayTarget = Math.random()<0.05;
+        
+        if (trackingTarget>=0 && trackingTarget < nmes.length && nmes[trackingTarget].hitpoints && displayTarget)
         {
              var x = modulo2(localPosition.x - nmes[trackingTarget].pos.x, localSpaceCubed)-localSpaceCubed*0.5;
              var y = modulo2(localPosition.y - nmes[trackingTarget].pos.y, localSpaceCubed)-localSpaceCubed*0.5;
@@ -1314,12 +1410,46 @@ function renderTargetingComputer()
           context.textAlign = "left";
         
           context.fillText('T:'+trackingTarget, x1, canvas.height-15);
-          
-          context.fillText('R:'+leadPadding(distance,3, true), x1+xw*0.5, canvas.height-15);   
-          context.fillText('Φ:'+leadPadding(gradonPhi,2, true), x1, y1-15);
-          context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
+          if (shipDamage.computer<isDamaged || Math.random()<0.2)
+          {
+            context.fillText('R:'+leadPadding(distance,3, true), x1+xw*0.5, canvas.height-15);   
+            context.fillText('Φ:'+leadPadding(gradonPhi,2, true), x1, y1-15);
+            context.fillText('θ:'+leadPadding(gradonTheta,2, true), x1+xw*0.5, y1-15);   
+          }
+          else
+          {
+            var msgs = ["", "PcLdLtr", "NaN", "Inf"];
+            context.fillText('R:'+msgs[Math.floor(Math.random()*2)], x1+xw*0.5, canvas.height-15);   
+            context.fillText('Φ:'+msgs[Math.floor(Math.random()*2)*2], x1, y1-15);
+            context.fillText('θ:'+msgs[Math.floor(Math.random()*2)*3], x1+xw*0.5, y1-15);                
+          }
         
       }
+  
+  if (trackingComputer && triggerWarp==normalSpace)
+  {
+     var aim = getWarpCentre();  
+    
+    var x = aim.x;
+    var y = aim.y;
+    var w = canvas.width/64;
+    var h = canvas.height/64;
+
+      context.beginPath();
+      context.moveTo(x, y+h);
+      context.lineTo(x+w, y);
+      context.lineTo(x, y-h);
+      context.lineTo(x-w, y);
+      context.closePath();
+    
+      context.lineWidth = 7;
+      context.strokeStyle = 'rgba(255,255,0,0.2)';
+      context.stroke();
+      context.lineWidth = 3;
+      context.strokeStyle = 'rgba(255,255,0,0.8)';
+      context.stroke();
+  
+  }
 }
 
 function renderStarDate()
@@ -1373,11 +1503,86 @@ function renderEnergy()
   context.fillText('Energy: ' + leadingzero + energy.toFixed(0), canvas.width/2, canvas.height-15);
 }
 
+function GuestimateScore()
+{ 
+  UpdateRunningStatistics()
+  var ranking = CalculateScore(allDead);
+  context.font = '20pt Orbitron';
+
+  context.textAlign = 'center';
+  context.lineWidth = 1;
+  context.fillStyle = 'rgba(128,0,240,0.8)';
+  context.fillText('On track for: '+ rank(ranking), canvas.width/2, 25);
+}
+
+function renderDamage()
+{
+  context.font = '20pt Orbitron';
+  context.fillStyle = 'rgb(0,0,255)';
+  context.textAlign = "right";
+  context.fillText('DC:', canvas.width/9, canvas.height-15);
+  var dam = "PESCLR";
+    
+  context.font = '30pt Orbitron';
+  context.textAlign = "left";
+  for (var i=0; i<6; i++)
+  {
+    context.lineWidth = 3;
+    damage = systemsDamage[i];
+    if (damage<isDamaged)
+      context.strokeStyle = 'rgb(0,255,255)';
+    else if (damage<isDestroyed)
+      context.strokeStyle = 'rgb(255,255,0)';
+    else
+      context.strokeStyle = 'rgb(255,0,0)';
+
+    context.strokeText(dam[i], canvas.width/9 + i*40, canvas.height-15); 
+  }
+
+  var i=0;
+  var message = ["Photons are", "Engines are", "Shields are", "Computer is", "Long Range Scanner is", "Sub-space Radio is"];
+  for (var o in shipDamage)
+  {
+     var damage = systemsDamage[i];
+     if (shipDamage[o]!=damage)
+     {
+        if (damage>=isDamaged)
+        {
+           if (shipDamage[o]<isDamaged) 
+           {
+             startText(message[i] + " damaged", border.x, 150);
+             if (i==1) SetThrottle(GetControl('throttle'));
+             if (i==5) radioDamageTime = (new Date()).getTime();
+           }
+           if (shipDamage[o]<isDestroyed && damage>=isDestroyed) 
+           {
+             startText(message[i] + " now destroyed", border.x, 150);
+             if (i==1) SetThrottle(GetControl('throttle'));
+             if (i==2) setShieldUp(false);
+           }
+        }
+        shipDamage[o] = systemsDamage[i];
+     }
+     i++;
+  }
+}
+
+function ProfileRenderGameScreen()
+{
+ // RenderStarDome();
+  profile(renderStarfield);
+  profile(RenderAsteroids);
+  profile(RenderNMEs);
+  profile(RenderParticles);
+
+  profile(renderShield);
+}
+
 function renderGameScreen()
 {
  // RenderStarDome();
   renderStarfield();
-  RenderAsteriods();
+  RenderAsteroids();
   RenderNMEs();
   RenderParticles();
 
@@ -1406,47 +1611,72 @@ function RenderRanks()
    }
 }
 
+function RenderColumnStat(name, value, x, y, w)
+{
+    context.textAlign = 'right';
+    context.fillText(value, x+w, y);  
+  
+    context.textAlign = 'left';
+    context.fillText(name, x, y);  
+}
+
 function RenderStatistics(stat, lastgame, fade)
 {
-  var x = canvas.width/2 - 500;
+  var x = canvas.width/2 - 600;
   var y = 150;
   var yinc = 20;
   context.lineWidth = 1;
   context.font = '20pt Orbitron';
   context.strokeStyle = 'rgba(0,255,0,'+fade+')';
-  context.textAlign = 'left';
-  context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
+  if (lastgame)
+  {
+     context.textAlign = 'left';
+     context.strokeText('Last Game Stats', x, y);    
+  }
+  else
+  {
+    context.textAlign = 'right';
+    context.strokeText('All time stats', x+1200, y);      
+  }
+//  context.textAlign = 'left';
+//  context.strokeText(lastgame?'Last Game Stats':'All time stats', x, y);
+  var precision = lastgame ?2 : 0;
   y+=20;
   context.fillStyle = 'rgba(255,0,0,'+fade+')';
-  context.font = '14pt Orbitron';
-  context.fillText('You Won : '+ stat.endgames[allDead], x, y+=yinc);
-  context.fillText('You were destroyed: '+ stat.endgames[destroyed], x, y+=yinc);
-  context.fillText('You run out of energy: '+ stat.endgames[energyLost], x, y+=yinc);
-  context.fillText('All your bases gone: '+ stat.endgames[basesGone], x, y+=yinc);
-  context.fillText('Manually Aborted: '+ stat.endgames[aborted], x, y+=yinc);
-  context.fillText('Difficulty: '+ stat.difficulty, x, y+=yinc);
-  context.fillText('Played: '+ stat.played, x, y+=yinc);
-
-  context.fillText('Meteors Fragmented: '+ stat.roidsFragmented, x, y+=yinc);
-  context.fillText('Meteors Destroyed: '+ stat.roidsHit, x, y+=yinc);  
-  context.fillText('Refueled: '+ stat.refuel.toFixed(2), x, y+=yinc);
-  context.fillText('Shots Fired: '+ stat.shots, x, y+=yinc);
-  context.fillText('Shields Hit: '+ stat.shieldsHit, x, y+=yinc);
-  context.fillText('Ships Hit: '+ stat.shipsHit, x, y+=yinc);
-  context.fillText('Shots Hit: '+ stat.deflects, x, y+=yinc);
-  context.fillText('Accuracy: '+ stat.accuracy.toFixed(2), x, y+=yinc);
-  context.fillText('Starbases lost: '+ stat.bases, x, y+=yinc);
-  context.fillText('Starbases killed: '+ stat.killTypes[0], x, y+=yinc);
-  context.fillText('Fighters killed: '+ stat.killTypes[1], x, y+=yinc);
-  context.fillText('Cruisers killed: '+ stat.killTypes[2], x, y+=yinc);
-  context.fillText('Basestars killed: '+ stat.killTypes[3], x, y+=yinc);
-  context.fillText('Times jumped: '+ stat.jumped, x, y+=yinc);
-  context.fillText('Energy jumped: '+ stat.jumpedEnergy.toFixed(2), x, y+=yinc);
-  context.fillText('Sectors jumped: '+ stat.travelled, x, y+=yinc);
-  context.fillText('Jumps cancelled: '+ stat.jumpCancelled, x, y+=yinc);
-  context.fillText('Damaged Systems: '+ stat.damaged, x, y+=yinc);
-  context.fillText('Metrons Travelled: '+ stat.distance.toFixed(2), x, y+=yinc);
-  context.fillText('Energy Used: '+ stat.energy.toFixed(2), x, y+=yinc);
+  context.font = '16pt Orbitron';
+  var w = 380;
+  var columnY = y;
+  RenderColumnStat('You Won :', stat.endgames[allDead], x, y+=yinc, w);
+  RenderColumnStat('You were destroyed: ', stat.endgames[destroyed], x, y+=yinc, w);
+  RenderColumnStat('You run out of energy: ', stat.endgames[energyLost], x, y+=yinc, w);
+  RenderColumnStat('All your bases gone: ', stat.endgames[basesGone], x, y+=yinc, w);
+  RenderColumnStat('Manually Aborted: ', stat.endgames[aborted], x, y+=yinc, w);
+  RenderColumnStat('Difficulty: ', stat.difficulty, x, y+=yinc, w);
+  RenderColumnStat('Played: ', stat.played, x, y+=yinc, w);
+  RenderColumnStat('Accuracy: ', stat.accuracy.toFixed(2), x, y+=yinc, w);
+  RenderColumnStat('Shots Fired: ', stat.shots, x, y+=yinc, w);
+  y = columnY;
+  x+=410;
+  RenderColumnStat('Meteors Fragmented: ', stat.roidsFragmented, x, y+=yinc, w);
+  RenderColumnStat('Meteors Destroyed: ', stat.roidsHit, x, y+=yinc, w);  
+  RenderColumnStat('Shields Hit: ', stat.shieldsHit, x, y+=yinc, w);
+  RenderColumnStat('Ships Hit: ', stat.shipsHit, x, y+=yinc, w);
+  RenderColumnStat('Shots Hit: ', stat.deflects, x, y+=yinc, w);
+  RenderColumnStat('Starbases killed: ', stat.killTypes[0], x, y+=yinc, w);
+  RenderColumnStat('Fighters killed: ', stat.killTypes[1], x, y+=yinc, w);
+  RenderColumnStat('Cruisers killed: ', stat.killTypes[2], x, y+=yinc, w);
+  RenderColumnStat('Basestars killed: ', stat.killTypes[3], x, y+=yinc, w);
+  y = columnY;
+  x+=410;
+  RenderColumnStat('Energy Used: ', stat.energy.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Refueled: ', stat.refuel.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Starbases lost: ', stat.bases, x, y+=yinc, w);
+  RenderColumnStat('Times jumped: ', stat.jumped, x, y+=yinc, w);
+  RenderColumnStat('Energy jumped: ', stat.jumpedEnergy.toFixed(precision), x, y+=yinc, w);
+  RenderColumnStat('Sectors jumped: ', stat.travelled, x, y+=yinc, w);
+  RenderColumnStat('Jumps cancelled: ', stat.jumpCancelled, x, y+=yinc, w);
+  RenderColumnStat('Damaged Systems: ', stat.damaged, x, y+=yinc, w);
+  RenderColumnStat('Metrons Travelled: ', stat.distance.toFixed(precision), x, y+=yinc, w);
 }
 
 function RenderInstructions()
@@ -1474,9 +1704,9 @@ function RenderInstructions()
  
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.9 beta', canvas.width/2, 360);
-  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
+  context.fillText('Version 0.93 beta', canvas.width/2, 360);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
+
   
   fade = 0;
   if (dt>20000) 
@@ -1546,7 +1776,7 @@ function RenderInstructions()
   context.fillStyle = 'rgba(128,255,0,'+fade+')';
   context.fillText('Destroy Fast moving patrols first', x, 180);
   context.fillText('Starbases when destroyed will spawn a new enemy patrol', x,240);
-  context.fillText('Destroying Asteriods is for fun only',x, 300);
+  context.fillText('Destroying Asteroids is for fun only',x, 300);
   context.fillText('Cancel Hyperwarps before 99 and you get a free boost(well almost free)',x, 360);
   context.fillText('Watch your Energy and dont forget to refuel', x,420);
   context.fillStyle = 'rgba(0,192,0,'+fade+')';
@@ -1582,9 +1812,8 @@ function RenderCredits()
 
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.9 beta', canvas.width/2, 360);
-  context.fillText('todo: Adv Difficulty warp', canvas.width/2, 380);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 400);
+  context.fillText('Version 0.93 beta', canvas.width/2, 360);
+  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
   
   fade = 0;
   if (dt>20000) 
@@ -1689,12 +1918,37 @@ function RenderStats()
   RenderStatistics(totals, false, fade);
 }
 
+function ProfileRenderTitleScreen()
+{
+  
+  profile(renderStarfield);
+  profile(RenderAsteroids);
+  profile(RenderButtons);
+  
+  switch (attractMode)
+  {
+    case 0:
+      profile(RenderInstructions);
+      break;
+    case 1:
+      profile(RenderStats);
+      break;
+    case 2:
+      profile(RenderRanks);
+      break;
+    case 3:
+      profile(RenderCredits);
+      break;
+  }
+  
+  profile(RenderMainTitle);
+}
 
 function RenderTitleScreen()
 {
   
   renderStarfield();
-  RenderAsteriods();
+  RenderAsteroids();
   RenderButtons();
   
   switch (attractMode)
@@ -1713,6 +1967,11 @@ function RenderTitleScreen()
       break;
   }
   
+  RenderMainTitle();
+}
+
+function RenderMainTitle()
+{
   context.font = '61pt Orbitron';
   context.lineWidth = 8;
   context.textAlign = "center";
@@ -1723,7 +1982,9 @@ function RenderTitleScreen()
   context.fillStyle = 'rgb(255,255,0)';
   context.fillText('STAR RAIDERS - 2014', canvas.width/2,100);
   var titlepixel = context.measureText('STAR RAIDERS - 2014');
-
+  context.font = '20pt Orbitron';
+    context.fillStyle = 'rgb(255,255,255)';
+  //context.fillText('FireFox is kind of running. Performance on OSX sucks bad. Chrome and Safari should be running fine. Please comment with bugs!', canvas.width/2, 24);
   // update the last score percentile
   lastScore.percentile = UpdatePercentile(lastScore.rank);
   
@@ -1763,7 +2024,9 @@ function  AddNewRank(ranking, date)
    bestRanks.sort(ranksort);
    // pops the 11th off
    bestRanks.pop();
-
+  
+   // update totals 
+   totals.rank+=ranking;
    // update local db
    SaveRanks();
 }
@@ -1842,6 +2105,15 @@ function SetupTitleButtons()
   new Button(bx, b.y*4.2, bw, ms.y*0.7, "Ranks", ViewRanks, '5');
   new Button(bx, b.y*5.2, bw, ms.y*0.7, "Instructions", ViewInstructions, '6');
   new Button(bx, b.y*6.2, bw, ms.y*0.7, "Credits", ViewCredits, '7');
+  
+  new Button(5, 5, bw/2, ms.y/2, "profile", ProfileToggle, 'p');
+  GetControl('profile').state = profiling;
+}
+
+function ProfileToggle(button)
+{
+   button.state^=1;
+   profiling = button.state;
 }
 
 function StartNovice()
@@ -1896,15 +2168,22 @@ function ViewCredits()
 }
 
 
+function ProfileUpdateTitleScreen()
+{
+   localPosition.z= modulo2(localPosition.z-0.1, localSpaceCubed*0.25);
+   setTrackingMouse(false);
+   profile(moveStarfield);
+
+   profile(UpdateAsteroids);
+}
+
 function UpdateTitleScreen()
 {
    localPosition.z= modulo2(localPosition.z-0.1, localSpaceCubed*0.25);
-   // cancel mouse tracking
-   tX = cX;
-   tY = cY;
+   setTrackingMouse(false);
    moveStarfield();
 
-   UpdateAsteriods();
+   UpdateAsteroids();
 }
 
 function renderOverlays()
@@ -1933,7 +2212,45 @@ function renderOverlays()
   
 }
 
+function renderSubspaceMessages()
+{
+  // only
+  if (shipDamage.subspaceradio>=isDamaged && endGameEvent==playing)
+  {
+     // flicker 
+     if (shipDamage.subspaceradio>=isDestroyed || Math.random()>0.9) return;
+  }
+
+  displayText();
+}
+
 // rendering functions
+function ProfileRender()
+{
+  document.getElementById("star-raiders").style.background = backgroundColor;  
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (titleScreen == true) return profile(RenderTitleScreen);
+  
+  profile(ProfileRenderGameScreen);
+
+  if (endGameEvent == playing)
+  {
+    profile(renderOverlays);
+    profile(renderInformation);
+  }
+  
+  profile(RenderButtons);
+  
+  if (endGameEvent == playing)
+    profile(WeaponCollisions);
+  
+  profile(DrawRedAlert);
+
+  profile(renderSubspaceMessages);
+}
+
 
 function render()
 {
@@ -1957,7 +2274,7 @@ function render()
   
   DrawRedAlert();
 
-  displayText();
+  renderSubspaceMessages();
 }
 
 // per frame tick functions
@@ -1979,23 +2296,23 @@ function updateclocks()
 
 function update()
 {
+  
    if (pauseGame == true) return;
    if (titleScreen == true) return UpdateTitleScreen();
   
-   if (endGameEvent!=playing)
-   {
-        tX = cX;
-        tY = cY;
-   }
+   setTrackingMouse(endGameEvent==playing);
+  
    moveStarfield();
   
-   UpdateAsteriods();
+   UpdateAsteroids();
 
    if (endGameEvent == playing)
    {
       UpdateBoard();
   
       UpdateShipControls();
+
+      TrackTargets();
    }
   
    UpdateNMEs();
@@ -2008,15 +2325,129 @@ function update()
      EndGameEvent();
 }
 
+function ProfileItem(name)
+{
+    this.name = name;
+    this.last = 0;
+    this.calls =0;
+    this.total =0;
+    this.maxtime = 0;
+    this.mintime = 0;
+}
+
+ProfileItem.prototype.add = function(time)
+{
+   this.last = time;
+   this.calls++;
+   this.total+=time;
+   this.mintime = Math.min(time, this.mintime);
+   this.maxtime = Math.max(time, this.maxtime);
+}
+
+ProfileItem.pro
+var profileItems = {};
+function profile(func)
+{
+  var st = performance.now();// (new Date()).getTime();
+  func();
+  var en = performance.now();//(new Date()).getTime();
+  if (profileItems[func.name]===undefined) profileItems[func.name] = new ProfileItem(func.name);
+  profileItems[func.name].add((en-st));
+}
+
+var lastProfileTime = 0;
+function profileDump()
+{
+  var time = (new Date).getTime();
+  if (time-lastProfileTime > 5000)
+  {
+     console.log(profileItems);
+     lastProfileTime = time;
+  }
+profileDisplay();
+}
+
+function profileDisplay()
+{
+   var keys = [];
+   x = 250;
+   y = 50;
+   w = 250;
+  
+   context.font = '12pt Orbitron';
+   context.fillStyle = '#0000ff';
+  
+   for(var obj in profileItems)
+   {      
+      keys.push(obj);
+      var item = profileItems[obj];
+      // remove coded profile name
+      var name = item.name.replace("profile","");
+      name = name.replace("Profile","");
+      // log line
+      profileColumnStat(name, item.maxtime, item.total/item.calls, item.calls, x, y, w);
+      y+=30;
+   }
+}
+
+function profileColumnStat(name, maxVal, avgVal, count, x, y, w)
+{
+    context.textAlign = 'left';
+    context.fillText(name, x, y);  
+    context.fillText("avg: "+avgVal.toFixed(2) + "ms | peek: " + maxVal.toFixed(2)+"ms", x+w, y);
+}
+
+function ProfileUpdate()
+{
+   if (pauseGame == true) return;
+   if (titleScreen == true) return profile(ProfileUpdateTitleScreen);
+  
+   setTrackingMouse(endGameEvent==playing);
+   
+   profile(moveStarfield);
+  
+   profile(UpdateAsteroids);
+
+   if (endGameEvent == playing)
+   {
+      profile(UpdateBoard);
+  
+      profile(UpdateShipControls);
+
+      profile(TrackTargets);
+   }
+  
+   profile(UpdateNMEs);
+  
+   profile(UpdateParticles);
+  
+  if (endGameEvent == playing)
+     profile(energyManagement);
+  else  
+     profile(EndGameEvent);
+}
 
 function animate()
 {
   // compute frequency
   updateclocks();
-  // movement update
-  update();
-  // render update
-  render();
+  
+  if (profiling)
+  {
+    // movement update
+    profile(ProfileUpdate);
+    // render update
+    profile(ProfileRender);
+    // periodically upload stats
+    profileDump();
+  }
+  else
+  {
+    // movement update
+    update();
+    // render update
+    render();
+  }
   // trigger next frame
   requestAnimationFrame(animate);
 }
@@ -2025,7 +2456,6 @@ function animate()
 function processKeydown(event)
 {
     var key = String.fromCharCode(event.keyCode);
-    console.log("key = " + key);
     if (CheckShortcuts(key)==false)
     {
         // throttle
@@ -2057,7 +2487,7 @@ function SetupButtons()
   new Button(bx, b.y*5.2, bw, ms.y*0.6, "Shields", ToggleShields, 'S');
   new Button(bx, b.y*6.2, bw, ms.y*0.6, "Target Comp", ToggleTargetComp, 'C');
   new Button(bx, b.y*7.2, bw, ms.y*0.6, "Tracking", ToggleTrackingComp, 'T');
-  new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", swapView, 'A');
+  new Button(bx, b.y*8.2, bw, ms.y*0.6, "Swap View", ToggleView, 'A');
   new Button(bx, b.y*1.2, bw, ms.y*0.6, "Pause Game", TogglePauseGame, 'P');
   new Button(bx, b.y*0.2, bw, ms.y*0.6, "Abort Mission", AbortMission, 'Q');  
 
@@ -2067,7 +2497,7 @@ function SetupButtons()
 
 function SwitchToLongRange(button)
 {
-  console.log("switching to long range");
+  //console.log("switching to long range");
   if (overlayMode == eLongRange)
   {
     overlayMode = targetComputer?eTargetComputer:eNone;
@@ -2083,7 +2513,7 @@ function SwitchToLongRange(button)
 
 function SwitchToGalaxyChart(button)
 {
-   console.log("switching to galatic range");
+   //console.log("switching to galatic range");
    if (overlayMode == eGalacticScanner)
    {
      overlayMode = targetComputer?eTargetComputer:eNone;
@@ -2108,6 +2538,7 @@ function ToggleWarp(button)
   {
     triggerWarp = enterHyperspace;
     PlayBeginHyperspace();
+    warpDeltaDistance = 0;
   }
   
   if (warpLocked && triggerWarp==enterHyperspace)
@@ -2128,10 +2559,12 @@ function ToggleShields(button)
 {
   button.state^=1;
   
-  shieldUp=button.state;
-  splutterCount = 30;
-  splutterNoise = 60;
-  startText(shieldUp?"Shields Activated": "Shields Deactivated", border.x, 150);
+  var on = shipDamage.shields>=isDestroyed ? false : button.state;
+  setShieldUp(on);
+  setSplutter(30, 60);
+  
+  
+  startText(getShieldUp()?"Shields Activated": "Shields Deactivated", border.x, 150);
   PlayConfirm();
 }
 
@@ -2163,6 +2596,12 @@ function ToggleTrackingComp(button)
        PlayConfirm();
 }
 
+function ToggleView(button)
+{
+   button.state^=1;
+   swapView();  
+}
+
 function TogglePauseGame(button)
 {
   PlayConfirm();
@@ -2171,6 +2610,8 @@ function TogglePauseGame(button)
   startText(pauseGame ? "Paused Game":"Resume Game", border.x, 150);
 
 }
+
+
 
 function AbortMission(button)
 {
@@ -2232,7 +2673,7 @@ function EndGame(endType)
    UpdateAllTotals();
   
    // calculate the player rank
-   var ranking = CalculateScore();
+   var ranking = CalculateScore(endType);
    AddNewRank(ranking, new Date());
   
    // save stats and rank to server
@@ -2268,7 +2709,7 @@ function EndGameEvent()
    var currentTime = new Date().getTime();
    var dx = currentTime - endGameTime;
    var messageNum = Math.floor(dx/2500)%4;
-   console.log(messageNum);
+   
    if (endGameLastMessage != messageNum)
    {
        var endMessages = [
@@ -2297,31 +2738,29 @@ function EndGameEvent()
 
 function DestroyShip()
 {
-    // explode (asteriods)
+    // explode (Asteroids)
     trackingComputer=false;
     targetComputer = false;
-    shieldUp = false;
+    setShieldUp(false);
   
          // detroy base
-   SpawnAsteriodsAt(localPosition);
-   spawnX = localPosition.x;
-   spawnY = localPosition.y;
-   spawnZ = localPosition.z;
-   explodeEmitter.create();
-   dustEmitter.create();
+   SpawnAsteroidsAt(localPosition);
+   setSpawn(localPosition.x, localPosition.y, localPosition.z);
+   getExplodeEmitter().create();
+   getDustEmitter().create();
    PlayExplosion();
 }
 
 function PowerDownShip()
 {
-    // explode (asteriods)
+    // explode (Asteroids)
     trackingComputer=false;
     targetComputer = false;
-    shieldUp = false;
+    setShieldUp(false);
     setShipVelocity = 0;
 }
 
-function CalculateScore(endType)
+function CalculateScore(finishType)
 {
   var Mtable = 
     [ 80, 60, 40,
@@ -2330,18 +2769,17 @@ function CalculateScore(endType)
       111, 100, 90];
   // compute M
   var mindex = gameDifficulty*3;
-  if (endType == destroyed) mindex++;
-  if (endType != allDead) mindex++;
+  if (finishType == destroyed) mindex++;
+  if (finishType != allDead) mindex++;
   
   var M = Mtable[mindex];
-  M += 6*kills;
+  M += 6*statistics.kills;
   M -= Math.floor(statistics.energy/100);
   M -= statistics.killTypes[base] * 3;
   M -= statistics.bases * 18;
   M -= Math.floor(statistics.timePlayed);  // time is decimalized
   
   statistics.rank = M;
-  totals.rank+=statistics.rank;
   
   return M;
 }
@@ -2438,8 +2876,7 @@ function CacheGlobalRankings()
          gameTotalPlays+=count;
          gameHitsPerRanks[index+248] = gameTotalPlays;
        }
-       console.log("results = "+ results.length);
-       console.log("numtotalplays = " + gameTotalPlays);
+       console.log("rankdata = " + gameTotalPlays + ", " + results.length);
     },
     error: function(error) 
     {
@@ -2598,8 +3035,8 @@ function TestMoveUnderMouse(mouseX, mouseY)
   statistics.distance+=Math.abs(speed);
   
   // changing
-  initVelocity = -setShipVelocity*0.05;
-  if (viewingAft()) initVelocity*=-1;
+  setInitVelocity(-setShipVelocity*0.05);
+  if (viewingAft()) setInitVelocity(getInitVelocity()*-1);
   
   panStarfield(angleX, angleY);
   
@@ -2685,8 +3122,11 @@ function SetThrottle(slider)
   if (triggerWarp==normalSpace)
   {
     throttle = Math.round(slider.value);
+    // engines damaged or destroyed 1/2 or 1/4 speed
     setShipVelocity = throttleTable[throttle];
     shipVelocityEnergy = throttleEnergy[throttle];
+    if (shipDamage.engines>=isDamaged) setShipVelocity*=0.5;
+    if (shipDamage.engines>=isDestroyed) setShipVelocity*=0.5;
   }
 }
 
@@ -2695,7 +3135,7 @@ function energyManagement()
   // twin ions
   energy -= (shipVelocityEnergy*freqHz);
   // shields
-  if (shieldUp) energy -= 2*freqHz;
+  if (getShieldUp() && !shieldVunerable()) energy -= 2*freqHz;
   // lifesupport
   energy -= 0.25 * freqHz;
   // tracking computer
@@ -2704,32 +3144,100 @@ function energyManagement()
   // check damage
   CheckShields();
   
+  //
+  if (shipDamage.shields>=isDamaged && Math.random()>0.98) setSplutter(30, 60);
+
   // end game
   if (energy < 0 ) EndGame(energyLost);
 }
 
+function RenderWarpPoint()
+{
+    if (triggerWarp==normalSpace) return;
+  
+    var warp = getWarpCentre();
+    
+    var x = warp.x;
+    var y = warp.y;
+    var w = canvas.width/64;
+    var h = canvas.height/64;
+  
+    if (w<h) w = h;
+    else h = w;
+
+    context.beginPath();
+    context.moveTo(x+w/4, y-h);
+    context.lineTo(x+w/4, y-h/4);
+    context.lineTo(x+w, y-h/4);
+
+    context.moveTo(x-w/4, y-h);
+    context.lineTo(x-w/4, y-h/4);
+    context.lineTo(x-w, y-h/4);
+
+    context.moveTo(x+w/4, y+h);
+    context.lineTo(x+w/4, y+h/4);
+    context.lineTo(x+w, y+h/4);
+
+    context.moveTo(x-w/4, y+h);
+    context.lineTo(x-w/4, y+h/4);
+    context.lineTo(x-w, y+h/4);
+
+    context.lineWidth = 7;
+    context.strokeStyle = 'rgba(128,255,255,0.2)';
+    context.stroke();
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgba(128,255,255,0.8)';
+    context.stroke();
+}
+
 function EnteringWarp()
 {
+   if (triggerWarp!=normalSpace)
+   {
+        var x = centreX;
+        var y = centreY;
+        setTrackingMouse(false);    
+         var warptime = shipVelocity;
+        if (gameDifficulty>pilot && shipVelocity>12)
+        {
+            var warp = getWarpCentre();
+            var factor = (gameDifficulty-1)*10*warptime*0.01;
+            x = warp.x+Math.random()*factor - (factor*0.5);
+            y = warp.y+Math.random()*factor - (factor*0.5);
+            setTrackingMouse(true);
+        }
+
+        setWarpCentre({x:x, y:y});     
+   }
+  
    if (triggerWarp==enterHyperspace)
    {
       UpdateHyperspaceSound(shipVelocity);
       setShipVelocity = 99.99;
-      if (!enterWarp && shipVelocity >90)
+      if (gameDifficulty>novice)
+      {
+         var warp = getWarpCentre();
+         dx = warp.x - centreX;
+         dy = warp.y - centreY;
+         warpDeltaDistance += (dx*dx+dy*dy)*shipVelocity*shipVelocity;
+      }      
+     
+      if (!getEnterWarp() && shipVelocity >90)
       {
         triggerWarp = inHyperspace;
-        enterWarp = true;
-        warpStartDepth = cameraDepth;
-        warpTime = 0;
+        setEnterWarp(true);
+        setWarpStartDepth(getCameraDepth());
+        setWarpTime(0);
         
         // clear data
-        asteriods = [];
+        clearAsteroids();
         nmes = []; 
       }
    }
   if (triggerWarp == inHyperspace)
   {
     // waiting destination 
-    if (enterWarp == false)
+    if (getEnterWarp() == false)
     {
        PlayConfirm();
        PauseHyperspaceSound(2);
@@ -2741,13 +3249,23 @@ function EnteringWarp()
        GetControl("Hyperspace").state = 0;
       
        // setwarpLocation
-       var badDriver = 1;
+       var dif = Math.sqrt(warpDeltaDistance) / (Math.sqrt(centreX*centreX+centreY*centreY)*50*getWarpTime());
+       if (gameDifficulty == novice) badDriving = 0;
+       else badDriving = dif * (gameDifficulty+7) * 0.1;
+       // factor displacement over distance
+       badDriving *= Math.round(Math.abs(warpLocation.x-shipLocation.x) + Math.abs(warpLocation.y-shipLocation.y));
+       badDriving -= badDriving*0.5;
+       //console.log("baddriving = " + badDriving);
+       // now randomize in the cone
        var x = warpLocation.x + Math.random()*badDriving;
        var y = warpLocation.y + Math.random()*badDriving;
-       if (warpLocked== false)
+      
+       if (warpLocked==false)
        {
-           x = Math.random()*badDriving*2 - 1;
-           y = Math.random()*badDriving*2 - 1;
+           badDriving = dif*5;
+           x = shipLocation.x + Math.random()*badDriving;
+           y = shipLocation.y + Math.random()*badDriving;
+           warpEnergy = 100;
        }
        
        // update stats - sectors covered, jumped and energy
@@ -2757,19 +3275,22 @@ function EnteringWarp()
        
        SetShipLocation(x, y);
        // Setup NME's
-       SetupAsteriods(localSpaceCubed);
+       SetupAsteroids(localSpaceCubed);
        SetupNMEs(GetPieceAtShipLocation());
+       if (trackingComputer) trackingTarget = ClosestTarget();
        warpLocked = false;
        energy-=warpEnergy;
+       setTrackingMouse(true);
 
     }
     else
     {
-      UpdateHyperspaceSound(shipVelocity+warpTime*0.5);
+      UpdateHyperspaceSound(shipVelocity+getWarpTime()*0.5);
     }
   }
   if (triggerWarp == cancelHyperspace)
   {
+     setTrackingMouse(true);
      triggerWarp = normalSpace;
      var slider = GetControl("throttle");
      SetThrottle(slider);
@@ -2827,6 +3348,34 @@ function RenderStarDome()
     context.fill();
 }
 
+function ClosestTarget()
+{
+  var distance = 10000000;
+  var select = -1;
+
+  for (var i=0; i<nmes.length; i++)
+  {
+    if (nmes[i].hitpoints>0)
+    {
+      var dist2 = nmes[i].targetPoint({x:0, y:0, z:0}).lengthSquared();
+      if (dist2<distance) {distance = dist2; select = i;}
+    }
+  }
+  return select;
+}
+
+function TrackTargets()
+{
+  if (!trackingComputer) return;
+  
+  if (trackingTarget<0 || trackingTarget>=nmes.length || nmes[trackingTarget].hitpoints<=0)
+  {
+    var t= ClosestTarget();
+    if (t>=0) trackingTarget = t;
+    else trackingTarget = 0;
+  }
+
+}
 
 // entry point
 init();
