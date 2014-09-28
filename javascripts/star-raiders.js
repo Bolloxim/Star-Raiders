@@ -238,6 +238,12 @@ function ClearGame()
    redAlertColor = 0;
   
    setShieldUp(false);
+   clearText();
+   lrsOffScreen = true;
+   mapOffScreen = true;
+   overlayMode = eNone;
+   trackingTarget = 0;
+   triggerWarp = normalSpace;
 }
 
 
@@ -644,6 +650,7 @@ function FixDamagedSystems()
 {
   var d = 0;
   for (var i=0; i<6; i++) d = Math.max(d, systemsDamage[i]);
+  if (shipDamage.subspaceradio>=isDestroyed) clearText();
   if (d>=isDamaged) startText("Systems Repaired", border.x, 150);
   // clear systems
   shipDamage = {photons:0, engines:0, shields:0, computer:0, longrangescanner:0, subspaceradio:0};
