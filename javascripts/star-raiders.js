@@ -1711,8 +1711,7 @@ function RenderInstructions()
  
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.93 beta', canvas.width/2, 360);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
+  context.fillText('Version 0.99 beta', canvas.width/2, 360);
 
   
   fade = 0;
@@ -1819,8 +1818,8 @@ function RenderCredits()
 
   context.font = '14pt Orbitron';
   context.fillStyle = 'rgba(0,128,0,'+fade+')';
-  context.fillText('Version 0.93 beta', canvas.width/2, 360);
-  context.fillText('todo: Damage/Destroyed systems', canvas.width/2, 380);
+  context.fillText('Version 0.99 beta', canvas.width/2, 360);
+
   
   fade = 0;
   if (dt>20000) 
@@ -1840,6 +1839,7 @@ function RenderCredits()
   context.fillText('Brian Dumlao for QA pass in his off hours', x, 180);
   context.fillText('Codepen for making it easy to prototype',x, 240);
   context.fillText('All the Disney folks I work with daily',x, 300);
+  context.fillText('Gary Fratarolla for lots of gameplay feedback',x, 360);
   context.fillStyle = 'rgba(0,192,0,'+fade+')';
   context.fillText('Chris Chapman for pointing me at some cool webresources', x, 210);
   context.fillText('Parse for a real easy to use datastore',x, 270);
@@ -1999,9 +1999,28 @@ function RenderMainTitle()
   context.font = '20pt Orbitron';
   context.fillStyle = 'rgb(0,0,255)';
   context.textAlign = "center";
+
+  var time = new Date().getTime() - titleStartTime;
+  var dt   = modulo2(time, 20000);
+  if (dt<9000) 
+      fade = 1;
+  else if (dt<10000)
+      fade = (10000-dt)/1000;
+  else if (dt>19000)
+      fade = (dt-19000)/1000;
+  fade =Math.max(0, fade);
+  invfade = 1.0-fade;
+  context.fillStyle = 'rgba(0,0,255,'+fade+')';
   context.fillText('Last Score: '+ rank(lastScore.rank) +'  -  Ranked in top '+lastScore.percentile.toFixed(1)+'%', canvas.width/2, canvas.height- 40);
+  context.fillStyle = 'rgba(0,0,255,'+invfade+')';
+  context.fillText('Best Rank: '+ rank(bestRanks[0].rank) +'  -  Ranked in top '+bestRanks[0].percentile.toFixed(1)+'%', canvas.width/2, canvas.height- 40);
+
   context.font = '12pt Orbitron';
+  context.fillText('Date: '+ bestRanks[0].date, canvas.width/2, canvas.height- 20);
+  context.fillStyle = 'rgba(0,0,255,'+fade+')';
   context.fillText('Date: '+ lastScore.date, canvas.width/2, canvas.height- 20);
+  
+
 }
 
 function UpdatePercentile(rank)
