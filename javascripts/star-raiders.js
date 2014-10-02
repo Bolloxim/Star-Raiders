@@ -1843,7 +1843,9 @@ function RenderCredits()
   context.fillStyle = 'rgba(0,192,0,'+fade+')';
   context.fillText('Chris Chapman for pointing me at some cool webresources', x, 210);
   context.fillText('Parse for a real easy to use datastore',x, 270);
-  context.fillText('Sheri Smithers for putting up with my late nights',x, 330);
+  context.fillText('lillian harter for feedback on gameplay and startup experience',x, 330);
+  context.fillText('Sheri Smithers for putting up with my late nights',x, 390);
+  
 
   
   fade = 0;
