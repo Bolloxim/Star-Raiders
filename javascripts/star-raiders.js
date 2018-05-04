@@ -3325,8 +3325,8 @@ function EnteringWarp()
      var slider = GetControl("throttle");
      SetThrottle(slider);
      energy-=100;
-     PlayExit();
-     CancelHyperSound();
+     PlayExit(0);
+     CancelHyperSound(0);
     
      // statistics 
      statistics.jumpedEnergy-=100;
